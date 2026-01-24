@@ -1,0 +1,39 @@
+package storage
+
+import (
+	core "opm.dev/core@v0"
+	schemas "opm.dev/schemas@v0"
+)
+
+//////////////////////////////////////////////////////////////////
+//// Volume Resource Definition
+/////////////////////////////////////////////////////////////////
+
+#VolumesResource: close(core.#ResourceDefinition & {
+	metadata: {
+		apiVersion:  "opm.dev/resources/storage@v0"
+		name:        "Volumes"
+		description: "A volume definition for workloads"
+		labels: {
+			"core.opm.dev/category":    "storage"
+			"core.opm.dev/persistence": "true"
+		}
+	}
+
+	// Default values for volumes resource
+	#defaults: #VolumesDefaults
+
+	// OpenAPIv3-compatible schema defining the structure of the volume spec
+	#spec: volumes: [volumeName=string]: schemas.#VolumeSchema & {name: string | *volumeName}
+})
+
+#Volumes: close(core.#ComponentDefinition & {
+	#resources: {(#VolumesResource.metadata.fqn): #VolumesResource}
+})
+
+#VolumesDefaults: close(schemas.#VolumeSchema & {
+	// Default empty dir medium
+	emptyDir?: {
+		medium: *"node" | "memory"
+	}
+})
