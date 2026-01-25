@@ -9,30 +9,21 @@ import (
 //// SharedNetwork Policy Definition
 /////////////////////////////////////////////////////////////////
 
-#SharedNetworkPolicy: close(core.#PolicyDefinition & {
+#SharedNetworkPolicy: close(core.#Policy & {
 	metadata: {
 		apiVersion:  "opm.dev/policies/connectivity@v0"
 		name:        "SharedNetwork"
 		description: "Allows all network traffic between components in the same scope based on their exposed ports"
-		target:      core.#PolicyTarget.scope // Scope-only
+		target:      "scope"
 	}
 	enforcement: {
 		mode:        "deployment"
 		onViolation: "block"
 	}
 
-	// Default values for shared network policy
-	#defaults: #SharedNetworkDefaults
-
-	#spec: sharedNetwork: schemas.#SharedNetworkSchema
+	#spec: SharedNetwork: schemas.#SharedNetworkSchema
 })
 
-#SharedNetwork: close(core.#ScopeDefinition & {
+#SharedNetwork: close(core.#Scope & {
 	#policies: {(#SharedNetworkPolicy.metadata.fqn): #SharedNetworkPolicy}
-})
-
-#SharedNetworkDefaults: close(schemas.#SharedNetworkSchema & {
-	networkConfig: {
-		dnsPolicy: "ClusterFirst"
-	}
 })

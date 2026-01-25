@@ -19,9 +19,6 @@ package core
 	// Scopes (from Module)
 	#scopes?: [Id=string]: #Scope
 
-	// Policies (from Module)
-	#policies?: [Id=string]: #Policy
-
 	// Value schema (preserved from Module)
 	#spec: _
 

@@ -19,9 +19,8 @@ import (
 		description?: string
 
 		// Where this policy can be applied
-		// component: Policy applies only to components
 		// scope: Policy applies only to scopes
-		target!: "scope" | "module"
+		target!: "scope"
 
 		labels?:      #LabelsAnnotationsType
 		annotations?: #LabelsAnnotationsType

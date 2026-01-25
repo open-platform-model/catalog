@@ -56,14 +56,6 @@ package core
 	// If not provided, defaults from the definition can be used
 	optionalTraits: [string]: _
 
-	// Policies required by this transformer - component MUST include these
-	// Map key is the FQN, value is the Policy definition (provides access to #defaults)
-	requiredPolicies: [string]: _
-
-	// Policies optionally used by this transformer - component MAY include these
-	// If not provided, defaults from the definition can be used
-	optionalPolicies: [string]: _
-
 	// Transform function
 	// IMPORTANT: output must be a list of resources, even if only one resource is generated
 	// This allows for consistent handling and concatenation when multiple transformers match

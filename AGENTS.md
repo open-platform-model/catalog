@@ -67,3 +67,14 @@ Core OPM CUE definitions published as `opm.dev/core@v0`. Contains schemas for al
 - FQN format: `"{apiVersion}#{name}"` (e.g., `"opm.dev/core@v1#Container"`)
 - Function pattern: `#Func: {X1="in": {...}, out: {...}}`
 - Closed definitions: Use `close({...})` to prevent extra fields
+
+## Glossary
+
+See [full glossary](../opm/docs/glossary.md) for detailed definitions.
+
+### Personas
+
+- **Infrastructure Operator** - Operates underlying infrastructure (clusters, cloud, networking)
+- **Module Author** - Develops and maintains ModuleDefinitions with sane defaults
+- **Platform Operator** - Curates module catalog, bridges infrastructure and end-users
+- **End-user** - Consumes modules via ModuleRelease with concrete values

@@ -13,19 +13,19 @@ OPM uses **Definition Types** as semantic categories to organize and communicate
 | **Policy** | What must be true | "What rules must it follow?" | Scope/Module |
 | **Blueprint** | Reusable composition | "What is the standardized pattern?" | Component |
 | **Lifecycle** | What happens on transitions | "What happens on install/upgrade/delete?" | Component/Module |
-| **StatusProbe** | What is computed state | "What is the configuration state?" | Module |
+| **Status** | What is computed state | "What is the configuration state?" | Module |
 | **Test** | Does the lifecycle work | "Does the module work correctly?" | Separate artifact |
 
 ### Mental Model
 
 ```text
-Resource    = The deployable thing (Container, Volume, ConfigMap)
-Trait       = Behavior/configuration of that thing (Replicas, HealthCheck, Expose)
-Policy      = Constraints on that thing (Encryption, NetworkRules, ResourceQuota)
-Blueprint   = Composition of Resources, Traits, and Policies (StatelessWorkload, TaskWorkload)
-Lifecycle   = Transition actions (ApplySchema, RunMigration, Cleanup)
-StatusProbe = Computed state from configuration (health, diagnostics, phase)
-Test        = Lifecycle verification (InstallTest, UpgradeTest, DeleteTest)
+Resource  = The deployable thing (Container, Volume, ConfigMap)
+Trait     = Behavior/configuration of that thing (Replicas, HealthCheck, Expose)
+Policy    = Constraints on that thing (Encryption, NetworkRules, ResourceQuota)
+Blueprint = Composition of Resources, Traits, and Policies (StatelessWorkload, TaskWorkload)
+Lifecycle = Transition actions (ApplySchema, RunMigration, Cleanup)
+Status    = Computed state from configuration (health, diagnostics, phase)
+Test      = Lifecycle verification (InstallTest, UpgradeTest, DeleteTest)
 ```
 
 ---
@@ -337,19 +337,19 @@ Ask yourself:
 
 ---
 
-## StatusProbe
+## Status
 
-A **StatusProbe** represents computed, configuration-derived information about a module. StatusProbe answers the question "what is the computed state of this configuration?" In OPM, StatusProbe is evaluated at CUE compile-time from module configuration - it is **not** runtime-observed state from a live system. StatusProbe provides structured diagnostic information, health indicators derived from configuration values, and human-readable messages.
+A **Status** represents computed, configuration-derived information about a module. Status answers the question "what is the computed state of this configuration?" In OPM, Status is evaluated at CUE compile-time from module configuration - it is **not** runtime-observed state from a live system. Status provides structured diagnostic information, health indicators derived from configuration values, and human-readable messages.
 
-StatusProbe is separate from other definition types because it is **derived/computed** rather than declared. A developer doesn't set `healthy: true` directly; they define an expression like `healthy: values.replicas >= 1` that computes health from configuration.
+Status is separate from other definition types because it is **derived/computed** rather than declared. A developer doesn't set `healthy: true` directly; they define an expression like `healthy: values.replicas >= 1` that computes health from configuration.
 
-### What StatusProbe Infers
+### What Status Infers
 
 - "This is **computed** from configuration"
 - "This provides **diagnostic insight**"
 - "This is evaluated at **CUE compile-time**, not runtime"
 
-### When to Use StatusProbe
+### When to Use Status
 
 Ask yourself:
 
@@ -359,7 +359,7 @@ Ask yourself:
 
 **Examples**: Health indicators, validation summaries, configuration completeness, replica counts
 
-### StatusProbe Structure
+### Status Structure
 
 ```cue
 #ModuleStatus: {

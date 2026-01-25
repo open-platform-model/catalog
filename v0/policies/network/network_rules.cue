@@ -9,26 +9,21 @@ import (
 //// NetworkRules Policy Definition
 /////////////////////////////////////////////////////////////////
 
-#NetworkRulesPolicy: close(core.#PolicyDefinition & {
+#NetworkRulesPolicy: close(core.#Policy & {
 	metadata: {
 		apiVersion:  "opm.dev/policies/connectivity@v0"
 		name:        "NetworkRules"
 		description: "Defines network traffic rules"
-		target:      core.#PolicyTarget.scope // Scope-only
+		target:      "scope"
 	}
 	enforcement: {
 		mode:        "deployment"
 		onViolation: "block"
 	}
 
-	// Default values for network rules policy
-	#defaults: #NetworkRulesDefaults
-
-	#spec: networkRules: [ruleName=string]: schemas.#NetworkRuleSchema
+	#spec: NetworkRules: [ruleName=string]: schemas.#NetworkRuleSchema
 })
 
-#NetworkRules: close(core.#ScopeDefinition & {
+#NetworkRules: close(core.#Scope & {
 	#policies: {(#NetworkRulesPolicy.metadata.fqn): #NetworkRulesPolicy}
 })
-
-#NetworkRulesDefaults: close(schemas.#NetworkRuleSchema & {})

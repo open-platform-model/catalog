@@ -46,14 +46,5 @@ import (
 		},
 	], 1)
 
-	#declaredPolicies: list.FlattenN([
-		for _, transformer in transformers {
-			list.Concat([
-				[for fqn, _ in transformer.requiredPolicies {fqn}],
-				[for fqn, _ in transformer.optionalPolicies {fqn}],
-			])
-		},
-	], 1)
-
-	#allDefinitions: list.Concat([#declaredResources, #declaredTraits, #declaredPolicies])
+	#allDefinitions: list.Concat([#declaredResources, #declaredTraits])
 }

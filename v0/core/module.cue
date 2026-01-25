@@ -37,9 +37,6 @@ package core
 	// Module-level scopes (developer-defined, optional. May be added to by the platform-team)
 	#scopes?: [Id=string]: #Scope
 
-	// Module-level policies (developer-defined, optional. May be added to by the platform-team)
-	#policies?: [Id=string]: #Policy
-
 	// Value schema - constraints only, NO defaults
 	// Developers define the configuration contract
 	// Platform teams can add defaults and refine constraints via CUE merging
@@ -52,7 +49,7 @@ package core
 	values: _
 
 	// Status: Computed during CUE evaluation
-	// Has full access to: metadata, #components, #scopes, #policies, #spec, values
+	// Has full access to: metadata, #components, #scopes, #spec, values
 	// Use for: configuration summaries, derived health checks, validation status
 	// See: opm/specs/001-opm-cue-spec/subsystems/module-status.md
 	#status?: #ModuleStatus

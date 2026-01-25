@@ -62,6 +62,9 @@ package core
 
 	// Resources applied for this component
 	#resources: #ResourceMap
+	if len(#resources) == 0 {
+		_|_
+	}
 
 	// Traits applied to this component
 	#traits?: #TraitMap

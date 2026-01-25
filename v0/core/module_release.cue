@@ -22,9 +22,6 @@ package core
 	if _module.#scopes != _|_ {
 		scopes: _module.#scopes
 	}
-	if _module.#policies != _|_ {
-		scopes: _module.#policies
-	}
 
 	// Concrete values (everything closed/concrete)
 	// Must satisfy the value schema from #module.#spec

@@ -20,7 +20,7 @@ package core
 	}
 
 	// Modules included in this bundle (full references)
-	#modules!: #ModuleMap
+	#modules!: #CompiledModuleMap
 
 	// MUST be an OpenAPIv3 compatible schema
 	#values!: _
