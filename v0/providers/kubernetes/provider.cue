@@ -21,12 +21,12 @@ import (
 
 	// Transformer registry - maps transformer FQNs to transformer definitions
 	transformers: {
-		"transformer.opm.dev/workload@v1#DeploymentTransformer":  k8s_transformers.#DeploymentTransformer
-		"transformer.opm.dev/workload@v1#StatefulSetTransformer": k8s_transformers.#StatefulSetTransformer
-		"transformer.opm.dev/workload@v1#DaemonSetTransformer":   k8s_transformers.#DaemonSetTransformer
-		"transformer.opm.dev/workload@v1#JobTransformer":         k8s_transformers.#JobTransformer
-		"transformer.opm.dev/workload@v1#CronJobTransformer":     k8s_transformers.#CronJobTransformer
-		"transformer.opm.dev/network@v1#ServiceTransformer":      k8s_transformers.#ServiceTransformer
-		"transformer.opm.dev/storage@v1#PVCTransformer":          k8s_transformers.#PVCTransformer
+		"transformer.opm.dev/workload@v0#DeploymentTransformer":  k8s_transformers.#DeploymentTransformer
+		"transformer.opm.dev/workload@v0#StatefulSetTransformer": k8s_transformers.#StatefulSetTransformer
+		"transformer.opm.dev/workload@v0#DaemonSetTransformer":   k8s_transformers.#DaemonSetTransformer
+		"transformer.opm.dev/workload@v0#JobTransformer":         k8s_transformers.#JobTransformer
+		"transformer.opm.dev/workload@v0#CronJobTransformer":     k8s_transformers.#CronJobTransformer
+		"transformer.opm.dev/network@v0#ServiceTransformer":      k8s_transformers.#ServiceTransformer
+		"transformer.opm.dev/storage@v0#PVCTransformer":          k8s_transformers.#PVCTransformer
 	}
 }

@@ -47,32 +47,6 @@ package core
 	// Developers define these values but it can be overriden by the platform operator.
 	// The end-user's concrete values override this except if a platform operator has already defined them.
 	values: _
-
-	// Status: Computed during CUE evaluation
-	// Has full access to: metadata, #components, #scopes, #spec, values
-	// Use for: configuration summaries, derived health checks, validation status
-	// See: opm/specs/001-opm-cue-spec/subsystems/module-status.md
-	#status?: #ModuleStatus
 })
 
 #ModuleMap: [string]: #Module
-
-// #ModuleStatus: Status computed during CUE evaluation
-// Developers define what constitutes "healthy" and what details to expose
-// All expressions are pure CUE with full access to module structure
-#ModuleStatus: {
-	// Structured diagnostic information (key-value pairs)
-	// Only primitive types allowed for portability
-	details?: [string]: bool | int | string
-	// Overall health indicator
-	// Must evaluate to a concrete boolean
-	valid?: bool
-	// Human-readable status message
-	message?: string
-	// Module phase derived from health (convenience field)
-	phase?: "healthy" | "degraded" | "unknown"
-	// Composable Runtime Probes
-	// A map of probes that will be evaluated at runtime by the controller.
-	// The controller unifies live state into these probes to determine runtime health.
-	#probes?: #StatusProbeMap
-}

@@ -7,7 +7,6 @@ package core
 //   1. ALL requiredLabels are present on the component with matching values
 //   2. ALL requiredResources FQNs exist in component.#resources
 //   3. ALL requiredTraits FQNs exist in component.#traits
-//   4. ALL requiredPolicies FQNs exist in component.#policies
 //
 // Component labels are inherited from the union of labels from all attached
 // #resources, #traits, and #policies definitions.
@@ -40,6 +39,10 @@ package core
 	// will have it. Transformers requiring "stateful" won't match.
 	requiredLabels?: #LabelsAnnotationsType
 
+	// Labels optionally used by this transformer - component MAY include these
+	// If not provided, defaults from the definition can be used
+	optionalLabels?: #LabelsAnnotationsType
+
 	// Resources required by this transformer - component MUST include these
 	// Map key is the FQN, value is the Resource definition (provides access to #defaults)
 	requiredResources: [string]: _
@@ -57,13 +60,12 @@ package core
 	optionalTraits: [string]: _
 
 	// Transform function
-	// IMPORTANT: output must be a list of resources, even if only one resource is generated
-	// This allows for consistent handling and concatenation when multiple transformers match
+	// IMPORTANT: output must be a single resource
 	#transform: {
 		#component: #Component
 		#context:   #TransformerContext
 
-		output: [...] // Must be a list of provider-specific resources
+		output: {...} // Must be a single provider-specific resource
 	}
 }
 
@@ -71,8 +73,12 @@ package core
 #TransformerMap: [string]: #Transformer
 
 // Provider context passed to transformers
-// Simplified: Components now have metadata unified from Module in CUE
 #TransformerContext: close({
-	// Module name and version
-	name: string
+	name:      string
+	namespace: string
+	version:   string
+	provider:  string
+	timestamp: string // RFC3339
+	strict:    bool
+	labels:    {[string]: string} // Module-level tracking labels
 })

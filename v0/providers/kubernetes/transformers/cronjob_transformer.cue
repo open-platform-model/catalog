@@ -1,9 +1,9 @@
 package transformers
 
 import (
-	core "opm.dev/core@v1"
-	workload_resources "opm.dev/resources/workload@v1"
-	workload_traits "opm.dev/traits/workload@v1"
+	core "opm.dev/core@v0"
+	workload_resources "opm.dev/resources/workload@v0"
+	workload_traits "opm.dev/traits/workload@v0"
 )
 
 // CronJobTransformer converts scheduled task components to Kubernetes CronJobs
@@ -22,7 +22,7 @@ import (
 
 	// Required resources - Container MUST be present
 	requiredResources: {
-		"opm.dev/resources/workload@v1#Container": workload_resources.#ContainerResource
+		"opm.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
 	}
 
 	// No optional resources
@@ -30,24 +30,18 @@ import (
 
 	// Required traits - CronJobConfig is mandatory for CronJob
 	requiredTraits: {
-		"opm.dev/traits/workload@v1#CronJobConfig": workload_traits.#CronJobConfigTrait
+		"opm.dev/traits/workload@v0#CronJobConfig": workload_traits.#CronJobConfigTrait
 	}
 
 	// Optional traits
 	optionalTraits: {
-		"opm.dev/traits/workload@v1#RestartPolicy":      workload_traits.#RestartPolicyTrait
-		"opm.dev/traits/workload@v1#SidecarContainers":  workload_traits.#SidecarContainersTrait
-		"opm.dev/traits/workload@v1#InitContainers":     workload_traits.#InitContainersTrait
+		"opm.dev/traits/workload@v0#RestartPolicy":      workload_traits.#RestartPolicyTrait
+		"opm.dev/traits/workload@v0#SidecarContainers":  workload_traits.#SidecarContainersTrait
+		"opm.dev/traits/workload@v0#InitContainers":     workload_traits.#InitContainersTrait
 	}
 
-	// No required policies
-	requiredPolicies: {}
-
-	// No optional policies
-	optionalPolicies: {}
-
 	#transform: {
-		#component: core.#ComponentDefinition
+		#component: core.#Component
 		#context:   core.#TransformerContext
 
 		// Extract required Container resource (will be bottom if not present)
@@ -64,22 +58,22 @@ import (
 		}
 
 		// Extract optional sidecar and init containers with defaults
-		_sidecarContainers: *optionalTraits["opm.dev/traits/workload@v1#SidecarContainers"].#defaults | [...]
+		_sidecarContainers: *optionalTraits["opm.dev/traits/workload@v0#SidecarContainers"].#defaults | [...]
 		if #component.spec.sidecarContainers != _|_ {
 			_sidecarContainers: #component.spec.sidecarContainers
 		}
 
-		_initContainers: *optionalTraits["opm.dev/traits/workload@v1#InitContainers"].#defaults | [...]
+		_initContainers: *optionalTraits["opm.dev/traits/workload@v0#InitContainers"].#defaults | [...]
 		if #component.spec.initContainers != _|_ {
 			_initContainers: #component.spec.initContainers
 		}
 
-		output: [{
+		output: {
 			apiVersion: "batch/v1"
 			kind:       "CronJob"
 			metadata: {
 				name:      #component.metadata.name
-				namespace: #context.name | *"default"
+				namespace: #context.namespace | *"default"
 				labels: {
 					app:                      #component.metadata.name
 					"app.kubernetes.io/name": #component.metadata.name
@@ -100,17 +94,17 @@ import (
 					suspend: _cronConfig.suspend
 				}
 
-				concurrencyPolicy:          *requiredTraits["opm.dev/traits/workload@v1#CronJobConfig"].#defaults.concurrencyPolicy | string
+				concurrencyPolicy:          *requiredTraits["opm.dev/traits/workload@v0#CronJobConfig"].#defaults.concurrencyPolicy | string
 				if _cronConfig.concurrencyPolicy != _|_ {
 					concurrencyPolicy: _cronConfig.concurrencyPolicy
 				}
 
-				successfulJobsHistoryLimit: *requiredTraits["opm.dev/traits/workload@v1#CronJobConfig"].#defaults.successfulJobsHistoryLimit | int
+				successfulJobsHistoryLimit: *requiredTraits["opm.dev/traits/workload@v0#CronJobConfig"].#defaults.successfulJobsHistoryLimit | int
 				if _cronConfig.successfulJobsHistoryLimit != _|_ {
 					successfulJobsHistoryLimit: _cronConfig.successfulJobsHistoryLimit
 				}
 
-				failedJobsHistoryLimit: *requiredTraits["opm.dev/traits/workload@v1#CronJobConfig"].#defaults.failedJobsHistoryLimit | int
+				failedJobsHistoryLimit: *requiredTraits["opm.dev/traits/workload@v0#CronJobConfig"].#defaults.failedJobsHistoryLimit | int
 				if _cronConfig.failedJobsHistoryLimit != _|_ {
 					failedJobsHistoryLimit: _cronConfig.failedJobsHistoryLimit
 				}
@@ -135,6 +129,6 @@ import (
 					}
 				}
 			}
-		}]
+		}
 	}
 }

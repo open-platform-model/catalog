@@ -1,9 +1,9 @@
 package transformers
 
 import (
-	core "opm.dev/core@v1"
-	workload_resources "opm.dev/resources/workload@v1"
-	network_traits "opm.dev/traits/network@v1"
+	core "opm.dev/core@v0"
+	workload_resources "opm.dev/resources/workload@v0"
+	network_traits "opm.dev/traits/network@v0"
 )
 
 // ServiceTransformer creates Kubernetes Services from components with Expose trait
@@ -22,7 +22,7 @@ import (
 
 	// Required resources - Container MUST be present to know which ports to expose
 	requiredResources: {
-		"opm.dev/resources/workload@v1#Container": workload_resources.#ContainerResource
+		"opm.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
 	}
 
 	// No optional resources
@@ -30,20 +30,14 @@ import (
 
 	// Required traits - Expose is mandatory for Service creation
 	requiredTraits: {
-		"opm.dev/traits/networking@v1#Expose": network_traits.#ExposeTrait
+		"opm.dev/traits/networking@v0#Expose": network_traits.#ExposeTrait
 	}
 
 	// No optional traits
 	optionalTraits: {}
 
-	// No required policies
-	requiredPolicies: {}
-
-	// No optional policies
-	optionalPolicies: {}
-
 	#transform: {
-		#component: core.#ComponentDefinition
+		#component: core.#Component
 		#context:   core.#TransformerContext
 
 		// Extract required Container resource (will be bottom if not present)
@@ -68,12 +62,12 @@ import (
 		]
 
 		// Build Service resource
-		output: [{
+		output: {
 			apiVersion: "v1"
 			kind:       "Service"
 			metadata: {
 				name:      #component.metadata.name
-				namespace: #context.name | *"default"
+				namespace: #context.namespace | *"default"
 				labels: {
 					app:                      #component.metadata.name
 					"app.kubernetes.io/name": #component.metadata.name
@@ -96,6 +90,6 @@ import (
 
 				ports: _ports
 			}
-		}]
+		}
 	}
 }
