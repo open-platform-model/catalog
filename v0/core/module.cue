@@ -20,22 +20,27 @@ package core
 		description?:      string
 		labels?:           #LabelsAnnotationsType
 		annotations?:      #LabelsAnnotationsType
+
+		labels: #LabelsAnnotationsType & {
+			// Standard labels for module identification
+			"module.opmodel.dev/name":    "\(fqn)"
+			"module.opmodel.dev/version": "\(version)"
+		}
 	}
 
 	// Components defined in this module (developer-defined, required. May be added to by the platform-team)
 	#components: [Id=string]: #Component & {
 		metadata: {
 			name:      string | *Id
-			namespace: string | *metadata.defaultNamespace
 		}
 	}
 
 	// List of all components in this module
 	// Useful for scopes that want to apply to all components
-	#allComponentsList: [for _, c in #components {c}]
+	// #allComponentsList: [for _, c in #components {c}]
 
 	// Module-level scopes (developer-defined, optional. May be added to by the platform-team)
-	#scopes?: [Id=string]: #Scope
+	// #scopes?: [Id=string]: #Scope
 
 	// Value schema - constraints only, NO defaults
 	// Developers define the configuration contract
@@ -46,7 +51,7 @@ package core
 	// Concrete values - should contain sane default values
 	// Developers define these values but it can be overriden by the platform operator.
 	// The end-user's concrete values override this except if a platform operator has already defined them.
-	values: _
+	values: close(#spec)
 })
 
 #ModuleMap: [string]: #Module

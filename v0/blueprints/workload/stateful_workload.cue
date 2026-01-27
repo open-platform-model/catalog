@@ -12,7 +12,7 @@ import (
 //// StatefulWorkload Blueprint Definition
 /////////////////////////////////////////////////////////////////
 
-#StatefulWorkloadBlueprint: close(core.#BlueprintDefinition & {
+#StatefulWorkloadBlueprint: close(core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opm.dev/blueprints/core@v0"
 		name:        "StatefulWorkload"
@@ -40,7 +40,7 @@ import (
 	#spec: statefulWorkload: schemas.#StatefulWorkloadSchema
 })
 
-#StatefulWorkload: close(core.#ComponentDefinition & {
+#StatefulWorkload: close(core.#Component & {
 	#blueprints: (#StatefulWorkloadBlueprint.metadata.fqn): #StatefulWorkloadBlueprint
 
 	workload_resources.#Container

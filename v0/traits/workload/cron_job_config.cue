@@ -10,7 +10,7 @@ import (
 //// CronJobConfig Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#CronJobConfigTrait: close(core.#TraitDefinition & {
+#CronJobConfigTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opm.dev/traits/workload@v0"
 		name:        "CronJobConfig"
@@ -28,7 +28,7 @@ import (
 	#spec: cronJobConfig: schemas.#CronJobConfigSchema
 })
 
-#CronJobConfig: close(core.#ComponentDefinition & {
+#CronJobConfig: close(core.#Component & {
 	#traits: {(#CronJobConfigTrait.metadata.fqn): #CronJobConfigTrait}
 })
 

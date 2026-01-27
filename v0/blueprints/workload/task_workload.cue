@@ -11,7 +11,7 @@ import (
 //// TaskWorkload Blueprint Definition
 /////////////////////////////////////////////////////////////////
 
-#TaskWorkloadBlueprint: close(core.#BlueprintDefinition & {
+#TaskWorkloadBlueprint: close(core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opm.dev/blueprints/core@v0"
 		name:        "TaskWorkload"
@@ -36,7 +36,7 @@ import (
 	#spec: taskWorkload: schemas.#TaskWorkloadSchema
 })
 
-#TaskWorkload: close(core.#ComponentDefinition & {
+#TaskWorkload: close(core.#Component & {
 	#blueprints: (#TaskWorkloadBlueprint.metadata.fqn): #TaskWorkloadBlueprint
 
 	workload_resources.#Container

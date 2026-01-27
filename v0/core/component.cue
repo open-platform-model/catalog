@@ -10,15 +10,12 @@ package core
 	metadata: {
 		name!: string
 
-		// Namespace (typically unified from Module)
-		namespace?: string
-
 		// Component labels - unified from all attached resources, traits
 		// Labels are inherited from definitions and used for transformer matching.
 		// If definitions have conflicting labels, CUE unification will fail (automatic validation).
-		labels: {
-			// Labels explicitly set on the component
-			[string]: string | int | bool | [...(string | int | bool)]
+		labels: #LabelsAnnotationsType & {
+			// Standard label for component name
+			"component.opmodel.dev/name": name
 
 			// Inherit labels from resources
 			for _, resource in #resources if resource.metadata.labels != _|_ {
@@ -62,9 +59,9 @@ package core
 
 	// Resources applied for this component
 	#resources: #ResourceMap
-	if len(#resources) == 0 {
-		_|_
-	}
+	// if len(#resources) == 0 {
+	// 	_|_
+	// }
 
 	// Traits applied to this component
 	#traits?: #TraitMap
@@ -117,3 +114,85 @@ package core
 })
 
 #ComponentMap: [string]: #Component
+
+_testComponent: #Component & {
+	metadata: {
+		name: "basic-component"
+		labels: {
+			"core.opm.dev/workload-type": "stateless"
+		}
+	}
+
+	#resources: {
+		"opm.dev/resources/workload@v0/Container": close(#Resource & {
+			metadata: {
+				apiVersion:  "opm.dev/resources/workload@v0"
+				name:        "Container"
+				description: "A container definition for workloads"
+				labels: {
+					"core.opm.dev/category": "workload"
+				}
+			}
+			// OpenAPIv3-compatible schema defining the structure of the container spec
+			#spec: container: {
+				// Name of the container
+				name!: string
+
+				// Container image (e.g., "nginx:latest")
+				image!: string
+
+				// Image pull policy
+				imagePullPolicy: "Always" | "IfNotPresent" | "Never" | *"IfNotPresent"
+
+				// Environment variables for the container
+				env?: [string]: {
+					name:  string
+					value: string
+				}
+
+				// Command to run in the container
+				command?: [...string]
+
+				// Arguments to pass to the command
+				args?: [...string]
+
+				// Resource requirements for the container
+				resources?: {
+					limits?: {
+						cpu?:    string
+						memory?: string
+					}
+					requests?: {
+						cpu?:    string
+						memory?: string
+					}
+				}
+			}
+		})
+	}
+
+	// Compose resources and traits, providing concrete values for the spec.
+	spec: {
+		container: {
+			name:            "nginx-container"
+			image:           "nginx:latest"
+			imagePullPolicy: "IfNotPresent"
+			env: {
+				ENVIRONMENT: {
+					name:  "ENVIRONMENT"
+					value: "production"
+				}
+			}
+			resources: {
+				limits: {
+					cpu:    "500m"
+					memory: "256Mi"
+				}
+				requests: {
+					cpu:    "250m"
+					memory: "128Mi"
+				}
+			}
+		}
+	}
+}

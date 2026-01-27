@@ -63,7 +63,7 @@ package core
 	// IMPORTANT: output must be a single resource
 	#transform: {
 		#component: #Component
-		#context:   #TransformerContext
+		context:   #TransformerContext
 
 		output: {...} // Must be a single provider-specific resource
 	}
@@ -74,11 +74,38 @@ package core
 
 // Provider context passed to transformers
 #TransformerContext: close({
-	name:      string
-	namespace: string
-	version:   string
-	provider:  string
-	timestamp: string // RFC3339
-	strict:    bool
-	labels:    {[string]: string} // Module-level tracking labels
+	#moduleMetadata: _ // Injected during rendering
+	#componentMetadata: _ // Injected during rendering
+	name:      string // Injected during rendering
+	namespace: string // Injected during rendering
+
+	moduleLabels: {
+		if #moduleMetadata.labels != _|_ {#moduleMetadata.labels}
+	}
+
+	componentLabels: {
+		"app.kubernetes.io/instance":  "\(name)-\(namespace)"
+
+		if #componentMetadata.labels != _|_ {#componentMetadata.labels}
+	}
+
+	controllerLabels: {
+		"app.kubernetes.io/managed-by": "open-platform-model"
+		"app.kubernetes.io/name":       #componentMetadata.name
+		"app.kubernetes.io/version":    #moduleMetadata.version
+	}
+
+	labels: {[string]: string}
+	labels: {
+		for k, v in moduleLabels {
+			(k): "\(v)"
+		}
+		for k, v in componentLabels {
+			(k): "\(v)"
+		}
+		for k, v in controllerLabels {
+			(k): "\(v)"
+		}
+		...
+	}
 })

@@ -9,13 +9,13 @@ import (
 //// Volume Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#VolumesResource: close(core.#ResourceDefinition & {
+#VolumesResource: close(core.#Resource & {
 	metadata: {
 		apiVersion:  "opm.dev/resources/storage@v0"
 		name:        "Volumes"
 		description: "A volume definition for workloads"
 		labels: {
-			"core.opm.dev/category":    "storage"
+			// "core.opm.dev/category":    "storage"
 			"core.opm.dev/persistence": "true"
 		}
 	}
@@ -27,7 +27,7 @@ import (
 	#spec: volumes: [volumeName=string]: schemas.#VolumeSchema & {name: string | *volumeName}
 })
 
-#Volumes: close(core.#ComponentDefinition & {
+#Volumes: close(core.#Component & {
 	#resources: {(#VolumesResource.metadata.fqn): #VolumesResource}
 })
 

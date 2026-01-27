@@ -10,7 +10,7 @@ import (
 //// UpdateStrategy Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#UpdateStrategyTrait: close(core.#TraitDefinition & {
+#UpdateStrategyTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opm.dev/traits/workload@v0"
 		name:        "UpdateStrategy"
@@ -28,7 +28,7 @@ import (
 	#spec: updateStrategy: schemas.#UpdateStrategySchema
 })
 
-#UpdateStrategy: close(core.#ComponentDefinition & {
+#UpdateStrategy: close(core.#Component & {
 	#traits: {(#UpdateStrategyTrait.metadata.fqn): #UpdateStrategyTrait}
 })
 

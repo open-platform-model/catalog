@@ -9,7 +9,8 @@ import (
 
 #VersionType: string & =~"^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
 
-// FQN (Fully Qualified Name) format: <repo-path>@v<major>#<Name>
+// FQN (Fully Qualified Name) format: <domain>[/path]@v<major>#<Name>
+// Example: opm.dev@v0#Container
 // Example: opm.dev/elements@v1#Container
 // Example: github.com/myorg/elements@v1#CustomWorkload
-#FQNType: string & =~"^([a-z0-9.-]+(?:/[a-z0-9.-]+)+)@v([0-9]+)#([A-Z][a-zA-Z0-9]*)$"
+#FQNType: string & =~"^([a-z0-9.-]+(?:/[a-z0-9.-]+)*)@v([0-9]+)#([A-Z][a-zA-Z0-9]*)$"

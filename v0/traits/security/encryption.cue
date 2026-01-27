@@ -9,7 +9,7 @@ import (
 //// Encryption Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#EncryptionTrait: close(core.#TraitDefinition & {
+#EncryptionTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opm.dev/traits/security@v0"
 		name:        "Encryption"
@@ -27,7 +27,7 @@ import (
 	}
 })
 
-#Encryption: close(core.#ComponentDefinition & {
+#Encryption: close(core.#Component & {
 	#traits: {(#EncryptionTrait.metadata.fqn): #EncryptionTrait}
 })
 

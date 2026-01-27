@@ -10,7 +10,7 @@ import (
 //// HealthCheck Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#HealthCheckTrait: close(core.#TraitDefinition & {
+#HealthCheckTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opm.dev/traits/workload@v0"
 		name:        "HealthCheck"
@@ -28,7 +28,7 @@ import (
 	#spec: healthCheck: schemas.#HealthCheckSchema
 })
 
-#HealthCheck: close(core.#ComponentDefinition & {
+#HealthCheck: close(core.#Component & {
 	#traits: {(#HealthCheckTrait.metadata.fqn): #HealthCheckTrait}
 })
 

@@ -10,7 +10,7 @@ import (
 //// SidecarContainers Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#SidecarContainersTrait: close(core.#TraitDefinition & {
+#SidecarContainersTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opm.dev/traits/workload@v0"
 		name:        "SidecarContainers"
@@ -28,7 +28,7 @@ import (
 	#spec: sidecarContainers: schemas.#SidecarContainersSchema
 })
 
-#SidecarContainers: close(core.#ComponentDefinition & {
+#SidecarContainers: close(core.#Component & {
 	#traits: {(#SidecarContainersTrait.metadata.fqn): #SidecarContainersTrait}
 })
 

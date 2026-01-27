@@ -11,7 +11,7 @@ import (
 //// ScheduledTaskWorkload Blueprint Definition
 /////////////////////////////////////////////////////////////////
 
-#ScheduledTaskWorkloadBlueprint: close(core.#BlueprintDefinition & {
+#ScheduledTaskWorkloadBlueprint: close(core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opm.dev/blueprints/core@v0"
 		name:        "ScheduledTaskWorkload"
@@ -36,7 +36,7 @@ import (
 	#spec: scheduledTaskWorkload: schemas.#ScheduledTaskWorkloadSchema
 })
 
-#ScheduledTaskWorkload: close(core.#ComponentDefinition & {
+#ScheduledTaskWorkload: close(core.#Component & {
 	#blueprints: (#ScheduledTaskWorkloadBlueprint.metadata.fqn): #ScheduledTaskWorkloadBlueprint
 
 	workload_resources.#Container

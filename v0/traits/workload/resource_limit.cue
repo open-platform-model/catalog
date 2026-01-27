@@ -10,7 +10,7 @@ import (
 //// ResourceLimit Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#ResourceLimitTrait: close(core.#TraitDefinition & {
+#ResourceLimitTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opm.dev/traits/workload@v0"
 		name:        "ResourceLimit"
@@ -28,7 +28,7 @@ import (
 	#spec: resourceLimit: schemas.#ResourceLimitSchema
 })
 
-#ResourceLimit: close(core.#ComponentDefinition & {
+#ResourceLimit: close(core.#Component & {
 	#traits: {(#ResourceLimitTrait.metadata.fqn): #ResourceLimitTrait}
 })
 

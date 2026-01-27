@@ -10,13 +10,13 @@ import (
 //// Expose Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#ExposeTrait: close(core.#TraitDefinition & {
+#ExposeTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opm.dev/traits/networking@v0"
 		name:        "Expose"
 		description: "A trait to expose a workload via a service"
 		labels: {
-			"core.opm.dev/category": "networking"
+			// "core.opm.dev/category": "networking"
 		}
 	}
 
@@ -28,7 +28,7 @@ import (
 	#spec: expose: schemas.#ExposeSchema
 })
 
-#Expose: close(core.#ComponentDefinition & {
+#Expose: close(core.#Component & {
 	#traits: {(#ExposeTrait.metadata.fqn): #ExposeTrait}
 })
 

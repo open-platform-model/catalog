@@ -26,7 +26,7 @@ import (
 	// }
 	transformers: #TransformerMap
 
-	// All resources, traits, and policies declared by transformers
+	// All resources, traits declared by transformers
 	// Extract FQNs from the map keys
 	#declaredResources: list.FlattenN([
 		for _, transformer in transformers {
@@ -46,5 +46,6 @@ import (
 		},
 	], 1)
 
-	#allDefinitions: list.Concat([#declaredResources, #declaredTraits])
+	#declaredDefinitions: list.Concat([#declaredResources, #declaredTraits])
+	...
 }

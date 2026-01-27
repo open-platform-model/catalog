@@ -12,7 +12,7 @@ import (
 //// SimpleDatabase Blueprint Definition
 /////////////////////////////////////////////////////////////////
 
-#SimpleDatabaseBlueprint: close(core.#BlueprintDefinition & {
+#SimpleDatabaseBlueprint: close(core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opm.dev/blueprints/data@v0"
 		name:        "SimpleDatabase"
@@ -37,7 +37,7 @@ import (
 	#spec: simpleDatabase: schemas.#SimpleDatabaseSchema
 })
 
-#SimpleDatabase: close(core.#ComponentDefinition & {
+#SimpleDatabase: close(core.#Component & {
 	#blueprints: (#SimpleDatabaseBlueprint.metadata.fqn): #SimpleDatabaseBlueprint
 
 	workload_resources.#Container

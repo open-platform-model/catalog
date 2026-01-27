@@ -10,7 +10,7 @@ import (
 //// Replicas Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#ReplicasTrait: close(core.#TraitDefinition & {
+#ReplicasTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opm.dev/traits/scaling@v0"
 		name:        "Replicas"
@@ -28,7 +28,7 @@ import (
 	#spec: replicas: schemas.#ReplicasSchema
 })
 
-#Replicas: close(core.#ComponentDefinition & {
+#Replicas: close(core.#Component & {
 	#traits: {(#ReplicasTrait.metadata.fqn): #ReplicasTrait}
 })
 

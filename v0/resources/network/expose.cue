@@ -9,7 +9,7 @@ import (
 //// Expose Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#ExposeResource: close(core.#ResourceDefinition & {
+#ExposeResource: close(core.#Resource & {
 	metadata: {
 		apiVersion:  "opm.dev/resources/network@v0"
 		name:        "Expose"
@@ -25,7 +25,7 @@ import (
 	#spec: expose: schemas.#ExposeSchema
 })
 
-#Expose: close(core.#ComponentDefinition & {
+#Expose: close(core.#Component & {
 	#resources: {(#ExposeResource.metadata.fqn): #ExposeResource}
 })
 

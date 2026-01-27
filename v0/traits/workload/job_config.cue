@@ -10,7 +10,7 @@ import (
 //// JobConfig Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#JobConfigTrait: close(core.#TraitDefinition & {
+#JobConfigTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opm.dev/traits/workload@v0"
 		name:        "JobConfig"
@@ -28,7 +28,7 @@ import (
 	#spec: jobConfig: schemas.#JobConfigSchema
 })
 
-#JobConfig: close(core.#ComponentDefinition & {
+#JobConfig: close(core.#Component & {
 	#traits: {(#JobConfigTrait.metadata.fqn): #JobConfigTrait}
 })
 

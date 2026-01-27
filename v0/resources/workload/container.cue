@@ -9,13 +9,13 @@ import (
 //// Container Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#ContainerResource: close(core.#ResourceDefinition & {
+#ContainerResource: close(core.#Resource & {
 	metadata: {
 		apiVersion:  "opm.dev/resources/workload@v0"
 		name:        "Container"
 		description: "A container definition for workloads"
 		labels: {
-			"core.opm.dev/category": "workload"
+			// "core.opm.dev/category": "workload"
 		}
 	}
 
@@ -26,7 +26,7 @@ import (
 	#spec: container: schemas.#ContainerSchema
 })
 
-#Container: close(core.#ComponentDefinition & {
+#Container: close(core.#Component & {
 	metadata: labels: {
 		"core.opm.dev/workload-type"!: "stateless" | "stateful" | "daemon" | "task" | "scheduled-task"
 		...

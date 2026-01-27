@@ -26,30 +26,36 @@ vars:
       path: core
       enabled: true
       desc: "Core OPM definitions (no deps)"
+
     - name: schemas
       path: schemas
       enabled: true
       desc: "Shared schemas (no deps)"
+
     - name: resources
       path: resources
       enabled: true
       desc: "Resource implementations"
+
     - name: traits
       path: traits
       enabled: true
       desc: "Trait implementations"
+
     - name: blueprints
       path: blueprints
       enabled: false
       desc: "Blueprint implementations"
+
     - name: policies
       path: policies
       enabled: true
       desc: "Policy implementations"
-    - name: statusprobes
-      path: statusprobes
-      enabled: false
-      desc: "Status probe implementations"
+
+    - name: examples
+      path: examples
+      enabled: true
+      desc: "Example implementations"
 
 tasks:
   default:

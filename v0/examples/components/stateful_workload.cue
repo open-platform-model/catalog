@@ -1,0 +1,119 @@
+package components
+
+import (
+	core "opm.dev/core@v0"
+	workload_resources "opm.dev/resources/workload@v0"
+	storage_resources "opm.dev/resources/storage@v0"
+	workload_traits "opm.dev/traits/workload@v0"
+)
+
+/////////////////////////////////////////////////////////////////
+//// Stateful Workload Example
+/////////////////////////////////////////////////////////////////
+
+statefulWorkload: core.#Component & {
+	metadata: {
+		name: "stateful-workload"
+		labels: {
+			"core.opm.dev/workload-type": "stateful"
+		}
+	}
+
+	// Compose resources and traits using helpers
+	workload_resources.#Container
+	storage_resources.#Volumes
+	workload_traits.#Replicas
+	workload_traits.#RestartPolicy
+	workload_traits.#UpdateStrategy
+	workload_traits.#HealthCheck
+	workload_traits.#InitContainers
+
+	spec: {
+		replicas: int | *1
+		restartPolicy: "Always"
+		updateStrategy: {
+			type: "RollingUpdate"
+			rollingUpdate: {
+				maxUnavailable: 1
+				partition:      0
+			}
+		}
+		healthCheck: {
+			livenessProbe: {
+				exec: {
+					command: ["pg_isready", "-U", "admin"]
+				}
+				initialDelaySeconds: 30
+				periodSeconds:       10
+				timeoutSeconds:      5
+				failureThreshold:    3
+			}
+			readinessProbe: {
+				exec: {
+					command: ["pg_isready", "-U", "admin"]
+				}
+				initialDelaySeconds: 5
+				periodSeconds:       10
+				timeoutSeconds:      1
+				failureThreshold:    3
+			}
+		}
+		initContainers: [{
+			name:  "init-db"
+			image: string | *"postgres:14"
+			env: {
+				PGHOST: {
+					name:  "PGHOST"
+					value: "localhost"
+				}
+			}
+		}]
+		container: {
+			name:            "postgres"
+			image:           string | *"postgres:14"
+			imagePullPolicy: "IfNotPresent"
+			ports: {
+				postgres: {
+					name:       "postgres"
+					targetPort: 5432
+				}
+			}
+			env: {
+				POSTGRES_DB: {
+					name:  "POSTGRES_DB"
+					value: "myapp"
+				}
+				POSTGRES_USER: {
+					name:  "POSTGRES_USER"
+					value: "admin"
+				}
+				POSTGRES_PASSWORD: {
+					name:  "POSTGRES_PASSWORD"
+					value: "secretpassword"
+				}
+			}
+			resources: {
+				requests: {
+					cpu:    "500m"
+					memory: "1Gi"
+				}
+				limits: {
+					cpu:    "2000m"
+					memory: "4Gi"
+				}
+			}
+			volumeMounts: {
+				data: {
+					name:      "data"
+					mountPath: "/var/lib/postgresql/data"
+				}
+			}
+		}
+		volumes: data: {
+			name: "data"
+			persistentClaim: {
+				size: "10Gi"
+			}
+		}
+	}
+}
