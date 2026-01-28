@@ -17,33 +17,27 @@ package core
 		version:      #module.metadata.version
 
 		labels: {
-			if #module.metadata.labels != _|_ {
-				for k, v in #module.metadata.labels {
-					(k): v
-				}
-			}
+			if #module.metadata.labels != _|_ {#module.metadata.labels}
 		}
 		annotations: {
-			if #module.metadata.annotations != _|_ {
-				for k, v in #module.metadata.annotations {
-					(k): v
-				}
-			}
+			if #module.metadata.annotations != _|_ {#module.metadata.annotations}
 		}
 	}
 
 	// Reference to the Module to deploy
-	#module!: #CompiledModule | #Module
+	#module!: #Module
 
+	// Components defined in this module release
 	components: #module.#components
 
-	// if #module.#scopes != _|_ {
-	// 	scopes: #module.#scopes
-	// }
+	// Module-level scopes (if any)
+	if #module.#scopes != _|_ {
+		scopes: #module.#scopes
+	}
 
 	// Concrete values (everything closed/concrete)
-	// Must satisfy the value schema from #module.#spec
-	values: close(#module.#spec)
+	// Must satisfy the value schema from #module.config
+	values: close(#module.config)
 
 	// if #module.#status != _|_ {status: #module.#status}
 	// status?: close({

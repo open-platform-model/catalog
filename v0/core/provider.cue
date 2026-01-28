@@ -49,3 +49,44 @@ import (
 	#declaredDefinitions: list.Concat([#declaredResources, #declaredTraits])
 	...
 }
+
+// #MatchTransformers computes the matching plan for a render pipeline.
+// Maps each transformer to its list of matched components.
+// Corresponds to Phase 3 (Component Matching) of the render pipeline (013-cli-render-spec).
+//
+// The output is a map where:
+//   - Keys are transformer IDs (same as provider.transformers keys)
+//   - Values contain the transformer definition and list of matching components
+//   - Only transformers with at least one match are included
+//
+// Usage:
+//   let plan = (#MatchTransformers & {provider: myProvider, module: myRelease}).out
+//   for transformerID, match in plan {
+//       // match.transformer: the transformer definition
+//       // match.components: list of components that matched
+//   }
+#MatchTransformers: {
+	provider: #Provider
+	module:   #ModuleRelease
+
+	out: {
+		// Iterate over all transformers in the provider
+		for tID, t in provider.transformers {
+			// Find all components in the module that match this transformer
+			let matches = [
+				for _, c in module.components
+				if (#Matches & {transformer: t, component: c}).result {
+					c
+				},
+			]
+
+			// Only include this transformer if it matched at least one component
+			if len(matches) > 0 {
+				(tID): {
+					transformer: t
+					components:  matches
+				}
+			}
+		}
+	}
+}

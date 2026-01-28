@@ -40,18 +40,18 @@ package core
 	// #allComponentsList: [for _, c in #components {c}]
 
 	// Module-level scopes (developer-defined, optional. May be added to by the platform-team)
-	// #scopes?: [Id=string]: #Scope
+	#scopes?: [Id=string]: #Scope
 
 	// Value schema - constraints only, NO defaults
 	// Developers define the configuration contract
 	// Platform teams can add defaults and refine constraints via CUE merging
 	// MUST be OpenAPIv3 compliant (no CUE templating - for/if statements)
-	#spec: _
+	config: _
 
 	// Concrete values - should contain sane default values
 	// Developers define these values but it can be overriden by the platform operator.
 	// The end-user's concrete values override this except if a platform operator has already defined them.
-	values: close(#spec)
+	values: close(config)
 })
 
 #ModuleMap: [string]: #Module

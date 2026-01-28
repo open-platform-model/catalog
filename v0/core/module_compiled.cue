@@ -22,7 +22,7 @@ package core
 	// Value schema (preserved from Module)
 	#spec: _
 
-	// Concerete values (preserved from Module)
+	// Concrete values (preserved from Module)
 	values: _
 
 	#status?: {
