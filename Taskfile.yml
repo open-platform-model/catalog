@@ -52,6 +52,11 @@ vars:
       enabled: true
       desc: "Policy implementations"
 
+    - name: providers
+      path: providers
+      enabled: true
+      desc: "Provider implementations"
+
     - name: examples
       path: examples
       enabled: true
