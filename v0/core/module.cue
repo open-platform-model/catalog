@@ -43,14 +43,12 @@ package core
 	#scopes?: [Id=string]: #Scope
 
 	// Value schema - constraints only, NO defaults
-	// Developers define the configuration contract
-	// Platform teams can add defaults and refine constraints via CUE merging
+	// Developers define the configuration contract and reference it in their components.
 	// MUST be OpenAPIv3 compliant (no CUE templating - for/if statements)
 	config: _
 
 	// Concrete values - should contain sane default values
 	// Developers define these values but it can be overriden by the platform operator.
-	// The end-user's concrete values override this except if a platform operator has already defined them.
 	values: close(config)
 })
 

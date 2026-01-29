@@ -38,33 +38,6 @@ package core
 	// Concrete values (everything closed/concrete)
 	// Must satisfy the value schema from #module.config
 	values: close(#module.config)
-
-	// if #module.#status != _|_ {status: #module.#status}
-	// status?: close({
-	// 	// Deployment lifecycle phase
-	// 	phase: "pending" | "deployed" | "failed" | "unknown" | *"pending"
-
-	// 	// Human-readable status message
-	// 	message?: string
-
-	// 	// Detailed status conditions (Kubernetes-style)
-	// 	conditions?: [...{
-	// 		type:                string // e.g., "Available", "Progressing", "Degraded"
-	// 		status:              "True" | "False" | "Unknown"
-	// 		reason?:             string
-	// 		message?:            string
-	// 		lastTransitionTime?: string // ISO 8601 timestamp
-	// 	}]
-
-	// 	// Deployment timestamp
-	// 	deployedAt?: string // ISO 8601 timestamp
-
-	// 	// Resources created by this release
-	// 	resources?: {
-	// 		count?: int
-	// 		kinds?: [...string]
-	// 	}
-	// })
 })
 
 #ModuleReleaseMap: [string]: #ModuleRelease
