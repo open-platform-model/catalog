@@ -11,13 +11,13 @@ package core
 // Component labels are inherited from the union of labels from all attached
 // #resources, #traits, and #policies definitions.
 #Transformer: {
-	apiVersion: "opm.dev/core/v0"
+	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Transformer"
 
 	metadata: {
-		apiVersion!: #NameType                          // Example: "opm.dev/transformers/kubernetes@v0"
+		apiVersion!: #NameType                          // Example: "opmodel.dev/transformers/kubernetes@v0"
 		name!:       #NameType                          // Example: "DeploymentTransformer"
-		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opm.dev/transformers/kubernetes@v0#DeploymentTransformer"
+		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opmodel.dev/transformers/kubernetes@v0#DeploymentTransformer"
 
 		description!: string // A brief description of what this transformer produces
 
@@ -33,7 +33,7 @@ package core
 	// #resources, #traits, and #policies.
 	//
 	// Example: A DeploymentTransformer requires stateless workloads:
-	//   requiredLabels: {"core.opm.dev/workload-type": "stateless"}
+	//   requiredLabels: {"core.opmodel.dev/workload-type": "stateless"}
 	//
 	// The Container resource defines this label, so components with Container
 	// will have it. Transformers requiring "stateful" won't match.
@@ -111,7 +111,7 @@ package core
 })
 
 // #Matches evaluates whether a transformer's requirements are satisfied by a component.
-// Implements the ALL-match semantics from 013-cli-render-spec Section 4:
+// Implements the ALL-match semantics from 004-render-and-lifecycle-spec Section 4:
 //   1. ALL requiredLabels present on component with matching values
 //   2. ALL requiredResources FQNs exist in component.#resources
 //   3. ALL requiredTraits FQNs exist in component.#traits

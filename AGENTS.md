@@ -2,7 +2,7 @@
 
 ## Overview
 
-Core OPM CUE definitions published as `opm.dev/core@v0`. Contains schemas for all definition types.
+Core OPM CUE definitions published as `opmodel.dev/core@v0`. Contains schemas for all definition types.
 
 ## Build/Test Commands
 
@@ -34,7 +34,7 @@ Core OPM CUE definitions published as `opm.dev/core@v0`. Contains schemas for al
 ## Project Structure
 
 ```text
-├── v0/                # Core CUE definitions (opm.dev/core@v0)
+├── v0/                # Core CUE definitions (opmodel.dev/core@v0)
 │   ├── cue.mod/       # CUE module configuration
 │   ├── module.cue     # ModuleDefinition, Module, ModuleRelease
 │   ├── component.cue  # Component schema
@@ -64,7 +64,7 @@ Core OPM CUE definitions published as `opm.dev/core@v0`. Contains schemas for al
 
 ## Patterns
 
-- FQN format: `"{apiVersion}#{name}"` (e.g., `"opm.dev/core@v1#Container"`)
+- FQN format: `"{apiVersion}#{name}"` (e.g., `"opmodel.dev/core@v1#Container"`)
 - Function pattern: `#Func: {X1="in": {...}, out: {...}}`
 - Closed definitions: Use `close({...})` to prevent extra fields
 

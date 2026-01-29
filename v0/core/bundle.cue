@@ -5,13 +5,13 @@ package core
 // Bundles can contain multiple modules, each representing a set of
 // definitions (resources, traits, blueprints, policies, scopes).
 #Bundle: close({
-	apiVersion: "opm.dev/core/v0"
+	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Bundle"
 
 	metadata: {
-		apiVersion!: #NameType                          // Example: "opm.dev/bundles/core@v0"
+		apiVersion!: #NameType                          // Example: "opmodel.dev/bundles/core@v0"
 		name!:       #NameType                          // Example: "ExampleBundle"
-		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opm.dev/bundles/core@v0#ExampleBundle"
+		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opmodel.dev/bundles/core@v0#ExampleBundle"
 
 		// Human-readable description of the bundle
 		description?: string

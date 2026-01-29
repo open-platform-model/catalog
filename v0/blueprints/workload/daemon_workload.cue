@@ -1,10 +1,10 @@
 package workload
 
 import (
-	core "opm.dev/core@v0"
-	schemas "opm.dev/schemas@v0"
-	workload_resources "opm.dev/resources/workload@v0"
-	workload_traits "opm.dev/traits/workload@v0"
+	core "opmodel.dev/core@v0"
+	schemas "opmodel.dev/schemas@v0"
+	workload_resources "opmodel.dev/resources/workload@v0"
+	workload_traits "opmodel.dev/traits/workload@v0"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -13,12 +13,12 @@ import (
 
 #DaemonWorkloadBlueprint: close(core.#Blueprint & {
 	metadata: {
-		apiVersion:  "opm.dev/blueprints/core@v0"
+		apiVersion:  "opmodel.dev/blueprints/core@v0"
 		name:        "DaemonWorkload"
 		description: "A daemon workload that runs on all (or selected) nodes in a cluster"
 		labels: {
-			"core.opm.dev/category":      "workload"
-			"core.opm.dev/workload-type": "daemon"
+			"core.opmodel.dev/category":      "workload"
+			"core.opmodel.dev/workload-type": "daemon"
 		}
 	}
 

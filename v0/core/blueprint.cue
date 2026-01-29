@@ -8,20 +8,20 @@ import (
 // that composes resources and traits into a higher-level abstraction.
 // Blueprints enable standardized configurations for common use cases.
 #Blueprint: close({
-	apiVersion: "opm.dev/core/v0"
+	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Blueprint"
 
 	metadata: {
-		apiVersion!: #NameType                          // Example: "opm.dev/blueprints@v0"
+		apiVersion!: #NameType                          // Example: "opmodel.dev/blueprints@v0"
 		name!:       #NameType                          // Example: "StatelessWorkload"
-		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opm.dev/blueprints@v0#StatelessWorkload"
+		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opmodel.dev/blueprints@v0#StatelessWorkload"
 
 		// Human-readable description of the definition
 		description?: string
 
 		// Optional metadata labels for categorization and filtering
 		// Labels are used by OPM for definition selection and matching
-		// Example: {"core.opm.dev/workload-type": "stateless"}
+		// Example: {"core.opmodel.dev/workload-type": "stateless"}
 		labels?: #LabelsAnnotationsType
 
 		// Optional metadata annotations for definition behavior hints (not used for categorization)

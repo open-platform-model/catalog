@@ -8,13 +8,13 @@ package core
 // initialize new OPM modules. Templates provide starting points for
 // different use cases and complexity levels.
 #TemplateDefinition: close({
-	apiVersion: #NameType & "opm.dev/core/v0"
+	apiVersion: #NameType & "opmodel.dev/core/v0"
 	kind:       #NameType & "Template"
 
 	metadata: {
-		apiVersion!: #NameType                          // Example: "templates.opm.dev/core@v1"
+		apiVersion!: #NameType                          // Example: "templates.opmodel.dev/core@v1"
 		name!:       #NameType                          // Example: "Standard"
-		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "templates.opm.dev/core@v1#Standard"
+		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "templates.opmodel.dev/core@v1#Standard"
 
 		// Template category: "module" or "bundle"
 		category!: "module" | "bundle"

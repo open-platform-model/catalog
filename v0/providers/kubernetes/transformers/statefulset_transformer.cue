@@ -1,29 +1,29 @@
 package transformers
 
 import (
-	core "opm.dev/core@v0"
-	workload_resources "opm.dev/resources/workload@v0"
-	workload_traits "opm.dev/traits/workload@v0"
+	core "opmodel.dev/core@v0"
+	workload_resources "opmodel.dev/resources/workload@v0"
+	workload_traits "opmodel.dev/traits/workload@v0"
 	"list"
 )
 
 // StatefulSetTransformer converts stateful workload components to Kubernetes StatefulSets
 #StatefulSetTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opm.dev/providers/kubernetes/transformers@v1"
+		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v1"
 		name:        "StatefulSetTransformer"
 		description: "Converts stateful workload components to Kubernetes StatefulSets"
 
 		labels: {
-			"core.opm.dev/workload-type": "stateful"
-			"core.opm.dev/resource-type": "statefulset"
-			"core.opm.dev/priority":      "10"
+			"core.opmodel.dev/workload-type": "stateful"
+			"core.opmodel.dev/resource-type": "statefulset"
+			"core.opmodel.dev/priority":      "10"
 		}
 	}
 
 	// Required resources - Container MUST be present
 	requiredResources: {
-		"opm.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
+		"opmodel.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
 	}
 
 	// No optional resources
@@ -34,12 +34,12 @@ import (
 
 	// Optional traits that enhance statefulset behavior
 	optionalTraits: {
-		"opm.dev/traits/scaling@v0#Replicas":            workload_traits.#ReplicasTrait
-		"opm.dev/traits/workload@v0#RestartPolicy":      workload_traits.#RestartPolicyTrait
-		"opm.dev/traits/workload@v0#UpdateStrategy":     workload_traits.#UpdateStrategyTrait
-		"opm.dev/traits/workload@v0#HealthCheck":        workload_traits.#HealthCheckTrait
-		"opm.dev/traits/workload@v0#SidecarContainers":  workload_traits.#SidecarContainersTrait
-		"opm.dev/traits/workload@v0#InitContainers":     workload_traits.#InitContainersTrait
+		"opmodel.dev/traits/scaling@v0#Replicas":            workload_traits.#ReplicasTrait
+		"opmodel.dev/traits/workload@v0#RestartPolicy":      workload_traits.#RestartPolicyTrait
+		"opmodel.dev/traits/workload@v0#UpdateStrategy":     workload_traits.#UpdateStrategyTrait
+		"opmodel.dev/traits/workload@v0#HealthCheck":        workload_traits.#HealthCheckTrait
+		"opmodel.dev/traits/workload@v0#SidecarContainers":  workload_traits.#SidecarContainersTrait
+		"opmodel.dev/traits/workload@v0#InitContainers":     workload_traits.#InitContainersTrait
 	}
 
 	#transform: {
@@ -50,12 +50,12 @@ import (
 		_container: #component.spec.container
 
 		// Apply defaults for optional traits
-		_replicas: *optionalTraits["opm.dev/traits/scaling@v0#Replicas"].#defaults | int
+		_replicas: *optionalTraits["opmodel.dev/traits/scaling@v0#Replicas"].#defaults | int
 		if #component.spec.replicas != _|_ {
 			_replicas: #component.spec.replicas
 		}
 
-		_restartPolicy: *optionalTraits["opm.dev/traits/workload@v0#RestartPolicy"].#defaults | string
+		_restartPolicy: *optionalTraits["opmodel.dev/traits/workload@v0#RestartPolicy"].#defaults | string
 		if #component.spec.restartPolicy != _|_ {
 			_restartPolicy: #component.spec.restartPolicy
 		}
@@ -71,7 +71,7 @@ import (
 		}
 
 		// Build container list (main container + optional sidecars)
-		_sidecarContainers: *optionalTraits["opm.dev/traits/workload@v0#SidecarContainers"].#defaults | [...]
+		_sidecarContainers: *optionalTraits["opmodel.dev/traits/workload@v0#SidecarContainers"].#defaults | [...]
 		if #component.spec.sidecarContainers != _|_ {
 			_sidecarContainers: #component.spec.sidecarContainers
 		}
@@ -82,7 +82,7 @@ import (
 		])
 
 		// Extract init containers with defaults
-		_initContainers: *optionalTraits["opm.dev/traits/workload@v0#InitContainers"].#defaults | [...]
+		_initContainers: *optionalTraits["opmodel.dev/traits/workload@v0#InitContainers"].#defaults | [...]
 		if #component.spec.initContainers != _|_ {
 			_initContainers: #component.spec.initContainers
 		}

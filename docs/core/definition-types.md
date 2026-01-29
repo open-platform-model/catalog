@@ -56,11 +56,11 @@ Ask yourself:
 
 ```cue
 #Resource: {
-    apiVersion: "opm.dev/core"
+    apiVersion: "opmodel.dev/core"
     kind:       "Resource"
 
     metadata: {
-        apiVersion!:  string  // e.g., "opm.dev/resources/workload@v0"
+        apiVersion!:  string  // e.g., "opmodel.dev/resources/workload@v0"
         name!:        string  // e.g., "Container"
         fqn:          string  // Computed: "{apiVersion}#{name}"
         description?: string
@@ -77,11 +77,11 @@ Ask yourself:
 ```cue
 #ContainerResource: core.#Resource & {
     metadata: {
-        apiVersion:  "opm.dev/resources/workload@v0"
+        apiVersion:  "opmodel.dev/resources/workload@v0"
         name:        "Container"
         description: "A container definition for workloads"
         labels: {
-            "core.opm.dev/category": "workload"
+            "core.opmodel.dev/category": "workload"
         }
     }
 
@@ -124,11 +124,11 @@ Ask yourself:
 
 ```cue
 #Trait: {
-    apiVersion: "opm.dev/core"
+    apiVersion: "opmodel.dev/core"
     kind:       "Trait"
 
     metadata: {
-        apiVersion!:  string  // e.g., "opm.dev/traits/scaling@v0"
+        apiVersion!:  string  // e.g., "opmodel.dev/traits/scaling@v0"
         name!:        string  // e.g., "Replicas"
         fqn:          string  // Computed: "{apiVersion}#{name}"
         description?: string
@@ -155,7 +155,7 @@ Trait → appliesTo → Resource
 ```cue
 #ReplicasTrait: core.#Trait & {
     metadata: {
-        apiVersion:  "opm.dev/traits/scaling@v0"
+        apiVersion:  "opmodel.dev/traits/scaling@v0"
         name:        "Replicas"
         description: "Number of replicas for a workload"
     }
@@ -213,11 +213,11 @@ Ask yourself:
 
 ```cue
 #Policy: {
-    apiVersion: "opm.dev/core"
+    apiVersion: "opmodel.dev/core"
     kind:       "Policy"
 
     metadata: {
-        apiVersion!:  string  // e.g., "opm.dev/policies/security@v0"
+        apiVersion!:  string  // e.g., "opmodel.dev/policies/security@v0"
         name!:        string  // e.g., "Encryption"
         fqn:          string  // Computed: "{apiVersion}#{name}"
         description?: string
@@ -241,7 +241,7 @@ Ask yourself:
 ```cue
 #NetworkPolicy: core.#Policy & {
     metadata: {
-        apiVersion:  "opm.dev/policies/network@v0"
+        apiVersion:  "opmodel.dev/policies/network@v0"
         name:        "NetworkRules"
         description: "Enforces network boundaries"
         target:      "scope"
@@ -286,11 +286,11 @@ Ask yourself:
 
 ```cue
 #Blueprint: {
-    apiVersion: "opm.dev/core"
+    apiVersion: "opmodel.dev/core"
     kind:       "Blueprint"
 
     metadata: {
-        apiVersion!:  string  // e.g., "opm.dev/blueprints/core@v0"
+        apiVersion!:  string  // e.g., "opmodel.dev/blueprints/core@v0"
         name!:        string  // e.g., "StatelessWorkload"
         fqn:          string  // Computed: "{apiVersion}#{name}"
         description?: string
@@ -313,7 +313,7 @@ Ask yourself:
 ```cue
 #StatelessWorkloadBlueprint: core.#Blueprint & {
     metadata: {
-        apiVersion:  "opm.dev/blueprints/core@v0"
+        apiVersion:  "opmodel.dev/blueprints/core@v0"
         name:        "StatelessWorkload"
         description: "A stateless workload definition"
     }
@@ -384,13 +384,13 @@ Ask yourself:
 }
 
 #StatusProbe: close({
-    apiVersion: "opm.dev/core/v0"
+    apiVersion: "opmodel.dev/core/v0"
     kind:       "StatusProbe"
 
     metadata: {
-        apiVersion!: #NameType                          // Example: "opm.dev/statusprobes/workload@v0"
+        apiVersion!: #NameType                          // Example: "opmodel.dev/statusprobes/workload@v0"
         name!:       #NameType                          // Example: "WorkloadReady"
-        fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opm.dev/statusprobes/workload@v0#WorkloadReady"
+        fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opmodel.dev/statusprobes/workload@v0#WorkloadReady"
 
         description?: string
         labels?:      #LabelsAnnotationsType

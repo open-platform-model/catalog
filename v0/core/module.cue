@@ -6,7 +6,7 @@ package core
 // Contains: Components, value schema (constraints only), optional module scopes
 // Does NOT contain: Concrete values, flattened state
 #Module: close({
-	apiVersion: "opm.dev/core/v0"
+	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Module"
 
 	metadata: {

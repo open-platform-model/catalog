@@ -6,7 +6,7 @@ package core
 // to a group of components, enabling consistent governance
 // and operational behavior across those components.
 #Scope: close({
-	apiVersion: "opm.dev/core/v0"
+	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Scope"
 
 	metadata: {

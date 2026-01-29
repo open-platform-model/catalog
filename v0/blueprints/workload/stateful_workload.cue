@@ -1,11 +1,11 @@
 package workload
 
 import (
-	core "opm.dev/core@v0"
-	schemas "opm.dev/schemas@v0"
-	workload_resources "opm.dev/resources/workload@v0"
-	workload_traits "opm.dev/traits/workload@v0"
-	storage_resources "opm.dev/resources/storage@v0"
+	core "opmodel.dev/core@v0"
+	schemas "opmodel.dev/schemas@v0"
+	workload_resources "opmodel.dev/resources/workload@v0"
+	workload_traits "opmodel.dev/traits/workload@v0"
+	storage_resources "opmodel.dev/resources/storage@v0"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -14,12 +14,12 @@ import (
 
 #StatefulWorkloadBlueprint: close(core.#Blueprint & {
 	metadata: {
-		apiVersion:  "opm.dev/blueprints/core@v0"
+		apiVersion:  "opmodel.dev/blueprints/core@v0"
 		name:        "StatefulWorkload"
 		description: "A stateful workload with stable identity and persistent storage requirements"
 		labels: {
-			"core.opm.dev/category":      "workload"
-			"core.opm.dev/workload-type": "stateful"
+			"core.opmodel.dev/category":      "workload"
+			"core.opmodel.dev/workload-type": "stateful"
 		}
 	}
 

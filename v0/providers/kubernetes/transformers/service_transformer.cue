@@ -1,28 +1,28 @@
 package transformers
 
 import (
-	core "opm.dev/core@v0"
-	workload_resources "opm.dev/resources/workload@v0"
-	network_traits "opm.dev/traits/network@v0"
+	core "opmodel.dev/core@v0"
+	workload_resources "opmodel.dev/resources/workload@v0"
+	network_traits "opmodel.dev/traits/network@v0"
 )
 
 // ServiceTransformer creates Kubernetes Services from components with Expose trait
 #ServiceTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opm.dev/providers/kubernetes/transformers@v1"
+		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v1"
 		name:        "ServiceTransformer"
 		description: "Creates Kubernetes Services for components with Expose trait"
 
 		labels: {
-			"core.opm.dev/trait-type":    "network"
-			"core.opm.dev/resource-type": "service"
-			"core.opm.dev/priority":      "5"
+			"core.opmodel.dev/trait-type":    "network"
+			"core.opmodel.dev/resource-type": "service"
+			"core.opmodel.dev/priority":      "5"
 		}
 	}
 
 	// Required resources - Container MUST be present to know which ports to expose
 	requiredResources: {
-		"opm.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
+		"opmodel.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
 	}
 
 	// No optional resources
@@ -30,7 +30,7 @@ import (
 
 	// Required traits - Expose is mandatory for Service creation
 	requiredTraits: {
-		"opm.dev/traits/networking@v0#Expose": network_traits.#ExposeTrait
+		"opmodel.dev/traits/networking@v0#Expose": network_traits.#ExposeTrait
 	}
 
 	// No optional traits

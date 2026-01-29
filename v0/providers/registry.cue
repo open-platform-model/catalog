@@ -1,7 +1,7 @@
 package providers
 
 import (
-	k8s "opm.dev/providers/kubernetes"
+	k8s "opmodel.dev/providers/kubernetes"
 )
 
 #Registry: {

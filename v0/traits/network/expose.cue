@@ -1,9 +1,9 @@
 package network
 
 import (
-	core "opm.dev/core@v0"
-	schemas "opm.dev/schemas@v0"
-	workload_resources "opm.dev/resources/workload@v0"
+	core "opmodel.dev/core@v0"
+	schemas "opmodel.dev/schemas@v0"
+	workload_resources "opmodel.dev/resources/workload@v0"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -12,11 +12,11 @@ import (
 
 #ExposeTrait: close(core.#Trait & {
 	metadata: {
-		apiVersion:  "opm.dev/traits/networking@v0"
+		apiVersion:  "opmodel.dev/traits/networking@v0"
 		name:        "Expose"
 		description: "A trait to expose a workload via a service"
 		labels: {
-			// "core.opm.dev/category": "networking"
+			// "core.opmodel.dev/category": "networking"
 		}
 	}
 

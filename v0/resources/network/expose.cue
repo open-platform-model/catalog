@@ -1,8 +1,8 @@
 package network
 
 import (
-	core "opm.dev/core@v0"
-	schemas "opm.dev/schemas@v0"
+	core "opmodel.dev/core@v0"
+	schemas "opmodel.dev/schemas@v0"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -11,11 +11,11 @@ import (
 
 #ExposeResource: close(core.#Resource & {
 	metadata: {
-		apiVersion:  "opm.dev/resources/network@v0"
+		apiVersion:  "opmodel.dev/resources/network@v0"
 		name:        "Expose"
 		description: "A resource to expose a network service"
 		labels: {
-			"core.opm.dev/category": "network"
+			"core.opmodel.dev/category": "network"
 		}
 	}
 

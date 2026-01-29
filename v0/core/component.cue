@@ -1,10 +1,10 @@
 package core
 
 // Workload type label key
-#LabelWorkloadType: "core.opm.dev/workload-type"
+#LabelWorkloadType: "core.opmodel.dev/workload-type"
 
 #Component: close({
-	apiVersion: "opm.dev/core/v0"
+	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Component"
 
 	metadata: {
@@ -119,18 +119,18 @@ _testComponent: #Component & {
 	metadata: {
 		name: "basic-component"
 		labels: {
-			"core.opm.dev/workload-type": "stateless"
+			"core.opmodel.dev/workload-type": "stateless"
 		}
 	}
 
 	#resources: {
-		"opm.dev/resources/workload@v0/Container": close(#Resource & {
+		"opmodel.dev/resources/workload@v0/Container": close(#Resource & {
 			metadata: {
-				apiVersion:  "opm.dev/resources/workload@v0"
+				apiVersion:  "opmodel.dev/resources/workload@v0"
 				name:        "Container"
 				description: "A container definition for workloads"
 				labels: {
-					"core.opm.dev/category": "workload"
+					"core.opmodel.dev/category": "workload"
 				}
 			}
 			// OpenAPIv3-compatible schema defining the structure of the container spec

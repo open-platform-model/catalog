@@ -1,8 +1,8 @@
 package network
 
 import (
-	core "opm.dev/core@v0"
-	schemas "opm.dev/schemas@v0"
+	core "opmodel.dev/core@v0"
+	schemas "opmodel.dev/schemas@v0"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -11,7 +11,7 @@ import (
 
 #SharedNetworkPolicy: close(core.#Policy & {
 	metadata: {
-		apiVersion:  "opm.dev/policies/connectivity@v0"
+		apiVersion:  "opmodel.dev/policies/connectivity@v0"
 		name:        "SharedNetwork"
 		description: "Allows all network traffic between components in the same scope based on their exposed ports"
 		target:      "scope"

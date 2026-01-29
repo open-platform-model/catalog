@@ -1,8 +1,8 @@
 package security
 
 import (
-	core "opm.dev/core@v0"
-	workload_resources "opm.dev/resources/workload@v0"
+	core "opmodel.dev/core@v0"
+	workload_resources "opmodel.dev/resources/workload@v0"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -11,7 +11,7 @@ import (
 
 #EncryptionTrait: close(core.#Trait & {
 	metadata: {
-		apiVersion:  "opm.dev/traits/security@v0"
+		apiVersion:  "opmodel.dev/traits/security@v0"
 		name:        "Encryption"
 		description: "Enforces encryption requirements"
 	}

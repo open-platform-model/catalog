@@ -1,9 +1,9 @@
 package components
 
 import (
-	core "opm.dev/core@v0"
-	workload_resources "opm.dev/resources/workload@v0"
-	workload_traits "opm.dev/traits/workload@v0"
+	core "opmodel.dev/core@v0"
+	workload_resources "opmodel.dev/resources/workload@v0"
+	workload_traits "opmodel.dev/traits/workload@v0"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -14,7 +14,7 @@ scheduledTaskWorkload: core.#Component & {
 	metadata: {
 		name: "scheduled-task-workload"
 		labels: {
-			"core.opm.dev/workload-type": "scheduled-task"
+			"core.opmodel.dev/workload-type": "scheduled-task"
 		}
 	}
 

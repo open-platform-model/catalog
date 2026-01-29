@@ -8,7 +8,7 @@ package core
 // May include platform additions (Policies, Scopes, Components) if created from
 // a platform team's extended Module, but primary purpose is compilation
 #CompiledModule: close({
-	apiVersion: "opm.dev/core/v0"
+	apiVersion: "opmodel.dev/core/v0"
 	kind:       "CompiledModule"
 
 	metadata: #Module.metadata

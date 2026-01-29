@@ -8,20 +8,20 @@ import (
 // Resources represent deployable components, services or resources
 // that can be instantiated and managed independently.
 #Resource: close({
-	apiVersion: #NameType & "opm.dev/core/v0"
+	apiVersion: #NameType & "opmodel.dev/core/v0"
 	kind:       #NameType & "Resource"
 
 	metadata: {
-		apiVersion!: #NameType                          // Example: "resources.opm.dev/workload@v0"
+		apiVersion!: #NameType                          // Example: "resources.opmodel.dev/workload@v0"
 		name!:       #NameType                          // Example: "Container"
-		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "resources.opm.dev/workload@v0#Container"
+		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "resources.opmodel.dev/workload@v0#Container"
 
 		// Human-readable description of the definition
 		description?: string
 
 		// Optional metadata labels for categorization and filtering
 		// Labels are used by OPM for definition selection and matching
-		// Example: {"core.opm.dev/workload-type": "stateless"}
+		// Example: {"core.opmodel.dev/workload-type": "stateless"}
 		labels?: #LabelsAnnotationsType
 
 		// Optional metadata annotations for definition behavior hints (not used for categorization)

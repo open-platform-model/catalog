@@ -1,10 +1,10 @@
 package workload
 
 import (
-	core "opm.dev/core@v0"
-	schemas "opm.dev/schemas@v0"
-	workload_resources "opm.dev/resources/workload@v0"
-	workload_traits "opm.dev/traits/workload@v0"
+	core "opmodel.dev/core@v0"
+	schemas "opmodel.dev/schemas@v0"
+	workload_resources "opmodel.dev/resources/workload@v0"
+	workload_traits "opmodel.dev/traits/workload@v0"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -13,12 +13,12 @@ import (
 
 #TaskWorkloadBlueprint: close(core.#Blueprint & {
 	metadata: {
-		apiVersion:  "opm.dev/blueprints/core@v0"
+		apiVersion:  "opmodel.dev/blueprints/core@v0"
 		name:        "TaskWorkload"
 		description: "A one-time task workload that runs to completion (Job)"
 		labels: {
-			"core.opm.dev/category":      "workload"
-			"core.opm.dev/workload-type": "task"
+			"core.opmodel.dev/category":      "workload"
+			"core.opmodel.dev/workload-type": "task"
 		}
 	}
 

@@ -1,9 +1,9 @@
 package workload
 
 import (
-	core "opm.dev/core@v0"
-	schemas "opm.dev/schemas@v0"
-	workload_resources "opm.dev/resources/workload@v0"
+	core "opmodel.dev/core@v0"
+	schemas "opmodel.dev/schemas@v0"
+	workload_resources "opmodel.dev/resources/workload@v0"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -12,11 +12,11 @@ import (
 
 #ReplicasTrait: close(core.#Trait & {
 	metadata: {
-		apiVersion:  "opm.dev/traits/scaling@v0"
+		apiVersion:  "opmodel.dev/traits/scaling@v0"
 		name:        "Replicas"
 		description: "A trait to specify the number of replicas for a workload"
 		labels: {
-			"core.opm.dev/category": "workload"
+			"core.opmodel.dev/category": "workload"
 		}
 	}
 

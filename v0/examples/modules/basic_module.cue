@@ -1,8 +1,8 @@
 package modules
 
 import (
-	core "opm.dev/core@v0"
-	components "opm.dev/examples/components@v0"
+	core "opmodel.dev/core@v0"
+	components "opmodel.dev/examples/components@v0"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -11,7 +11,7 @@ import (
 
 basicModule: core.#Module & {
 	metadata: {
-		apiVersion: "opm.dev@v0"
+		apiVersion: "opmodel.dev@v0"
 		name:       "BasicModule"
 		version:    "0.1.0"
 

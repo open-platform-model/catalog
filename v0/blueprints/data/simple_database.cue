@@ -1,11 +1,11 @@
 package data
 
 import (
-	core "opm.dev/core@v0"
-	schemas "opm.dev/schemas@v0"
-	workload_resources "opm.dev/resources/workload@v0"
-	storage_resources "opm.dev/resources/storage@v0"
-	workload_traits "opm.dev/traits/workload@v0"
+	core "opmodel.dev/core@v0"
+	schemas "opmodel.dev/schemas@v0"
+	workload_resources "opmodel.dev/resources/workload@v0"
+	storage_resources "opmodel.dev/resources/storage@v0"
+	workload_traits "opmodel.dev/traits/workload@v0"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -14,12 +14,12 @@ import (
 
 #SimpleDatabaseBlueprint: close(core.#Blueprint & {
 	metadata: {
-		apiVersion:  "opm.dev/blueprints/data@v0"
+		apiVersion:  "opmodel.dev/blueprints/data@v0"
 		name:        "SimpleDatabase"
 		description: "A simple database workload with persistent storage"
 		labels: {
-			"core.opm.dev/category":      "data"
-			"core.opm.dev/workload-type": "stateful"
+			"core.opmodel.dev/category":      "data"
+			"core.opmodel.dev/workload-type": "stateful"
 		}
 	}
 

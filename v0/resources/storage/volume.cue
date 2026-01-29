@@ -1,8 +1,8 @@
 package storage
 
 import (
-	core "opm.dev/core@v0"
-	schemas "opm.dev/schemas@v0"
+	core "opmodel.dev/core@v0"
+	schemas "opmodel.dev/schemas@v0"
 )
 
 //////////////////////////////////////////////////////////////////
@@ -11,12 +11,12 @@ import (
 
 #VolumesResource: close(core.#Resource & {
 	metadata: {
-		apiVersion:  "opm.dev/resources/storage@v0"
+		apiVersion:  "opmodel.dev/resources/storage@v0"
 		name:        "Volumes"
 		description: "A volume definition for workloads"
 		labels: {
-			// "core.opm.dev/category":    "storage"
-			"core.opm.dev/persistence": "true"
+			// "core.opmodel.dev/category":    "storage"
+			"core.opmodel.dev/persistence": "true"
 		}
 	}
 

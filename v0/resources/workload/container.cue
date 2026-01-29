@@ -1,8 +1,8 @@
 package workload
 
 import (
-	core "opm.dev/core@v0"
-	schemas "opm.dev/schemas@v0"
+	core "opmodel.dev/core@v0"
+	schemas "opmodel.dev/schemas@v0"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -11,11 +11,11 @@ import (
 
 #ContainerResource: close(core.#Resource & {
 	metadata: {
-		apiVersion:  "opm.dev/resources/workload@v0"
+		apiVersion:  "opmodel.dev/resources/workload@v0"
 		name:        "Container"
 		description: "A container definition for workloads"
 		labels: {
-			// "core.opm.dev/category": "workload"
+			// "core.opmodel.dev/category": "workload"
 		}
 	}
 
@@ -28,7 +28,7 @@ import (
 
 #Container: close(core.#Component & {
 	metadata: labels: {
-		"core.opm.dev/workload-type"!: "stateless" | "stateful" | "daemon" | "task" | "scheduled-task"
+		"core.opmodel.dev/workload-type"!: "stateless" | "stateful" | "daemon" | "task" | "scheduled-task"
 		...
 	}
 

@@ -1,28 +1,28 @@
 package transformers
 
 import (
-	core "opm.dev/core@v0"
-	workload_resources "opm.dev/resources/workload@v0"
-	workload_traits "opm.dev/traits/workload@v0"
+	core "opmodel.dev/core@v0"
+	workload_resources "opmodel.dev/resources/workload@v0"
+	workload_traits "opmodel.dev/traits/workload@v0"
 )
 
 // CronJobTransformer converts scheduled task components to Kubernetes CronJobs
 #CronJobTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opm.dev/providers/kubernetes/transformers@v1"
+		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v1"
 		name:        "CronJobTransformer"
 		description: "Converts scheduled task components to Kubernetes CronJobs"
 
 		labels: {
-			"core.opm.dev/workload-type": "scheduled-task"
-			"core.opm.dev/resource-type": "cronjob"
-			"core.opm.dev/priority":      "10"
+			"core.opmodel.dev/workload-type": "scheduled-task"
+			"core.opmodel.dev/resource-type": "cronjob"
+			"core.opmodel.dev/priority":      "10"
 		}
 	}
 
 	// Required resources - Container MUST be present
 	requiredResources: {
-		"opm.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
+		"opmodel.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
 	}
 
 	// No optional resources
@@ -30,14 +30,14 @@ import (
 
 	// Required traits - CronJobConfig is mandatory for CronJob
 	requiredTraits: {
-		"opm.dev/traits/workload@v0#CronJobConfig": workload_traits.#CronJobConfigTrait
+		"opmodel.dev/traits/workload@v0#CronJobConfig": workload_traits.#CronJobConfigTrait
 	}
 
 	// Optional traits
 	optionalTraits: {
-		"opm.dev/traits/workload@v0#RestartPolicy":      workload_traits.#RestartPolicyTrait
-		"opm.dev/traits/workload@v0#SidecarContainers":  workload_traits.#SidecarContainersTrait
-		"opm.dev/traits/workload@v0#InitContainers":     workload_traits.#InitContainersTrait
+		"opmodel.dev/traits/workload@v0#RestartPolicy":      workload_traits.#RestartPolicyTrait
+		"opmodel.dev/traits/workload@v0#SidecarContainers":  workload_traits.#SidecarContainersTrait
+		"opmodel.dev/traits/workload@v0#InitContainers":     workload_traits.#InitContainersTrait
 	}
 
 	#transform: {
@@ -58,12 +58,12 @@ import (
 		}
 
 		// Extract optional sidecar and init containers with defaults
-		_sidecarContainers: *optionalTraits["opm.dev/traits/workload@v0#SidecarContainers"].#defaults | [...]
+		_sidecarContainers: *optionalTraits["opmodel.dev/traits/workload@v0#SidecarContainers"].#defaults | [...]
 		if #component.spec.sidecarContainers != _|_ {
 			_sidecarContainers: #component.spec.sidecarContainers
 		}
 
-		_initContainers: *optionalTraits["opm.dev/traits/workload@v0#InitContainers"].#defaults | [...]
+		_initContainers: *optionalTraits["opmodel.dev/traits/workload@v0#InitContainers"].#defaults | [...]
 		if #component.spec.initContainers != _|_ {
 			_initContainers: #component.spec.initContainers
 		}
@@ -94,17 +94,17 @@ import (
 					suspend: _cronConfig.suspend
 				}
 
-				concurrencyPolicy:          *requiredTraits["opm.dev/traits/workload@v0#CronJobConfig"].#defaults.concurrencyPolicy | string
+				concurrencyPolicy:          *requiredTraits["opmodel.dev/traits/workload@v0#CronJobConfig"].#defaults.concurrencyPolicy | string
 				if _cronConfig.concurrencyPolicy != _|_ {
 					concurrencyPolicy: _cronConfig.concurrencyPolicy
 				}
 
-				successfulJobsHistoryLimit: *requiredTraits["opm.dev/traits/workload@v0#CronJobConfig"].#defaults.successfulJobsHistoryLimit | int
+				successfulJobsHistoryLimit: *requiredTraits["opmodel.dev/traits/workload@v0#CronJobConfig"].#defaults.successfulJobsHistoryLimit | int
 				if _cronConfig.successfulJobsHistoryLimit != _|_ {
 					successfulJobsHistoryLimit: _cronConfig.successfulJobsHistoryLimit
 				}
 
-				failedJobsHistoryLimit: *requiredTraits["opm.dev/traits/workload@v0#CronJobConfig"].#defaults.failedJobsHistoryLimit | int
+				failedJobsHistoryLimit: *requiredTraits["opmodel.dev/traits/workload@v0#CronJobConfig"].#defaults.failedJobsHistoryLimit | int
 				if _cronConfig.failedJobsHistoryLimit != _|_ {
 					failedJobsHistoryLimit: _cronConfig.failedJobsHistoryLimit
 				}

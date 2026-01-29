@@ -5,7 +5,7 @@ import (
 )
 
 #Provider: {
-	apiVersion: "core.opm.dev/v0"
+	apiVersion: "core.opmodel.dev/v0"
 	kind:       "Provider"
 	metadata: {
 		name:        string // The name of the provider
@@ -14,7 +14,7 @@ import (
 		minVersion:  string // The minimum version of the provider
 
 		// Labels for provider categorization and compatibility
-		// Example: {"core.opm.dev/format": "kubernetes"}
+		// Example: {"core.opmodel.dev/format": "kubernetes"}
 		labels?: #LabelsAnnotationsType
 	}
 
@@ -52,7 +52,7 @@ import (
 
 // #MatchTransformers computes the matching plan for a render pipeline.
 // Maps each transformer to its list of matched components.
-// Corresponds to Phase 3 (Component Matching) of the render pipeline (013-cli-render-spec).
+// Corresponds to Phase 3 (Component Matching) of the render pipeline (004-render-and-lifecycle-spec).
 //
 // The output is a map where:
 //   - Keys are transformer IDs (same as provider.transformers keys)

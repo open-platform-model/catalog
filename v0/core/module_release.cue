@@ -4,7 +4,7 @@ package core
 // Contains: Reference to Module, concrete values (closed), target namespace
 // Users/deployment systems create this to deploy a specific version
 #ModuleRelease: close({
-	apiVersion: "opm.dev/core/v0"
+	apiVersion: "opmodel.dev/core/v0"
 	kind:       "ModuleRelease"
 
 	metadata: {

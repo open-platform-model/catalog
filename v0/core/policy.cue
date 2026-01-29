@@ -8,13 +8,13 @@ import (
 // compliance controls, and operational guardrails.
 // Policies define what MUST be true, not suggestions.
 #Policy: close({
-	apiVersion: "opm.dev/core/v0"
+	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Policy"
 
 	metadata: {
-		apiVersion!: #NameType                          // Example: "opm.dev/policies/security@v0"
+		apiVersion!: #NameType                          // Example: "opmodel.dev/policies/security@v0"
 		name!:       #NameType                          // Example: "Encryption"
-		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opm.dev/policies/security@v0#Encryption"
+		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opmodel.dev/policies/security@v0#Encryption"
 
 		description?: string
 

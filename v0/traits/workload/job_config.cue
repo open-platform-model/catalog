@@ -1,9 +1,9 @@
 package workload
 
 import (
-	core "opm.dev/core@v0"
-	schemas "opm.dev/schemas@v0"
-	workload_resources "opm.dev/resources/workload@v0"
+	core "opmodel.dev/core@v0"
+	schemas "opmodel.dev/schemas@v0"
+	workload_resources "opmodel.dev/resources/workload@v0"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -12,11 +12,11 @@ import (
 
 #JobConfigTrait: close(core.#Trait & {
 	metadata: {
-		apiVersion:  "opm.dev/traits/workload@v0"
+		apiVersion:  "opmodel.dev/traits/workload@v0"
 		name:        "JobConfig"
 		description: "A trait to configure Job-specific settings for task workloads"
 		labels: {
-			"core.opm.dev/category": "workload"
+			"core.opmodel.dev/category": "workload"
 		}
 	}
 

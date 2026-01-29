@@ -4,7 +4,7 @@ package core
 // Contains: Reference to Bundle, concrete values (closed)
 // Users/deployment systems create this to deploy a specific version
 #BundleRelease: close({
-	apiVersion: "opm.dev/core/v0"
+	apiVersion: "opmodel.dev/core/v0"
 	kind:       "BundleRelease"
 
 	metadata: {
