@@ -16,12 +16,13 @@ import (
 		description: "Defines network traffic rules"
 		target:      "scope"
 	}
+
 	enforcement: {
 		mode:        "deployment"
 		onViolation: "block"
 	}
 
-	#spec: NetworkRules: [ruleName=string]: schemas.#NetworkRuleSchema
+	#spec: networkRules: [ruleName=string]: schemas.#NetworkRuleSchema
 })
 
 #NetworkRules: close(core.#Scope & {

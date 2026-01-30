@@ -37,7 +37,7 @@ import (
 	optionalTraits: {}
 
 	#transform: {
-		#component: core.#Component
+		#component: _ // Unconstrained; validated by matching, not by transform signature
 		#context:   core.#TransformerContext
 
 		// Extract required Container resource (will be bottom if not present)
@@ -47,11 +47,14 @@ import (
 		_expose: #component.spec.expose
 
 		// Build port list from expose trait ports
+		// Schema: targetPort = container port, exposedPort = optional external port
+		// K8s Service: port = service port (external), targetPort = pod port
 		_ports: [
 			for portName, portConfig in _expose.ports {
 				{
-					name:       portName
-					port:       portConfig.port
+					name: portName
+					// Service port: use exposedPort if specified, else targetPort
+					port:       portConfig.exposedPort | *portConfig.targetPort
 					targetPort: portConfig.targetPort
 					protocol:   portConfig.protocol | *"TCP"
 					if _expose.type == "NodePort" && portConfig.exposedPort != _|_ {
@@ -92,4 +95,9 @@ import (
 			}
 		}
 	}
+}
+
+_testServiceTransformer: #ServiceTransformer.#transform & {
+	#component: _testServiceComponent
+	#context:   _testContext
 }

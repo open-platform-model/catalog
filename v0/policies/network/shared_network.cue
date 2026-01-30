@@ -16,12 +16,13 @@ import (
 		description: "Allows all network traffic between components in the same scope based on their exposed ports"
 		target:      "scope"
 	}
+
 	enforcement: {
 		mode:        "deployment"
 		onViolation: "block"
 	}
 
-	#spec: SharedNetwork: schemas.#SharedNetworkSchema
+	#spec: sharedNetwork: schemas.#SharedNetworkSchema
 })
 
 #SharedNetwork: close(core.#Scope & {

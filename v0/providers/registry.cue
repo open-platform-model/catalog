@@ -5,5 +5,5 @@ import (
 )
 
 #Registry: {
-	"kubernetes": k8s.#KubernetesProvider
+	"kubernetes": k8s.#Provider
 }

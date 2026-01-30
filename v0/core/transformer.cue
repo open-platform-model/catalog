@@ -63,7 +63,7 @@ package core
 	// IMPORTANT: output must be a single resource
 	#transform: {
 		#component: _ // Unconstrained; validated by matching, not by the transform signature
-		context:   #TransformerContext
+		#context:   #TransformerContext
 
 		output: {...} // Must be a single provider-specific resource
 	}
@@ -74,10 +74,12 @@ package core
 
 // Provider context passed to transformers
 #TransformerContext: close({
-	#moduleMetadata:    _ // Injected during rendering
+	#moduleMetadata: _ // Injected during rendering
+
 	#componentMetadata: _ // Injected during rendering
-	name:               string // Injected during rendering (release name)
-	namespace:          string // Injected during rendering (target namespace)
+
+	name:      string // Injected during rendering (release name)
+	namespace: string // Injected during rendering (target namespace)
 
 	moduleLabels: {
 		if #moduleMetadata.labels != _|_ {#moduleMetadata.labels}

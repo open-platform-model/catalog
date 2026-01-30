@@ -60,7 +60,7 @@ package core
 	// Resources applied for this component
 	#resources: #ResourceMap
 	// if len(#resources) == 0 {
-	// 	_|_
+	// 	error("Component must have at least one resource defined")
 	// }
 
 	// Traits applied to this component

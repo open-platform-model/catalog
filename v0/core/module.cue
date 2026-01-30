@@ -31,7 +31,7 @@ package core
 	// Components defined in this module (developer-defined, required. May be added to by the platform-team)
 	#components: [Id=string]: #Component & {
 		metadata: {
-			name:      string | *Id
+			name: string | *Id
 		}
 	}
 
@@ -49,7 +49,28 @@ package core
 
 	// Concrete values - should contain sane default values
 	// Developers define these values but it can be overriden by the platform operator.
-	values: close(config)
+	values: config
 })
 
 #ModuleMap: [string]: #Module
+
+_testModule: #Module & {
+	metadata: {
+		apiVersion: "test.module.dev/modules@v0"
+		name:       "TestModule"
+		version:    "0.1.0"
+	}
+
+	#components: {
+		"test-deployment": _testComponent
+	}
+
+	config: {
+		replicaCount: int & >=1 & <=10
+		image:        string
+	}
+	values: {
+		replicaCount: 3
+		image:        "nginx:latest"
+	}
+}

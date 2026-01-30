@@ -4,6 +4,7 @@ import (
 	core "opmodel.dev/core@v0"
 	workload_resources "opmodel.dev/resources/workload@v0"
 	workload_traits "opmodel.dev/traits/workload@v0"
+	"list"
 )
 
 // CronJobTransformer converts scheduled task components to Kubernetes CronJobs
@@ -35,13 +36,13 @@ import (
 
 	// Optional traits
 	optionalTraits: {
-		"opmodel.dev/traits/workload@v0#RestartPolicy":      workload_traits.#RestartPolicyTrait
-		"opmodel.dev/traits/workload@v0#SidecarContainers":  workload_traits.#SidecarContainersTrait
-		"opmodel.dev/traits/workload@v0#InitContainers":     workload_traits.#InitContainersTrait
+		"opmodel.dev/traits/workload@v0#RestartPolicy":     workload_traits.#RestartPolicyTrait
+		"opmodel.dev/traits/workload@v0#SidecarContainers": workload_traits.#SidecarContainersTrait
+		"opmodel.dev/traits/workload@v0#InitContainers":    workload_traits.#InitContainersTrait
 	}
 
 	#transform: {
-		#component: core.#Component
+		#component: _ // Unconstrained; validated by matching, not by transform signature
 		#context:   core.#TransformerContext
 
 		// Extract required Container resource (will be bottom if not present)
@@ -94,7 +95,7 @@ import (
 					suspend: _cronConfig.suspend
 				}
 
-				concurrencyPolicy:          *requiredTraits["opmodel.dev/traits/workload@v0#CronJobConfig"].#defaults.concurrencyPolicy | string
+				concurrencyPolicy: *requiredTraits["opmodel.dev/traits/workload@v0#CronJobConfig"].#defaults.concurrencyPolicy | string
 				if _cronConfig.concurrencyPolicy != _|_ {
 					concurrencyPolicy: _cronConfig.concurrencyPolicy
 				}
@@ -117,7 +118,7 @@ import (
 								"app.kubernetes.io/name": #component.metadata.name
 							}
 							spec: {
-								containers: [_container] + _sidecarContainers
+								containers: list.Concat([[_container], _sidecarContainers])
 
 								if len(_initContainers) > 0 {
 									initContainers: _initContainers
@@ -131,4 +132,9 @@ import (
 			}
 		}
 	}
+}
+
+_testCronJobTransformer: #CronJobTransformer.#transform & {
+	#component: _testCronJobComponent
+	#context:   _testContext
 }

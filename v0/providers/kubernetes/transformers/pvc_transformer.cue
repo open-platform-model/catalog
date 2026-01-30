@@ -34,15 +34,15 @@ import (
 	optionalTraits: {}
 
 	#transform: {
-		#component: core.#Component
+		#component: _ // Unconstrained; validated by matching, not by transform signature
 		#context:   core.#TransformerContext
 
 		// Extract required Volumes resource (will be bottom if not present)
 		_volumes: #component.spec.volumes
 
-		// Generate PVC for each volume in the volumes map
+		// Generate PVC for each volume that has a persistentClaim defined
 		output: {
-			for volumeName, volume in _volumes {
+			for volumeName, volume in _volumes if volume.persistentClaim != _|_ {
 				"\(volumeName)": {
 					apiVersion: "v1"
 					kind:       "PersistentVolumeClaim"
@@ -58,27 +58,25 @@ import (
 						}
 					}
 					spec: {
-						accessModes: volume.accessModes | *["ReadWriteOnce"]
+						// accessMode is singular in schema, K8s expects accessModes array
+						accessModes: [volume.persistentClaim.accessMode | *"ReadWriteOnce"]
 						resources: {
 							requests: {
-								storage: volume.size
+								storage: volume.persistentClaim.size
 							}
 						}
 
-						if volume.storageClass != _|_ {
-							storageClassName: volume.storageClass
-						}
-
-						if volume.volumeMode != _|_ {
-							volumeMode: volume.volumeMode
-						}
-
-						if volume.selector != _|_ {
-							selector: volume.selector
+						if volume.persistentClaim.storageClass != _|_ {
+							storageClassName: volume.persistentClaim.storageClass
 						}
 					}
 				}
 			}
 		}
 	}
+}
+
+_testPVCTransformer: #PVCTransformer.#transform & {
+	#component: _testPVCComponent
+	#context:   _testContext
 }

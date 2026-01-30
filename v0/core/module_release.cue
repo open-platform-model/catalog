@@ -13,8 +13,8 @@ package core
 		labels?:      #LabelsAnnotationsType
 		annotations?: #LabelsAnnotationsType
 
-		fqn:          #module.metadata.fqn
-		version:      #module.metadata.version
+		fqn:     #module.metadata.fqn
+		version: #module.metadata.version
 
 		labels: {
 			if #module.metadata.labels != _|_ {#module.metadata.labels}

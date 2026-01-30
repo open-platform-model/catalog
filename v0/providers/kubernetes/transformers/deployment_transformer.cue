@@ -34,17 +34,17 @@ import (
 
 	// Optional traits that enhance deployment behavior
 	optionalTraits: {
-		"opmodel.dev/traits/scaling@v0#Replicas":                workload_traits.#ReplicasTrait
-		"opmodel.dev/traits/workload@v0#RestartPolicy":          workload_traits.#RestartPolicyTrait
-		"opmodel.dev/traits/workload@v0#UpdateStrategy":         workload_traits.#UpdateStrategyTrait
-		"opmodel.dev/traits/workload@v0#HealthCheck":            workload_traits.#HealthCheckTrait
-		"opmodel.dev/traits/workload@v0#SidecarContainers":      workload_traits.#SidecarContainersTrait
-		"opmodel.dev/traits/workload@v0#InitContainers":         workload_traits.#InitContainersTrait
+		"opmodel.dev/traits/scaling@v0#Replicas":           workload_traits.#ReplicasTrait
+		"opmodel.dev/traits/workload@v0#RestartPolicy":     workload_traits.#RestartPolicyTrait
+		"opmodel.dev/traits/workload@v0#UpdateStrategy":    workload_traits.#UpdateStrategyTrait
+		"opmodel.dev/traits/workload@v0#HealthCheck":       workload_traits.#HealthCheckTrait
+		"opmodel.dev/traits/workload@v0#SidecarContainers": workload_traits.#SidecarContainersTrait
+		"opmodel.dev/traits/workload@v0#InitContainers":    workload_traits.#InitContainersTrait
 	}
 
 	// Transform function
 	#transform: {
-		#component: core.#Component
+		#component: _ // Unconstrained; validated by matching, not by transform signature
 		#context:   core.#TransformerContext
 
 		// Extract required Container resource
@@ -139,4 +139,9 @@ import (
 			}
 		}
 	}
+}
+
+_testDeploymentTransformer: #DeploymentTransformer.#transform & {
+	#component: _testComponent
+	#context:   _testContext
 }

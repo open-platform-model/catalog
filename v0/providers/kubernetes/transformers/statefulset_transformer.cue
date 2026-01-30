@@ -34,16 +34,16 @@ import (
 
 	// Optional traits that enhance statefulset behavior
 	optionalTraits: {
-		"opmodel.dev/traits/scaling@v0#Replicas":            workload_traits.#ReplicasTrait
-		"opmodel.dev/traits/workload@v0#RestartPolicy":      workload_traits.#RestartPolicyTrait
-		"opmodel.dev/traits/workload@v0#UpdateStrategy":     workload_traits.#UpdateStrategyTrait
-		"opmodel.dev/traits/workload@v0#HealthCheck":        workload_traits.#HealthCheckTrait
-		"opmodel.dev/traits/workload@v0#SidecarContainers":  workload_traits.#SidecarContainersTrait
-		"opmodel.dev/traits/workload@v0#InitContainers":     workload_traits.#InitContainersTrait
+		"opmodel.dev/traits/scaling@v0#Replicas":           workload_traits.#ReplicasTrait
+		"opmodel.dev/traits/workload@v0#RestartPolicy":     workload_traits.#RestartPolicyTrait
+		"opmodel.dev/traits/workload@v0#UpdateStrategy":    workload_traits.#UpdateStrategyTrait
+		"opmodel.dev/traits/workload@v0#HealthCheck":       workload_traits.#HealthCheckTrait
+		"opmodel.dev/traits/workload@v0#SidecarContainers": workload_traits.#SidecarContainersTrait
+		"opmodel.dev/traits/workload@v0#InitContainers":    workload_traits.#InitContainersTrait
 	}
 
 	#transform: {
-		#component: core.#Component
+		#component: _ // Unconstrained; validated by matching, not by transform signature
 		#context:   core.#TransformerContext
 
 		// Extract required Container resource (will be bottom if not present)
@@ -135,4 +135,9 @@ import (
 			}
 		}
 	}
+}
+
+_testStatefulSetTransformer: #StatefulSetTransformer.#transform & {
+	#component: _testStatefulSetComponent
+	#context:   _testContext
 }
