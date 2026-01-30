@@ -14,7 +14,7 @@ package core
 	}
 
 	// Reference to the Bundle to deploy
-	#bundle!: #CompiledBundle | #Bundle
+	#bundle!: #Bundle
 
 	// Concrete values (everything closed/concrete)
 	// Must satisfy the value schema from #bundle.spec

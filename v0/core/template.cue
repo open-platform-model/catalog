@@ -4,10 +4,10 @@ package core
 //// Template Definition
 /////////////////////////////////////////////////////////////////
 
-// #TemplateDefinition: Defines a module template that can be used to
+// #Template: Defines a module template that can be used to
 // initialize new OPM modules. Templates provide starting points for
 // different use cases and complexity levels.
-#TemplateDefinition: close({
+#Template: close({
 	apiVersion: #NameType & "opmodel.dev/core/v0"
 	kind:       #NameType & "Template"
 
@@ -36,6 +36,4 @@ package core
 	}
 })
 
-#TemplateMap: [string]: #TemplateDefinition
-
-#TemplateStringArray: [...string]
+#TemplateMap: [string]: #Template
