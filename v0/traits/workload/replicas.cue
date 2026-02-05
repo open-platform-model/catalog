@@ -12,7 +12,7 @@ import (
 
 #ReplicasTrait: close(core.#Trait & {
 	metadata: {
-		apiVersion:  "opmodel.dev/traits/scaling@v0"
+		apiVersion:  "opmodel.dev/traits/workload@v0"
 		name:        "Replicas"
 		description: "A trait to specify the number of replicas for a workload"
 		labels: {

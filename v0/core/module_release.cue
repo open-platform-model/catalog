@@ -33,8 +33,22 @@ package core
 	}
 
 	// Concrete values (everything closed/concrete)
-	// Must satisfy the value schema from #module.config
-	values: close(#module.#values)
+	// Must satisfy the value schema from #module
+	values: close(#module.#config)
 })
 
 #ModuleReleaseMap: [string]: #ModuleRelease
+
+_testModuleRelease: #ModuleRelease & {
+	metadata: {
+		name:      "test-release"
+		namespace: "default"
+	}
+
+	#module: _testModule
+
+	values: {
+		replicaCount: 3
+		image:        "nginx:latest"
+	}
+}

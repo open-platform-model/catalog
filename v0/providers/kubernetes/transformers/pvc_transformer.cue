@@ -15,9 +15,10 @@ import (
 		labels: {
 			"core.opmodel.dev/resource-category": "storage"
 			"core.opmodel.dev/resource-type":     "persistentvolumeclaim"
-			"core.opmodel.dev/priority":          "5"
 		}
 	}
+
+	requiredLabels: {} // No specific labels required; matches any component with Volumes resource
 
 	// Required resources - Volumes MUST be present
 	requiredResources: {
@@ -49,10 +50,7 @@ import (
 					metadata: {
 						name:      volume.name | *volumeName
 						namespace: #context.namespace | *"default"
-						labels: {
-							"app.kubernetes.io/name":      #component.metadata.name
-							"app.kubernetes.io/component": "storage"
-						}
+						labels: #context.labels
 						if #component.metadata.annotations != _|_ {
 							annotations: #component.metadata.annotations
 						}

@@ -149,7 +149,7 @@ _testServiceComponent: core.#Component & {
 	}
 
 	#traits: {
-		"opmodel.dev/traits/networking@v0#Expose": network_traits.#ExposeTrait
+		"opmodel.dev/traits/network@v0#Expose": network_traits.#ExposeTrait
 	}
 
 	spec: {

@@ -17,8 +17,12 @@ import (
 		labels: {
 			"core.opmodel.dev/workload-type": "daemon"
 			"core.opmodel.dev/resource-type": "daemonset"
-			"core.opmodel.dev/priority":      "10"
 		}
+	}
+
+	// Required label to match daemon workloads
+	requiredLabels: {
+		"core.opmodel.dev/workload-type": "daemon"
 	}
 
 	// Required resources - Container MUST be present
@@ -89,28 +93,15 @@ import (
 			metadata: {
 				name:      #component.metadata.name
 				namespace: #context.namespace | *"default"
-				labels: {
-					app:                      #component.metadata.name
-					"app.kubernetes.io/name": #component.metadata.name
-					if #component.metadata.labels != _|_ {
-						for k, v in #component.metadata.labels {
-							"\(k)": v
-						}
-					}
-				}
+				labels: #context.labels
 				if #component.metadata.annotations != _|_ {
 					annotations: #component.metadata.annotations
 				}
 			}
 			spec: {
-				selector: matchLabels: {
-					app: #component.metadata.name
-				}
+				selector: matchLabels: #context.componentLabels
 				template: {
-					metadata: labels: {
-						app:                      #component.metadata.name
-						"app.kubernetes.io/name": #component.metadata.name
-					}
+					metadata: labels: #context.componentLabels
 					spec: {
 						containers: _containers
 

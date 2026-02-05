@@ -16,9 +16,10 @@ import (
 		labels: {
 			"core.opmodel.dev/trait-type":    "network"
 			"core.opmodel.dev/resource-type": "service"
-			"core.opmodel.dev/priority":      "5"
 		}
 	}
+
+	requiredLabels: {} // No specific labels required; matches any component with Expose trait
 
 	// Required resources - Container MUST be present to know which ports to expose
 	requiredResources: {
@@ -30,7 +31,7 @@ import (
 
 	// Required traits - Expose is mandatory for Service creation
 	requiredTraits: {
-		"opmodel.dev/traits/networking@v0#Expose": network_traits.#ExposeTrait
+		"opmodel.dev/traits/network@v0#Expose": network_traits.#ExposeTrait
 	}
 
 	// No optional traits
@@ -71,15 +72,7 @@ import (
 			metadata: {
 				name:      #component.metadata.name
 				namespace: #context.namespace | *"default"
-				labels: {
-					app:                      #component.metadata.name
-					"app.kubernetes.io/name": #component.metadata.name
-					if #component.metadata.labels != _|_ {
-						for k, v in #component.metadata.labels {
-							"\(k)": v
-						}
-					}
-				}
+				labels: #context.labels
 				if #component.metadata.annotations != _|_ {
 					annotations: #component.metadata.annotations
 				}
@@ -87,9 +80,7 @@ import (
 			spec: {
 				type: _expose.type
 
-				selector: {
-					app: #component.metadata.name
-				}
+				selector: #context.componentLabels
 
 				ports: _ports
 			}

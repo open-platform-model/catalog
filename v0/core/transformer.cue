@@ -86,14 +86,18 @@ package core
 	}
 
 	componentLabels: {
-		"app.kubernetes.io/instance": "\(name)-\(namespace)"
-
+		"app.kubernetes.io/name":       #componentMetadata.name
 		if #componentMetadata.labels != _|_ {#componentMetadata.labels}
+	}
+
+	componentAnnotations: {
+		if #componentMetadata.annotations != _|_ {#componentMetadata.annotations}
 	}
 
 	controllerLabels: {
 		"app.kubernetes.io/managed-by": "open-platform-model"
 		"app.kubernetes.io/name":       #componentMetadata.name
+		"app.kubernetes.io/instance":   #componentMetadata.name
 		"app.kubernetes.io/version":    #moduleMetadata.version
 	}
 

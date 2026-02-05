@@ -11,9 +11,9 @@ import (
 	kind:       "Trait"
 
 	metadata: {
-		apiVersion!: #NameType                          // Example: "opmodel.dev/traits/scaling@v0"
+		apiVersion!: #NameType                          // Example: "opmodel.dev/traits/workload@v0"
 		name!:       #NameType                          // Example: "Replicas"
-		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opmodel.dev/traits/scaling@v0#Replicas"
+		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opmodel.dev/traits/workload@v0#Replicas"
 
 		// Human-readable description of the definition
 		description?: string

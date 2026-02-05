@@ -128,7 +128,7 @@ Ask yourself:
     kind:       "Trait"
 
     metadata: {
-        apiVersion!:  string  // e.g., "opmodel.dev/traits/scaling@v0"
+        apiVersion!:  string  // e.g., "opmodel.dev/traits/workload@v0"
         name!:        string  // e.g., "Replicas"
         fqn:          string  // Computed: "{apiVersion}#{name}"
         description?: string
@@ -155,7 +155,7 @@ Trait → appliesTo → Resource
 ```cue
 #ReplicasTrait: core.#Trait & {
     metadata: {
-        apiVersion:  "opmodel.dev/traits/scaling@v0"
+        apiVersion:  "opmodel.dev/traits/workload@v0"
         name:        "Replicas"
         description: "Number of replicas for a workload"
     }

@@ -33,7 +33,7 @@ package core
 
 	// List of all components in this module
 	// Useful for scopes that want to apply to all components
-	// #allComponentsList: [for _, c in #components {c}]
+	// #allComponents: [for _, c in #components {c}]
 
 	// Module-level scopes (developer-defined, optional. May be added to by the platform-team)
 	#scopes?: [Id=string]: #Scope
@@ -41,16 +41,16 @@ package core
 	// Value schema - constraints only, NO defaults
 	// Developers define the configuration contract and reference it in their components.
 	// MUST be OpenAPIv3 compliant (no CUE templating - for/if statements)
-	// config: _
+	#config: _
 
-	// Value schema - should contain sane default values
-	// Developers define the configuration contract and reference it in their components.
-	// MUST be OpenAPIv3 compliant (no CUE templating - for/if statements)
-	#values: _
+	// Concrete values - should contain sane default values
+	// Used as the basis for #ModuleRelease.values, but can be overridden by users/deployers when creating a release.
+	values: #config
 })
 
 #ModuleMap: [string]: #Module
 
+// Simplified module definition for testing purposes
 _testModule: #Module & {
 	metadata: {
 		apiVersion: "test.module.dev/modules@v0"
@@ -59,15 +59,20 @@ _testModule: #Module & {
 	}
 
 	#components: {
-		"test-deployment": _testComponent
+		"test-deployment": _testComponent & {
+			spec: container: image: #config.image
+			spec: replicas: #config.replicaCount
+		}
 	}
 
-	// config: {
-	// 	replicaCount: int & >=1 & <=10
-	// 	image:        string
-	// }
-	#values: {
-		replicaCount: 3
-		image:        "nginx:latest"
+	#config: {
+		replicaCount: int & >=1
+		image:        string
+	}
+
+	values: {
+		replicaCount: 2
+		image:        "nginx:12"
 	}
 }
+

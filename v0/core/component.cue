@@ -105,16 +105,11 @@ package core
 	spec: close({
 		_allFields
 	})
-
-	status: {
-		resourceCount: len(#resources)
-		traitCount?: {if #traits != _|_ {len(#traits)}}
-		blueprintCount?: {if #blueprints != _|_ {len(#blueprints)}}
-	}
 })
 
 #ComponentMap: [string]: #Component
 
+// Simplified component definition for testing purposes
 _testComponent: #Component & {
 	metadata: {
 		name: "basic-component"
@@ -171,11 +166,23 @@ _testComponent: #Component & {
 		})
 	}
 
+	#traits: {
+		"opmodel.dev/traits/workload@v0/Replicas": close(#Trait & {
+			metadata: {
+				apiVersion:  "opmodel.dev/traits/workload@v0"
+				name:        "Replicas"
+				description: "A trait to specify the number of replicas for a workload"
+			}
+			// OpenAPIv3-compatible schema defining the structure of the replicas trait spec
+			#spec: replicas: int & >=1 & <=1000
+		})
+	}
+
 	// Compose resources and traits, providing concrete values for the spec.
 	spec: {
 		container: {
 			name:            "nginx-container"
-			image:           "nginx:latest"
+			image:           string
 			imagePullPolicy: "IfNotPresent"
 			env: {
 				ENVIRONMENT: {
@@ -194,5 +201,6 @@ _testComponent: #Component & {
 				}
 			}
 		}
+		replicas: int
 	}
 }
