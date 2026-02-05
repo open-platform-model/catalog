@@ -1,0 +1,109 @@
+schema: spec-driven
+
+context: |
+  # Open Platform Model - Catalog Repository Constitution
+
+  ## Overview
+  This repository contains core OPM CUE definitions published as CUE modules.
+  Modules: core, schemas, resources, traits, policies, providers, blueprints, examples.
+
+  ## Core Principles
+
+  ### I. Type Safety First
+  All definitions MUST be expressed in CUE. Invalid configuration MUST be rejected
+  at definition time—never in production. CUE's structural typing, constraints, and
+  validation provide compile-time guarantees that prevent runtime failures.
+
+  ### II. Separation of Concerns
+  The delivery flow MUST maintain clear ownership boundaries:
+  - Developers declare intent via Modules
+  - Platform teams extend definitions via CUE unification
+  - Consumers receive approved ModuleReleases with concrete values
+  Module → ModuleRelease is the canonical flow.
+
+  ### III. Composability
+  Definitions MUST compose without implicit coupling:
+  - Resources describe "what exists" independently
+  - Traits modify behavior without knowing Resource internals
+  - Blueprints compose Resources + Traits without requiring modification
+  - Components reference definitions by name, not by internal structure
+
+  ### IV. Declarative Intent
+  Modules MUST express intent, not implementation. Declare WHAT, not HOW:
+  - No imperative scripts in definitions
+  - No ordering dependencies between Resources (unless explicit via Lifecycle)
+  - No runtime-specific API calls in application definitions
+  Provider-specific steps belong in ProviderDefinitions, applied at deployment time.
+
+  ### V. Portability by Design
+  Definitions MUST be runtime-agnostic. The same Module MUST be deployable to
+  multiple providers (Kubernetes, Docker Compose, future orchestrators) without
+  rewriting. Provider-specific concerns belong in ProviderDefinitions.
+
+  ### VI. Semantic Versioning
+  All artifacts MUST follow SemVer 2.0.0 (MAJOR/MINOR/PATCH).
+  All commits MUST follow Conventional Commits v1: type(scope): description
+  Types: feat, fix, refactor, docs, test, chore
+
+  ### VII. Simplicity & YAGNI
+  Start simple. Complexity MUST be justified with clear rationale. Prefer:
+  - Direct solutions over clever indirection
+  - Fewer concepts that compose well over many specialized concepts
+  - Explicit configuration over implicit convention
+
+  ## Technology Standards
+
+  ### CUE Tooling
+  - CUE Version: v0.15.0 or later
+  - Format: cue fmt ./...
+  - Validate: cue vet ./...
+  - Tidy deps: cue mod tidy
+
+  ### CUE Code Style
+  - Use # prefix for definitions (e.g., #Module)
+  - Use _ prefix for hidden/private fields (e.g., _internal)
+  - Use ! suffix for required fields (e.g., name!: string)
+  - Use ? suffix for optional fields (e.g., description?: string)
+  - Use * for defaults (e.g., port: *8080 | int)
+  - Use error() builtin for custom validation messages (v0.14.0+)
+
+  ## Module Dependencies
+  Modules are organized in dependency order (no circular dependencies allowed):
+  1. core - Base definitions, no external dependencies
+  2. schemas - Common shared schemas, no external dependencies
+  3. resources - Resource implementations (depends on core, schemas)
+  4. traits - Trait implementations (depends on core, schemas)
+  5. blueprints - Blueprint implementations (depends on core, schemas)
+  6. policies - Policy implementations (depends on core, schemas)
+  7. providers - Provider/transformer implementations (depends on core, schemas)
+  8. examples - Usage examples (depends on all above)
+
+  ## Validation Gates (before any merge)
+  1. cue fmt ./... — All CUE files formatted
+  2. cue vet ./... — All CUE files validate
+
+  ## Commit Standards
+  - Format: type(scope): description
+  - Types: feat, fix, refactor, docs, test, chore
+  - Scope: module name when applicable (e.g., feat(core): add X)
+  - Keep descriptions concise
+  - No AI attribution in commit messages
+
+rules:
+  proposal:
+    - Complexity additions MUST include justification (Principle VII)
+    - Identify portability impacts if introducing provider-specific concerns
+    - State whether this is MAJOR/MINOR/PATCH change per SemVer
+    - Identify which CUE module(s) are affected
+    - State if changes affect module API (breaking vs non-breaking)
+  specs:
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY) to indicate requirement strength
+    - Focus on WHAT should exist, not HOW to create it (Principle IV)
+    - Ensure requirements are runtime-agnostic (Principle V)
+  design:
+    - Document how type safety is maintained (Principle I)
+    - Explain composition strategy - how pieces fit together (Principle III)
+    - Identify ownership boundaries between Developer/Platform/Consumer (Principle II)
+  tasks:
+    - Include validation gates as final tasks (cue fmt, cue vet)
+    - Group by logical phases (schema changes, implementation, validation)
