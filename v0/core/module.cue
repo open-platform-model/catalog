@@ -1,10 +1,6 @@
 package core
 
 // #Module: The portable application blueprint created by developers and/or platform teams
-// Developers: Create initial ModuleDefinitions with application intent
-// Platform teams: Can inherit and extend upstream ModuleDefinitions via CUE unification
-// Contains: Components, value schema (constraints only), optional module scopes
-// Does NOT contain: Concrete values, flattened state
 #Module: close({
 	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Module"
@@ -45,11 +41,12 @@ package core
 	// Value schema - constraints only, NO defaults
 	// Developers define the configuration contract and reference it in their components.
 	// MUST be OpenAPIv3 compliant (no CUE templating - for/if statements)
-	config: _
+	// config: _
 
-	// Concrete values - should contain sane default values
-	// Developers define these values but it can be overriden by the platform operator.
-	values: config
+	// Value schema - should contain sane default values
+	// Developers define the configuration contract and reference it in their components.
+	// MUST be OpenAPIv3 compliant (no CUE templating - for/if statements)
+	#values: _
 })
 
 #ModuleMap: [string]: #Module
@@ -65,11 +62,11 @@ _testModule: #Module & {
 		"test-deployment": _testComponent
 	}
 
-	config: {
-		replicaCount: int & >=1 & <=10
-		image:        string
-	}
-	values: {
+	// config: {
+	// 	replicaCount: int & >=1 & <=10
+	// 	image:        string
+	// }
+	#values: {
 		replicaCount: 3
 		image:        "nginx:latest"
 	}

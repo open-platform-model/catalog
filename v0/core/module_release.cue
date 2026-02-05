@@ -16,12 +16,8 @@ package core
 		fqn:     #module.metadata.fqn
 		version: #module.metadata.version
 
-		labels: {
-			if #module.metadata.labels != _|_ {#module.metadata.labels}
-		}
-		annotations: {
-			if #module.metadata.annotations != _|_ {#module.metadata.annotations}
-		}
+		labels: {if #module.metadata.labels != _|_ {#module.metadata.labels}}
+		annotations: {if #module.metadata.annotations != _|_ {#module.metadata.annotations}}
 	}
 
 	// Reference to the Module to deploy
@@ -31,13 +27,14 @@ package core
 	components: #module.#components
 
 	// Module-level scopes (if any)
+	scopes?: [Id=string]: #Scope
 	if #module.#scopes != _|_ {
 		scopes: #module.#scopes
 	}
 
 	// Concrete values (everything closed/concrete)
 	// Must satisfy the value schema from #module.config
-	values: close(#module.config)
+	values: close(#module.#values)
 })
 
 #ModuleReleaseMap: [string]: #ModuleRelease
