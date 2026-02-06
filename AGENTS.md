@@ -23,10 +23,11 @@ All agents MUST read and adhere to `openspec/config.yaml`.
 
 ## Build/Test Commands
 
-- Format: `cue fmt ./...`
-- Validate: `cue vet ./...`
+- Format: `task fmt` for all or `task fmt MODULE=<module name>` for one specific module
+- Validate: `task vet` for all or `task vet MODULE=<module name>` for one specific module
+- Download dependencies: `task tidy` for all or `task tidy MODULE=<module name>` for one specific module
+- Print evaluation result: `task eval` for all or `task eval MODULE=<module name>` for one specific module. use `OUTPUT=<file>` to output to a file.
 - Export schema: `cue export -e '#ModuleDefinition' v0/`
-- Check module: `cue mod tidy` (in v0/ directory)
 
 ## Tone and style
 
@@ -47,6 +48,16 @@ All agents MUST read and adhere to `openspec/config.yaml`.
 - **Required fields**: Use `!` suffix (e.g., `name!: string`)
 - **Optional fields**: Use `?` suffix (e.g., `description?: string`)
 - **Defaults**: Use `*` syntax (e.g., `port: *8080 | int`)
+
+## OPM and CUE
+
+Use these environment variables during development and validation. Commands like "cue mod tidy" or "cue vet ./..."
+
+```bash
+export CUE_REGISTRY=localhost:5000
+export OPM_REGISTRY=localhost:5000
+export CUE_CACHE_DIR=/var/home/emil/Dev/open-platform-model/.cue-cache
+```
 
 ## Project Structure
 

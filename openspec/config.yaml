@@ -79,8 +79,8 @@ context: |
   8. examples - Usage examples (depends on all above)
 
   ## Validation Gates (before any merge)
-  1. cue fmt ./... — All CUE files formatted
-  2. cue vet ./... — All CUE files validate
+  1. task fmt — All CUE files formatted
+  2. task vet — All CUE files validate
 
   ## Commit Standards
   - Format: type(scope): description
@@ -105,5 +105,7 @@ rules:
     - Explain composition strategy - how pieces fit together (Principle III)
     - Identify ownership boundaries between Developer/Platform/Consumer (Principle II)
   tasks:
-    - Include validation gates as final tasks (cue fmt, cue vet)
+    - Include validation gates as final tasks (task fmt, task vet)
     - Group by logical phases (schema changes, implementation, validation)
+    - Use "task vet" (with "CONCRETE=true" to force concreteness) as final step to ensure all changes validate before merge.
+    - Use "task eval" to print the evaluated output for verification when applicable.

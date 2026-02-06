@@ -13,7 +13,12 @@ version: '3'
 # Or via root orchestration:
 #   task module:fmt MODULE=schemas
 
+# Silent by default - set TASK_VERBOSE=1 or use --verbose to show commands
 silent: true
+
+env:
+  CUE_REGISTRY: '{{.LOCAL_REGISTRY}}+insecure'
+  CUE_CACHE_DIR: '{{.TASKFILE_DIR}}/../.cue-cache'
 
 vars:
   V0_DIR: v0
@@ -44,7 +49,7 @@ vars:
 
     - name: blueprints
       path: blueprints
-      enabled: false
+      enabled: true
       desc: "Blueprint implementations"
 
     - name: policies
@@ -107,22 +112,25 @@ tasks:
       Validate CUE files in catalog modules.
 
       Usage:
-        task vet              # Validate all modules
-        task vet MODULE=schemas  # Validate specific module
+        task vet                        # Validate all modules
+        task vet MODULE=schemas         # Validate specific module
+        task vet CONCRETE=true          # Validate with concreteness checks
     vars:
       MODULE: '{{.MODULE | default ""}}'
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
     cmds:
       - |
         if [ -n "{{.MODULE}}" ]; then
-          echo "Validating {{.MODULE}}..."
-          cd "{{.V0_DIR}}/{{.MODULE}}" && cue vet ./...
+          echo "Validating {{.MODULE}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+          cd "{{.V0_DIR}}/{{.MODULE}}" && cue vet {{.VET_FLAGS}} ./...
           echo "Done"
         else
-          echo "Validating all catalog modules..."
+          echo "Validating all catalog modules{{if eq .CONCRETE "true"}} (concrete){{end}}..."
           FAILED=""
           {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
           echo "  Validating {{$mod.name}}..."
-          if ! (cd "{{$.V0_DIR}}/{{$mod.path}}" && cue vet ./... 2>&1); then
+          if ! (cd "{{$.V0_DIR}}/{{$mod.path}}" && cue vet {{$.VET_FLAGS}} ./... 2>&1); then
             FAILED="${FAILED} {{$mod.name}}"
           fi
           {{end}}{{end}}
@@ -135,6 +143,43 @@ tasks:
           echo "Done"
         fi
 
+
+  eval:
+    desc: Evaluate CUE files (all modules or specific MODULE)
+    summary: |
+      Evaluate CUE files in catalog modules and check for errors.
+
+      Usage:
+        task eval                          # Evaluate all modules
+        task eval MODULE=schemas           # Evaluate specific module
+        task eval OUTPUT=out.cue           # Evaluate all, write to file
+    vars:
+      MODULE: '{{.MODULE | default ""}}'
+      OUTPUT: '{{.OUTPUT | default ""}}'
+      EVAL_REDIRECT: '{{if .OUTPUT}}> {{.OUTPUT}}{{end}}'
+    cmds:
+      - |
+        if [ -n "{{.MODULE}}" ]; then
+          echo "Evaluating {{.MODULE}}..."
+          cd "{{.V0_DIR}}/{{.MODULE}}" && cue eval ./... {{.EVAL_REDIRECT}}
+          echo "Done"
+        else
+          echo "Evaluating all catalog modules..."
+          FAILED=""
+          {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
+          echo "  Evaluating {{$mod.name}}..."
+          if ! (cd "{{$.V0_DIR}}/{{$mod.path}}" && cue eval ./... {{$.EVAL_REDIRECT}} 2>&1); then
+            FAILED="${FAILED} {{$mod.name}}"
+          fi
+          {{end}}{{end}}
+          
+          if [ -n "$FAILED" ]; then
+            echo ""
+            echo "Failed:${FAILED}"
+            exit 1
+          fi
+          echo "Done"
+        fi
   # ============================================================================
   # Module Management
   # ============================================================================
@@ -147,13 +192,13 @@ tasks:
       - |
         if [ -n "{{.MODULE}}" ]; then
           echo "Tidying {{.MODULE}} dependencies..."
-          cd "{{.V0_DIR}}/{{.MODULE}}" && CUE_REGISTRY={{.LOCAL_REGISTRY}}+insecure cue mod tidy
+          cd "{{.V0_DIR}}/{{.MODULE}}" && cue mod tidy
           echo "Done"
         else
           echo "Tidying all catalog module dependencies..."
           {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
           echo "  Tidying {{$mod.name}}..."
-          (cd "{{$.V0_DIR}}/{{$mod.path}}" && CUE_REGISTRY={{$.LOCAL_REGISTRY}}+insecure cue mod tidy) || true
+          (cd "{{$.V0_DIR}}/{{$mod.path}}" && cue mod tidy) || true
           {{end}}{{end}}
           echo "Done"
         fi
@@ -342,7 +387,7 @@ tasks:
         fi
         
         echo "Publishing {{.MODULE}}@$VERSION to {{.LOCAL_REGISTRY}}..."
-        cd "{{.V0_DIR}}/{{.MODULE}}" && CUE_REGISTRY={{.LOCAL_REGISTRY}}+insecure cue mod publish "$VERSION"
+        cd "{{.V0_DIR}}/{{.MODULE}}" && cue mod publish "$VERSION"
         echo "Published {{.MODULE}}@$VERSION"
 
   publish:all:local:
@@ -365,7 +410,7 @@ tasks:
         echo "Publishing {{$mod.name}}@$VERSION..."
         
         if (cd "{{$.V0_DIR}}/{{$mod.path}}" && \
-            CUE_REGISTRY={{$.LOCAL_REGISTRY}}+insecure cue mod publish "$VERSION" 2>&1); then
+            cue mod publish "$VERSION" 2>&1); then
           echo "  Published {{$mod.name}}@$VERSION"
         else
           echo "  Failed to publish {{$mod.name}}"
