@@ -71,7 +71,7 @@ package core
 }
 
 // Map of transformers by fully qualified name
-#TransformerMap: [string]: #Transformer
+#TransformerMap: [#FQNType]: #Transformer
 
 // Provider context passed to transformers
 #TransformerContext: close({

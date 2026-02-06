@@ -10,7 +10,7 @@ import (
 // DeploymentTransformer converts stateless workload components to Kubernetes Deployments
 #DeploymentTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "transformer.opmodel.dev/workload@v1"
+		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
 		name:        "deployment-transformer"
 		description: "Converts stateless workload components with Container resource to Kubernetes Deployments"
 
