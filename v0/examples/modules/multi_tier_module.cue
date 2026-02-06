@@ -12,46 +12,36 @@ import (
 multiTierModule: core.#Module & {
 	metadata: {
 		apiVersion: "opmodel.dev@v0"
-		name:       "MultiTierModule"
+		name:       "multi-tier-module"
 		version:    "0.1.0"
 	}
 
 	#components: {
-		database:  components.statefulWorkload & {
+		database: components.statefulWorkload & {
 			spec: {
-				replicas: values.database.replicas
-				container: {
-					image: values.database.image
-				}
+				replicas: #config.database.replicas
+				container: image: #config.database.image
 			}
 		}
-		logAgent:  components.daemonWorkload & {
+		logAgent: components.daemonWorkload & {
 			spec: {
-				container: {
-					image: values.logAgent.image
-				}
+				container: image: #config.logAgent.image
 			}
 		}
-		setupJob:  components.taskWorkload & {
+		setupJob: components.taskWorkload & {
 			spec: {
-				container: {
-					image: values.setupJob.image
-				}
+				container: image: #config.setupJob.image
 			}
 		}
 		backupJob: components.scheduledTaskWorkload & {
 			spec: {
-				container: {
-					image: values.backupJob.image
-				}
-				cronJobConfig: {
-					scheduleCron: values.backupJob.schedule
-				}
+				container: image:            #config.backupJob.image
+				cronJobConfig: scheduleCron: #config.backupJob.schedule
 			}
 		}
 	}
-	
-	#spec: {
+
+	#config: {
 		database: {
 			replicas: int
 			image:    string
@@ -87,6 +77,10 @@ multiTierModule: core.#Module & {
 }
 
 multiTierModuleRelease: core.#ModuleRelease & {
+	metadata: {
+		name:      "multi-tier-release"
+		namespace: "default"
+	}
 	#module: multiTierModule
 	values: {
 		database: {

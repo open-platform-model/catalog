@@ -29,7 +29,7 @@ statefulWorkload: core.#Component & {
 	workload_traits.#InitContainers
 
 	spec: {
-		replicas: int | *1
+		replicas:      int | *1
 		restartPolicy: "Always"
 		updateStrategy: {
 			type: "RollingUpdate"

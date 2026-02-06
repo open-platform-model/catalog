@@ -64,4 +64,3 @@ basicComponent: core.#Component & {
 		}
 	}
 }
-

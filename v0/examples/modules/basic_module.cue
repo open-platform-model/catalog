@@ -12,7 +12,7 @@ import (
 basicModule: core.#Module & {
 	metadata: {
 		apiVersion: "opmodel.dev@v0"
-		name:       "BasicModule"
+		name:       "basic-module"
 		version:    "0.1.0"
 
 		defaultNamespace: "default"
@@ -25,27 +25,21 @@ basicModule: core.#Module & {
 	#components: {
 		web: components.basicComponent & {
 			spec: {
-				replicas: values.web.replicas
-				container: {
-					image: values.web.image
-				}
+				replicas: #config.web.replicas
+				container: image: #config.web.image
 			}
 		}
-		db:  components.postgresComponent & {
+		db: components.postgresComponent & {
 			spec: {
-				container: {
-					image: values.db.image
-				}
+				container: image: #config.db.image
 				volumes: "postgres-data": {
-					persistentClaim: {
-						size: values.db.volumeSize
-					}
+					persistentClaim: size: #config.db.volumeSize
 				}
 			}
 		}
 	}
 
-	#spec: {
+	#config: {
 		web: {
 			replicas: int
 			image:    string
@@ -70,7 +64,7 @@ basicModule: core.#Module & {
 
 basicModuleRelease: core.#ModuleRelease & {
 	metadata: {
-		name: "basic-module-release"
+		name:      "basic-module-release"
 		namespace: "production"
 
 		labels: {
