@@ -5,16 +5,16 @@ import (
 )
 
 // #Resource: Defines a resource of deployment within the system.
-// Resources represent deployable components, services or resources
-// that can be instantiated and managed independently.
+// Resources represent deployable components, services or resources that can be instantiated and managed independently.
 #Resource: close({
-	apiVersion: #NameType & "opmodel.dev/core/v0"
-	kind:       #NameType & "Resource"
+	apiVersion: "opmodel.dev/core/v0"
+	kind:       "Resource"
 
 	metadata: {
-		apiVersion!: #NameType                          // Example: "resources.opmodel.dev/workload@v0"
-		name!:       #NameType                          // Example: "Container"
-		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "resources.opmodel.dev/workload@v0#Container"
+		apiVersion!: #APIVersionType // Example: "resources.opmodel.dev/workload@v0"
+		name!:       #NameType       // Example: "container"
+		_definitionName: (#KebabToPascal & {"in": name}).out
+		fqn: #FQNType & "\(apiVersion)#\(_definitionName)" // Example: "resources.opmodel.dev/workload@v0#Container"
 
 		// Human-readable description of the definition
 		description?: string
@@ -33,7 +33,7 @@ import (
 	// The field and schema exposed by this definition
 	// Use # to allow inconcrete fields
 	// TODO: Add OpenAPIv3 schema validation
-	#spec!: (strings.ToCamel(metadata.name)): _
+	#spec!: (strings.ToCamel(metadata._definitionName)): _
 })
 
 #ResourceMap: [string]: _

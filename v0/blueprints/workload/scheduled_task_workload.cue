@@ -14,7 +14,7 @@ import (
 #ScheduledTaskWorkloadBlueprint: close(core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opmodel.dev/blueprints/core@v0"
-		name:        "ScheduledTaskWorkload"
+		name:        "scheduled-task-workload"
 		description: "A scheduled task workload that runs on a cron schedule (CronJob)"
 		labels: {
 			"core.opmodel.dev/category":      "workload"

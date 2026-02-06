@@ -12,7 +12,7 @@ import (
 #VolumesResource: close(core.#Resource & {
 	metadata: {
 		apiVersion:  "opmodel.dev/resources/storage@v0"
-		name:        "Volumes"
+		name:        "volumes"
 		description: "A volume definition for workloads"
 		labels: {
 			// "core.opmodel.dev/category":    "storage"

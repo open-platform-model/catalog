@@ -12,7 +12,7 @@ import (
 #EncryptionTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/security@v0"
-		name:        "Encryption"
+		name:        "encryption"
 		description: "Enforces encryption requirements"
 	}
 

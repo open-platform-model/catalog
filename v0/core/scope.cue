@@ -10,7 +10,7 @@ package core
 	kind:       "Scope"
 
 	metadata: {
-		name!: string
+		name!: #NameType
 
 		labels?:      #LabelsAnnotationsType
 		annotations?: #LabelsAnnotationsType

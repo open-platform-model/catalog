@@ -13,7 +13,7 @@ import (
 #JobConfigTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
-		name:        "JobConfig"
+		name:        "job-config"
 		description: "A trait to configure Job-specific settings for task workloads"
 		labels: {
 			"core.opmodel.dev/category": "workload"

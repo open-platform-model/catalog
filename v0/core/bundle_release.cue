@@ -8,7 +8,7 @@ package core
 	kind:       "BundleRelease"
 
 	metadata: {
-		name!:        string
+		name!:        #NameType
 		labels?:      #LabelsAnnotationsType
 		annotations?: #LabelsAnnotationsType
 	}

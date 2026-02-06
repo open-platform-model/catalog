@@ -12,9 +12,10 @@ import (
 	kind:       "Blueprint"
 
 	metadata: {
-		apiVersion!: #NameType                          // Example: "opmodel.dev/blueprints@v0"
-		name!:       #NameType                          // Example: "StatelessWorkload"
-		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opmodel.dev/blueprints@v0#StatelessWorkload"
+		apiVersion!: #APIVersionType // Example: "opmodel.dev/blueprints@v0"
+		name!:       #NameType       // Example: "stateless-workload"
+		_definitionName: (#KebabToPascal & {"in": name}).out
+		fqn: #FQNType & "\(apiVersion)#\(_definitionName)" // Example: "opmodel.dev/blueprints@v0#StatelessWorkload"
 
 		// Human-readable description of the definition
 		description?: string
@@ -39,7 +40,7 @@ import (
 	// The field and schema exposed by this definition
 	// Use # to allow inconcrete fields
 	// TODO: Add OpenAPIv3 schema validation
-	#spec!: (strings.ToCamel(metadata.name)): _
+	#spec!: (strings.ToCamel(metadata._definitionName)): _
 })
 
 #BlueprintMap: [string]: #Blueprint

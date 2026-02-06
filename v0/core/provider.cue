@@ -8,10 +8,10 @@ import (
 	apiVersion: "core.opmodel.dev/v0"
 	kind:       "Provider"
 	metadata: {
-		name:        string // The name of the provider
-		description: string // A brief description of the provider
-		version:     string // The version of the provider
-		minVersion:  string // The minimum version of the provider
+		name:        #NameType // The name of the provider
+		description: string    // A brief description of the provider
+		version:     string    // The version of the provider
+		minVersion:  string    // The minimum version of the provider
 
 		// Labels for provider categorization and compatibility
 		// Example: {"core.opmodel.dev/format": "kubernetes"}

@@ -11,7 +11,7 @@ import (
 #DaemonSetTransformer: core.#Transformer & {
 	metadata: {
 		apiVersion:  "transformer.opmodel.dev/workload@v1"
-		name:        "DaemonSetTransformer"
+		name:        "daemonset-transformer"
 		description: "Converts daemon workload components to Kubernetes DaemonSets"
 
 		labels: {
@@ -93,7 +93,7 @@ import (
 			metadata: {
 				name:      #component.metadata.name
 				namespace: #context.namespace | *"default"
-				labels: #context.labels
+				labels:    #context.labels
 				if #component.metadata.annotations != _|_ {
 					annotations: #component.metadata.annotations
 				}

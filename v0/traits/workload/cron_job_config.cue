@@ -13,7 +13,7 @@ import (
 #CronJobConfigTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
-		name:        "CronJobConfig"
+		name:        "cron-job-config"
 		description: "A trait to configure CronJob-specific settings for scheduled task workloads"
 		labels: {
 			"core.opmodel.dev/category": "workload"

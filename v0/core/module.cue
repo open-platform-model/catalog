@@ -6,11 +6,11 @@ package core
 	kind:       "Module"
 
 	metadata: {
-		apiVersion!: #NameType                          // Example: "example.com/modules@v0"
-		name!:       #NameType                          // Example: "ExampleModule"
-		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "example.com/modules@v0#ExampleModule"
-
-		version!: #VersionType // Semantic version of this module definition
+		apiVersion!: #APIVersionType // Example: "example.com/modules@v0"
+		name!:       #NameType       // Example: "example-module"
+		_definitionName: (#KebabToPascal & {"in": name}).out
+		fqn:      #FQNType & "\(apiVersion)#\(_definitionName)" // Example: "example.com/modules@v0#ExampleModule"
+		version!: #VersionType                                  // Semantic version of this module definition
 
 		defaultNamespace?: string
 		description?:      string
@@ -54,7 +54,7 @@ package core
 _testModule: #Module & {
 	metadata: {
 		apiVersion: "test.module.dev/modules@v0"
-		name:       "TestModule"
+		name:       "test-module"
 		version:    "0.1.0"
 	}
 
@@ -75,4 +75,3 @@ _testModule: #Module & {
 		image:        "nginx:12"
 	}
 }
-

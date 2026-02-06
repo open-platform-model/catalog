@@ -8,8 +8,8 @@ import (
 // PVCTransformer creates standalone PersistentVolumeClaims from Volume resources
 #PVCTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v1"
-		name:        "PVCTransformer"
+		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
+		name:        "pvc-transformer"
 		description: "Creates standalone Kubernetes PersistentVolumeClaims from Volume resources"
 
 		labels: {
@@ -50,7 +50,7 @@ import (
 					metadata: {
 						name:      volume.name | *volumeName
 						namespace: #context.namespace | *"default"
-						labels: #context.labels
+						labels:    #context.labels
 						if #component.metadata.annotations != _|_ {
 							annotations: #component.metadata.annotations
 						}

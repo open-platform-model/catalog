@@ -8,16 +8,13 @@ package core
 	kind:       "ModuleRelease"
 
 	metadata: {
-		name!:        string
-		namespace!:   string // Required for releases (target environment)
-		labels?:      #LabelsAnnotationsType
-		annotations?: #LabelsAnnotationsType
+		name!:      #NameType
+		namespace!: string // Required for releases (target environment)
+		fqn:        #module.metadata.fqn
+		version:    #module.metadata.version
 
-		fqn:     #module.metadata.fqn
-		version: #module.metadata.version
-
-		labels: {if #module.metadata.labels != _|_ {#module.metadata.labels}}
-		annotations: {if #module.metadata.annotations != _|_ {#module.metadata.annotations}}
+		labels?: #LabelsAnnotationsType & {if #module.metadata.labels != _|_ {#module.metadata.labels}}
+		annotations?: #LabelsAnnotationsType & {if #module.metadata.annotations != _|_ {#module.metadata.annotations}}
 	}
 
 	// Reference to the Module to deploy

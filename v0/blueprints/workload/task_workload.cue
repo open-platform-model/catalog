@@ -14,7 +14,7 @@ import (
 #TaskWorkloadBlueprint: close(core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opmodel.dev/blueprints/core@v0"
-		name:        "TaskWorkload"
+		name:        "task-workload"
 		description: "A one-time task workload that runs to completion (Job)"
 		labels: {
 			"core.opmodel.dev/category":      "workload"

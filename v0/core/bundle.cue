@@ -9,9 +9,10 @@ package core
 	kind:       "Bundle"
 
 	metadata: {
-		apiVersion!: #NameType                          // Example: "opmodel.dev/bundles/core@v0"
-		name!:       #NameType                          // Example: "ExampleBundle"
-		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opmodel.dev/bundles/core@v0#ExampleBundle"
+		apiVersion!: #APIVersionType // Example: "opmodel.dev/bundles/core@v0"
+		name!:       #NameType       // Example: "example-bundle"
+		_definitionName: (#KebabToPascal & {"in": name}).out
+		fqn: #FQNType & "\(apiVersion)#\(_definitionName)" // Example: "opmodel.dev/bundles/core@v0#ExampleBundle"
 
 		// Human-readable description of the bundle
 		description?: string

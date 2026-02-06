@@ -13,7 +13,7 @@ import (
 #InitContainersTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
-		name:        "InitContainers"
+		name:        "init-containers"
 		description: "A trait to specify init containers for a workload"
 		labels: {
 			"core.opmodel.dev/category": "workload"

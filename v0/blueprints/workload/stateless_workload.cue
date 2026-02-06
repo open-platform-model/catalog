@@ -14,7 +14,7 @@ import (
 #StatelessWorkloadBlueprint: close(core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opmodel.dev/blueprints/core@v0"
-		name:        "StatelessWorkload"
+		name:        "stateless-workload"
 		description: "A stateless workload with no requirement for stable identity or storage"
 		labels: {
 			"core.opmodel.dev/category":      "workload"

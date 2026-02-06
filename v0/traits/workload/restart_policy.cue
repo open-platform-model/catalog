@@ -13,7 +13,7 @@ import (
 #RestartPolicyTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
-		name:        "RestartPolicy"
+		name:        "restart-policy"
 		description: "A trait to specify the restart policy for a workload"
 		labels: {
 			"core.opmodel.dev/category": "workload"

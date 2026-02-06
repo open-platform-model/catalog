@@ -14,7 +14,7 @@ import (
 #DaemonWorkloadBlueprint: close(core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opmodel.dev/blueprints/core@v0"
-		name:        "DaemonWorkload"
+		name:        "daemon-workload"
 		description: "A daemon workload that runs on all (or selected) nodes in a cluster"
 		labels: {
 			"core.opmodel.dev/category":      "workload"

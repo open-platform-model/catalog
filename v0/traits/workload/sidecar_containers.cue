@@ -13,7 +13,7 @@ import (
 #SidecarContainersTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
-		name:        "SidecarContainers"
+		name:        "sidecar-containers"
 		description: "A trait to specify sidecar containers for a workload"
 		labels: {
 			"core.opmodel.dev/category": "workload"

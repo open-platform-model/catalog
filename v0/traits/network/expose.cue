@@ -13,7 +13,7 @@ import (
 #ExposeTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/network@v0"
-		name:        "Expose"
+		name:        "expose"
 		description: "A trait to expose a workload via a service"
 		labels: {
 			// "core.opmodel.dev/category": "network"

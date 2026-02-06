@@ -4,16 +4,16 @@ import (
 	"strings"
 )
 
-// #Trait: Defines additional behavior or characteristics
-// that can be attached to components.
+// #Trait: Defines additional behavior or characteristics that can be attached to components.
 #Trait: close({
 	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Trait"
 
 	metadata: {
-		apiVersion!: #NameType                          // Example: "opmodel.dev/traits/workload@v0"
-		name!:       #NameType                          // Example: "Replicas"
-		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opmodel.dev/traits/workload@v0#Replicas"
+		apiVersion!: #APIVersionType // Example: "opmodel.dev/traits/workload@v0"
+		name!:       #NameType       // Example: "replicas"
+		_definitionName: (#KebabToPascal & {"in": name}).out
+		fqn: #FQNType & "\(apiVersion)#\(_definitionName)" // Example: "opmodel.dev/traits/workload@v0#Replicas"
 
 		// Human-readable description of the definition
 		description?: string
@@ -32,7 +32,7 @@ import (
 	// The field and schema exposed by this definition
 	// Use # to allow inconcrete fields
 	// TODO: Add OpenAPIv3 schema validation
-	#spec!: (strings.ToCamel(metadata.name)): _
+	#spec!: (strings.ToCamel(metadata._definitionName)): _
 
 	// Resources that this trait can be applied to (full references)
 	appliesTo!: [...#Resource]

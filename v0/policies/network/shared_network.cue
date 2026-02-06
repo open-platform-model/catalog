@@ -12,7 +12,7 @@ import (
 #SharedNetworkPolicy: close(core.#Policy & {
 	metadata: {
 		apiVersion:  "opmodel.dev/policies/connectivity@v0"
-		name:        "SharedNetwork"
+		name:        "shared-network"
 		description: "Allows all network traffic between components in the same scope based on their exposed ports"
 		target:      "scope"
 	}

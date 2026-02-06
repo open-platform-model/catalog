@@ -15,9 +15,10 @@ package core
 	kind:       "Transformer"
 
 	metadata: {
-		apiVersion!: #NameType                          // Example: "opmodel.dev/transformers/kubernetes@v0"
-		name!:       #NameType                          // Example: "DeploymentTransformer"
-		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opmodel.dev/transformers/kubernetes@v0#DeploymentTransformer"
+		apiVersion!: #APIVersionType // Example: "opmodel.dev/transformers/kubernetes@v0"
+		name!:       #NameType       // Example: "deployment-transformer"
+		_definitionName: (#KebabToPascal & {"in": name}).out
+		fqn: #FQNType & "\(apiVersion)#\(_definitionName)" // Example: "opmodel.dev/transformers/kubernetes@v0#DeploymentTransformer"
 
 		description!: string // A brief description of what this transformer produces
 
@@ -86,7 +87,7 @@ package core
 	}
 
 	componentLabels: {
-		"app.kubernetes.io/name":       #componentMetadata.name
+		"app.kubernetes.io/name": #componentMetadata.name
 		if #componentMetadata.labels != _|_ {#componentMetadata.labels}
 	}
 

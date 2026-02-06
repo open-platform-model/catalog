@@ -12,7 +12,7 @@ import (
 #NetworkRulesPolicy: close(core.#Policy & {
 	metadata: {
 		apiVersion:  "opmodel.dev/policies/connectivity@v0"
-		name:        "NetworkRules"
+		name:        "network-rules"
 		description: "Defines network traffic rules"
 		target:      "scope"
 	}

@@ -10,8 +10,8 @@ import (
 // CronJobTransformer converts scheduled task components to Kubernetes CronJobs
 #CronJobTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v1"
-		name:        "CronJobTransformer"
+		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
+		name:        "cronjob-transformer"
 		description: "Converts scheduled task components to Kubernetes CronJobs"
 
 		labels: {
@@ -79,7 +79,7 @@ import (
 			metadata: {
 				name:      #component.metadata.name
 				namespace: #context.namespace | *"default"
-				labels: #context.labels
+				labels:    #context.labels
 				if #component.metadata.annotations != _|_ {
 					annotations: #component.metadata.annotations
 				}

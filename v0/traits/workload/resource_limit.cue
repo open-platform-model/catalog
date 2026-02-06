@@ -13,7 +13,7 @@ import (
 #ResourceLimitTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
-		name:        "ResourceLimit"
+		name:        "resource-limit"
 		description: "A trait to specify resource limits for a workload"
 		labels: {
 			"core.opmodel.dev/category": "workload"

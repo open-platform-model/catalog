@@ -15,7 +15,7 @@ import (
 #SimpleDatabaseBlueprint: close(core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opmodel.dev/blueprints/data@v0"
-		name:        "SimpleDatabase"
+		name:        "simple-database"
 		description: "A simple database workload with persistent storage"
 		labels: {
 			"core.opmodel.dev/category":      "data"

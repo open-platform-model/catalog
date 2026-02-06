@@ -9,8 +9,8 @@ import (
 // ServiceTransformer creates Kubernetes Services from components with Expose trait
 #ServiceTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v1"
-		name:        "ServiceTransformer"
+		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
+		name:        "service-transformer"
 		description: "Creates Kubernetes Services for components with Expose trait"
 
 		labels: {
@@ -72,7 +72,7 @@ import (
 			metadata: {
 				name:      #component.metadata.name
 				namespace: #context.namespace | *"default"
-				labels: #context.labels
+				labels:    #context.labels
 				if #component.metadata.annotations != _|_ {
 					annotations: #component.metadata.annotations
 				}

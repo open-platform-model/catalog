@@ -13,7 +13,7 @@ import (
 #HealthCheckTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
-		name:        "HealthCheck"
+		name:        "health-check"
 		description: "A trait to specify liveness and readiness probes for a workload"
 		labels: {
 			"core.opmodel.dev/category": "workload"

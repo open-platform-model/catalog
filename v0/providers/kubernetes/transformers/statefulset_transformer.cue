@@ -10,8 +10,8 @@ import (
 // StatefulSetTransformer converts stateful workload components to Kubernetes StatefulSets
 #StatefulSetTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v1"
-		name:        "StatefulSetTransformer"
+		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
+		name:        "statefulset-transformer"
 		description: "Converts stateful workload components to Kubernetes StatefulSets"
 
 		labels: {
@@ -38,7 +38,7 @@ import (
 
 	// Optional traits that enhance statefulset behavior
 	optionalTraits: {
-		"opmodel.dev/traits/workload@v0#Replicas":           workload_traits.#ReplicasTrait
+		"opmodel.dev/traits/workload@v0#Replicas":          workload_traits.#ReplicasTrait
 		"opmodel.dev/traits/workload@v0#RestartPolicy":     workload_traits.#RestartPolicyTrait
 		"opmodel.dev/traits/workload@v0#UpdateStrategy":    workload_traits.#UpdateStrategyTrait
 		"opmodel.dev/traits/workload@v0#HealthCheck":       workload_traits.#HealthCheckTrait
@@ -98,7 +98,7 @@ import (
 			metadata: {
 				name:      #component.metadata.name
 				namespace: #context.namespace | *"default"
-				labels: #context.labels
+				labels:    #context.labels
 				if #component.metadata.annotations != _|_ {
 					annotations: #component.metadata.annotations
 				}

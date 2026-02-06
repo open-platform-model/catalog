@@ -13,7 +13,7 @@ import (
 #UpdateStrategyTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
-		name:        "UpdateStrategy"
+		name:        "update-strategy"
 		description: "A trait to specify the update strategy for a workload"
 		labels: {
 			"core.opmodel.dev/category": "workload"

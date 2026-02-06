@@ -8,7 +8,7 @@ package core
 	kind:       "Component"
 
 	metadata: {
-		name!: string
+		name!: #NameType
 
 		// Component labels - unified from all attached resources, traits
 		// Labels are inherited from definitions and used for transformer matching.
@@ -119,10 +119,10 @@ _testComponent: #Component & {
 	}
 
 	#resources: {
-		"opmodel.dev/resources/workload@v0/Container": close(#Resource & {
+		"opmodel.dev/resources/workload@v0#Container": close(#Resource & {
 			metadata: {
 				apiVersion:  "opmodel.dev/resources/workload@v0"
-				name:        "Container"
+				name:        "container"
 				description: "A container definition for workloads"
 				labels: {
 					"core.opmodel.dev/category": "workload"
@@ -131,7 +131,7 @@ _testComponent: #Component & {
 			// OpenAPIv3-compatible schema defining the structure of the container spec
 			#spec: container: {
 				// Name of the container
-				name!: string
+				name!: #NameType
 
 				// Container image (e.g., "nginx:latest")
 				image!: string
@@ -167,10 +167,10 @@ _testComponent: #Component & {
 	}
 
 	#traits: {
-		"opmodel.dev/traits/workload@v0/Replicas": close(#Trait & {
+		"opmodel.dev/traits/workload@v0#Replicas": close(#Trait & {
 			metadata: {
 				apiVersion:  "opmodel.dev/traits/workload@v0"
-				name:        "Replicas"
+				name:        "replicas"
 				description: "A trait to specify the number of replicas for a workload"
 			}
 			// OpenAPIv3-compatible schema defining the structure of the replicas trait spec

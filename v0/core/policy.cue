@@ -12,9 +12,10 @@ import (
 	kind:       "Policy"
 
 	metadata: {
-		apiVersion!: #NameType                          // Example: "opmodel.dev/policies/security@v0"
-		name!:       #NameType                          // Example: "Encryption"
-		fqn:         #FQNType & "\(apiVersion)#\(name)" // Example: "opmodel.dev/policies/security@v0#Encryption"
+		apiVersion!: #APIVersionType // Example: "opmodel.dev/policies/security@v0"
+		name!:       #NameType       // Example: "encryption"
+		_definitionName: (#KebabToPascal & {"in": name}).out
+		fqn: #FQNType & "\(apiVersion)#\(_definitionName)" // Example: "opmodel.dev/policies/security@v0#Encryption"
 
 		description?: string
 
@@ -52,7 +53,7 @@ import (
 	// The field and schema exposed by this definition
 	// Use # to allow inconcrete fields
 	// TODO: Add OpenAPIv3 schema validation
-	#spec!: (strings.ToCamel(metadata.name)): _
+	#spec!: (strings.ToCamel(metadata._definitionName)): _
 })
 
 #PolicyMap: [string]: _

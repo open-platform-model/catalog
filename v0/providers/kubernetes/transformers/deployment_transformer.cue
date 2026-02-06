@@ -11,7 +11,7 @@ import (
 #DeploymentTransformer: core.#Transformer & {
 	metadata: {
 		apiVersion:  "transformer.opmodel.dev/workload@v1"
-		name:        "DeploymentTransformer"
+		name:        "deployment-transformer"
 		description: "Converts stateless workload components with Container resource to Kubernetes Deployments"
 
 		labels: {
@@ -38,7 +38,7 @@ import (
 
 	// Optional traits that enhance deployment behavior
 	optionalTraits: {
-		"opmodel.dev/traits/workload@v0#Replicas":           workload_traits.#ReplicasTrait
+		"opmodel.dev/traits/workload@v0#Replicas":          workload_traits.#ReplicasTrait
 		"opmodel.dev/traits/workload@v0#RestartPolicy":     workload_traits.#RestartPolicyTrait
 		"opmodel.dev/traits/workload@v0#UpdateStrategy":    workload_traits.#UpdateStrategyTrait
 		"opmodel.dev/traits/workload@v0#HealthCheck":       workload_traits.#HealthCheckTrait
@@ -99,7 +99,7 @@ import (
 			metadata: {
 				name:      #component.metadata.name
 				namespace: #context.namespace
-				labels: #context.labels
+				labels:    #context.labels
 				if #context.componentAnnotations != _|_ {
 					annotations: #context.componentAnnotations
 				}

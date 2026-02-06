@@ -12,7 +12,7 @@ import (
 #ContainerResource: close(core.#Resource & {
 	metadata: {
 		apiVersion:  "opmodel.dev/resources/workload@v0"
-		name:        "Container"
+		name:        "container"
 		description: "A container definition for workloads"
 		labels: {
 			// "core.opmodel.dev/category": "workload"

@@ -10,8 +10,8 @@ import (
 // JobTransformer converts task workload components to Kubernetes Jobs
 #JobTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v1"
-		name:        "JobTransformer"
+		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
+		name:        "job-transformer"
 		description: "Converts task workload components to Kubernetes Jobs"
 
 		labels: {
@@ -79,7 +79,7 @@ import (
 			metadata: {
 				name:      #component.metadata.name
 				namespace: #context.namespace | *"default"
-				labels: #context.labels
+				labels:    #context.labels
 				if #component.metadata.annotations != _|_ {
 					annotations: #component.metadata.annotations
 				}
