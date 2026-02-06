@@ -22,7 +22,7 @@ import (
 	// Example:
 	// transformers: {
 	// 	"k8s.io/api/apps/v1.Deployment": #DeploymentTransformer
-	// 	"k8s.io/api/apps/v1.StatefulSet": #StatefulSetTransformer
+	// 	"k8s.io/api/apps/v1.StatefulSet": #StatefulsetTransformer
 	// }
 	transformers: #TransformerMap
 

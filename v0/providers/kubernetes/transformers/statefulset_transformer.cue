@@ -7,8 +7,8 @@ import (
 	"list"
 )
 
-// StatefulSetTransformer converts stateful workload components to Kubernetes StatefulSets
-#StatefulSetTransformer: core.#Transformer & {
+// StatefulsetTransformer converts stateful workload components to Kubernetes StatefulSets
+#StatefulsetTransformer: core.#Transformer & {
 	metadata: {
 		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
 		name:        "statefulset-transformer"
@@ -128,7 +128,7 @@ import (
 	}
 }
 
-_testStatefulSetTransformer: #StatefulSetTransformer.#transform & {
+_testStatefulsetTransformer: #StatefulsetTransformer.#transform & {
 	#component: _testStatefulSetComponent
 	#context:   _testContext
 }

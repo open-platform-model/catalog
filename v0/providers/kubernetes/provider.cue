@@ -22,7 +22,7 @@ import (
 	// Transformer registry - maps transformer FQNs to transformer definitions
 	transformers: {
 		"transformer.opmodel.dev/workload@v0#DeploymentTransformer":  k8s_transformers.#DeploymentTransformer
-		"transformer.opmodel.dev/workload@v0#StatefulsetTransformer": k8s_transformers.#StatefulSetTransformer
+		"transformer.opmodel.dev/workload@v0#StatefulsetTransformer": k8s_transformers.#StatefulsetTransformer
 		"transformer.opmodel.dev/workload@v0#DaemonsetTransformer":   k8s_transformers.#DaemonSetTransformer
 		"transformer.opmodel.dev/workload@v0#JobTransformer":         k8s_transformers.#JobTransformer
 		"transformer.opmodel.dev/workload@v0#CronjobTransformer":     k8s_transformers.#CronJobTransformer
