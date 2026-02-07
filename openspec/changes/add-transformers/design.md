@@ -28,7 +28,7 @@ This change depends on:
 - Changing the core `#Transformer` contract (single-output constraint stays)
 - Adding transformers for non-K8s providers
 - Handling CRDs or operator-based resources (e.g., cert-manager Certificates)
-- Adding Namespace transformer (scope-level concern, not component-level)
+- Adding Namespace transformer (module-level concern, not component-level)
 
 ## Decisions
 
@@ -66,7 +66,7 @@ ConfigMap and Secret resources are standalone K8s objects. The transformer match
 
 ### 4. NetworkPolicy transformer matches at scope level
 
-NetworkRules is a policy applied to scopes, not individual components. The transformer needs access to scope-level policy data.
+NetworkRules is a policy applied to scopes, not individual components. The transformer needs access to module-level policy data.
 
 **Decision**: The NetworkPolicyTransformer requires the NetworkRules policy and emits one NetworkPolicy per rule defined in the policy spec. This may require the transformer to receive scope context — if the current `#TransformerContext` doesn't support this, the transformer should document the gap and use component-level data available.
 
@@ -94,7 +94,7 @@ The backend service name is derived from `#context.name` (the component name), w
 
 ## Risks / Trade-offs
 
-**[Scope-level transformer matching]** → NetworkRules is a scope-level policy, but transformers currently match against components. The NetworkPolicyTransformer may need to operate differently or the matching mechanism may need extension. **Mitigation**: Start with component-level NetworkPolicy (per-component ingress/egress rules) and defer scope-wide policies to a future change if the matching mechanism needs work.
+**[Scope-level transformer matching]** → NetworkRules is a module-level policy, but transformers currently match against components. The NetworkPolicyTransformer may need to operate differently or the matching mechanism may need extension. **Mitigation**: Start with component-level NetworkPolicy (per-component ingress/egress rules) and defer scope-wide policies to a future change if the matching mechanism needs work.
 
 **[Ordering dependency]** → This change depends on three sibling changes being completed first. **Mitigation**: The wiring fixes (HealthCheck, ResourceLimit) can be implemented immediately against existing definitions. New transformers can be stubbed with TODOs for imports that don't exist yet.
 

@@ -2,7 +2,7 @@
 
 ### Requirement: NetworkPolicy transformer definition
 
-The Kubernetes provider SHALL include a `#NetworkPolicyTransformer` that conforms to `core.#Transformer`. It SHALL declare `requiredTraits` or a matching mechanism that identifies components governed by a NetworkRules policy. Since NetworkRules is a scope-level policy and the current transformer matching is component-based, the transformer SHALL operate on component-level network rule data when available.
+The Kubernetes provider SHALL include a `#NetworkPolicyTransformer` that conforms to `core.#Transformer`. It SHALL declare `requiredTraits` or a matching mechanism that identifies components governed by a NetworkRules policy. Since NetworkRules is a module-level policy and the current transformer matching is component-based, the transformer SHALL operate on component-level network rule data when available.
 
 #### Scenario: Transformer matches component with network rules
 
