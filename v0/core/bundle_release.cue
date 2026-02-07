@@ -17,17 +17,8 @@ package core
 	#bundle!: #Bundle
 
 	// Concrete values (everything closed/concrete)
-	// Must satisfy the value schema from #bundle.spec
-	values!: close(#bundle.#spec)
-
-	if #bundle.#status != _|_ {status: #bundle.#status}
-	status?: {
-		// Deployment lifecycle phase
-		phase: "pending" | "deployed" | "failed" | "unknown" | *"pending"
-
-		// Human-readable status message
-		message?: string
-	}
+	// Must satisfy the value schema from #bundle
+	values!: close(#bundle.#config)
 })
 
 #BundleReleaseMap: [string]: #BundleRelease

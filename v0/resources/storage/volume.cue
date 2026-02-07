@@ -15,7 +15,6 @@ import (
 		name:        "volumes"
 		description: "A volume definition for workloads"
 		labels: {
-			// "core.opmodel.dev/category":    "storage"
 			"core.opmodel.dev/persistence": "true"
 		}
 	}

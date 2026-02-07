@@ -27,13 +27,9 @@ package core
 	// Modules included in this bundle (full references)
 	#modules!: #ModuleMap
 
-	// MUST be an OpenAPIv3 compatible schema
-
 	// Value schema - constraints only, NO defaults
-	// Developers define the configuration contract
-	// Platform teams can add defaults and refine constraints via CUE merging
 	// MUST be OpenAPIv3 compliant (no CUE templating - for/if statements)
-	#spec!: _
+	#config!: _
 
 	// Concrete values - should contain sane default values
 	// Developers define these values but it can be overriden by the platform operator.
