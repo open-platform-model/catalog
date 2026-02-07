@@ -2,7 +2,7 @@
 
 ### Requirement: TcpRoute schema definition
 
-The schemas module SHALL define a `#TcpRouteSchema` that specifies TCP port-forwarding rules. The schema SHALL include a required `rules` field (list, minimum one entry) where each rule embeds `#RouteRuleBase` (providing `backendPort`). TCP routes SHALL NOT support hostname matching, header matching, or other L7 constructs — they operate at L4 only.
+The schemas module SHALL define a `#TcpRouteSchema` that embeds `#RouteAttachmentSchema` and specifies TCP port-forwarding rules. The schema SHALL include a required `rules` field (list, minimum one entry) where each rule embeds `#RouteRuleBase` (providing `backendPort`). TCP routes SHALL NOT support hostname matching, header matching, or other L7 constructs — they operate at L4 only.
 
 #### Scenario: Schema validates a basic TCP route
 
@@ -23,6 +23,21 @@ The schemas module SHALL define a `#TcpRouteSchema` that specifies TCP port-forw
 
 - **WHEN** a component specifies `tcpRoute: { rules: [{ backendPort: 0 }] }`
 - **THEN** the schema SHALL reject the value because port MUST be in range 1-65535
+
+#### Scenario: Schema accepts gateway reference
+
+- **WHEN** a component specifies `tcpRoute: { gatewayRef: { name: "tcp-gateway" }, rules: [{ backendPort: 5432 }] }`
+- **THEN** the schema SHALL accept the value
+
+#### Scenario: Schema accepts TLS passthrough
+
+- **WHEN** a component specifies `tcpRoute: { tls: { mode: "Passthrough" }, rules: [{ backendPort: 5432 }] }`
+- **THEN** the schema SHALL accept the value
+
+#### Scenario: Schema accepts className
+
+- **WHEN** a component specifies `tcpRoute: { className: "cilium", rules: [{ backendPort: 5432 }] }`
+- **THEN** the schema SHALL accept the value
 
 ### Requirement: TcpRoute trait definition
 

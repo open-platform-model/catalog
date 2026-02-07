@@ -5,9 +5,10 @@
 - [ ] Add `#SecurityContextSchema` to new `schemas/security.cue`
 - [ ] Add `#RouteHeaderMatch` shared base to `schemas/network.cue`
 - [ ] Add `#RouteRuleBase` shared base to `schemas/network.cue`
-- [ ] Add `#HttpRouteMatchSchema` and `#HttpRouteRuleSchema` and `#HttpRouteSchema` to `schemas/network.cue`
-- [ ] Add `#GrpcRouteMatchSchema` and `#GrpcRouteRuleSchema` and `#GrpcRouteSchema` to `schemas/network.cue`
-- [ ] Add `#TcpRouteRuleSchema` and `#TcpRouteSchema` to `schemas/network.cue`
+- [ ] Add `#RouteAttachmentSchema` shared base to `schemas/network.cue` (gatewayRef, tls, className)
+- [ ] Add `#HttpRouteMatchSchema` and `#HttpRouteRuleSchema` and `#HttpRouteSchema` to `schemas/network.cue` (embedding `#RouteAttachmentSchema`)
+- [ ] Add `#GrpcRouteMatchSchema` and `#GrpcRouteRuleSchema` and `#GrpcRouteSchema` to `schemas/network.cue` (embedding `#RouteAttachmentSchema`)
+- [ ] Add `#TcpRouteRuleSchema` and `#TcpRouteSchema` to `schemas/network.cue` (embedding `#RouteAttachmentSchema`)
 - [ ] Add `#DisruptionBudgetSchema` to `schemas/workload.cue`
 - [ ] Add `#GracefulShutdownSchema` to `schemas/workload.cue`
 - [ ] Add `#PlacementSchema` to `schemas/workload.cue`

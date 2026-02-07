@@ -2,7 +2,7 @@
 
 ### Requirement: GrpcRoute schema definition
 
-The schemas module SHALL define a `#GrpcRouteSchema` that specifies gRPC routing rules. The schema SHALL include an optional `hostnames` field (list of strings) for host-based matching. The schema SHALL include a required `rules` field (list, minimum one entry) where each rule embeds `#RouteRuleBase` and adds an optional `matches` list. Each match entry SHALL support optional fields: `service` (string, the fully-qualified gRPC service name), `method` (string, the gRPC method name), and `headers` (list of `#RouteHeaderMatch`). The schema SHALL NOT include gateway references or TLS configuration.
+The schemas module SHALL define a `#GrpcRouteSchema` that embeds `#RouteAttachmentSchema` and specifies gRPC routing rules. The schema SHALL include an optional `hostnames` field (list of strings) for host-based matching. The schema SHALL include a required `rules` field (list, minimum one entry) where each rule embeds `#RouteRuleBase` and adds an optional `matches` list. Each match entry SHALL support optional fields: `service` (string, the fully-qualified gRPC service name), `method` (string, the gRPC method name), and `headers` (list of `#RouteHeaderMatch`).
 
 #### Scenario: Schema validates a basic gRPC route with service matching
 
@@ -28,6 +28,21 @@ The schemas module SHALL define a `#GrpcRouteSchema` that specifies gRPC routing
 
 - **WHEN** a component specifies `grpcRoute: { rules: [] }`
 - **THEN** the schema SHALL reject the value because at least one rule MUST be present
+
+#### Scenario: Schema accepts gateway reference
+
+- **WHEN** a component specifies `grpcRoute: { gatewayRef: { name: "grpc-gateway" }, rules: [{ backendPort: 9090 }] }`
+- **THEN** the schema SHALL accept the value
+
+#### Scenario: Schema accepts TLS configuration
+
+- **WHEN** a component specifies `grpcRoute: { tls: { mode: "Terminate", certificateRef: { name: "grpc-cert" } }, rules: [{ backendPort: 9090 }] }`
+- **THEN** the schema SHALL accept the value
+
+#### Scenario: Schema accepts className
+
+- **WHEN** a component specifies `grpcRoute: { className: "istio", rules: [{ backendPort: 9090 }] }`
+- **THEN** the schema SHALL accept the value
 
 ### Requirement: GrpcRoute trait definition
 

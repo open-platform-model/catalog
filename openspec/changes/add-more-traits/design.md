@@ -26,8 +26,6 @@ traits/<cat>/    → #FooTrait (wraps schema, declares appliesTo, provides #defa
 **Non-Goals:**
 
 - K8s transformer implementations (covered by `add-transformers` change)
-- Gateway/infrastructure-level routing config (platform concern, not module-author concern)
-- TLS termination on routes (platform concern, handled at gateway level)
 - Blueprint updates to compose new traits (separate follow-up)
 - Workload schema updates (e.g., adding traits to `#StatelessWorkloadSchema`) — those schemas are `close()`d and would need explicit updates in a follow-up
 
@@ -38,14 +36,14 @@ traits/<cat>/    → #FooTrait (wraps schema, declares appliesTo, provides #defa
 **Decision**: Add schemas to the file matching their category:
 
 - `schemas/workload.cue` — DisruptionBudget, GracefulShutdown, Placement
-- `schemas/network.cue` — RouteHeaderMatch, RouteRuleBase, HttpRoute, GrpcRoute, TcpRoute
+- `schemas/network.cue` — RouteHeaderMatch, RouteRuleBase, RouteAttachmentSchema, HttpRoute, GrpcRoute, TcpRoute
 - New `schemas/security.cue` — SecurityContext
 
 **Rationale**: Follows existing convention where `#ExposeSchema` lives in `network.cue` and workload schemas live in `workload.cue`. A new `security.cue` is warranted because security constraints are neither config/secrets nor workload lifecycle.
 
 ### 2. Shared base schemas for route traits
 
-**Decision**: Define `#RouteHeaderMatch` and `#RouteRuleBase` in `schemas/network.cue` as shared base types:
+**Decision**: Define `#RouteHeaderMatch`, `#RouteRuleBase`, and `#RouteAttachmentSchema` in `schemas/network.cue` as shared base types:
 
 ```cue
 #RouteHeaderMatch: {
@@ -56,9 +54,24 @@ traits/<cat>/    → #FooTrait (wraps schema, declares appliesTo, provides #defa
 #RouteRuleBase: {
     backendPort!: uint & >=1 & <=65535
 }
+
+#RouteAttachmentSchema: {
+    gatewayRef?: {
+        name!:      string
+        namespace?: string
+    }
+    tls?: {
+        mode?:           *"Terminate" | "Passthrough"
+        certificateRef?: {
+            name!:      string
+            namespace?: string
+        }
+    }
+    ingressClassName?: string
+}
 ```
 
-Protocol-specific schemas embed the base and add their own match fields:
+Protocol-specific schemas embed `#RouteRuleBase` for rules and `#RouteAttachmentSchema` at the top level:
 
 ```cue
 #HttpRouteRuleSchema: #RouteRuleBase & {
@@ -68,9 +81,15 @@ Protocol-specific schemas embed the base and add their own match fields:
     matches?: [...#GrpcRouteMatchSchema]
 }
 #TcpRouteRuleSchema: #RouteRuleBase  // No additional match fields
+
+#HttpRouteSchema: #RouteAttachmentSchema & {
+    hostnames?: [...string]
+    rules: [#HttpRouteRuleSchema, ...#HttpRouteRuleSchema]
+}
+// GrpcRouteSchema, TcpRouteSchema follow the same embedding pattern
 ```
 
-**Alternative considered**: Fully independent schemas per protocol. Rejected because it duplicates `backendPort` validation and `#RouteHeaderMatch` across three schemas.
+**Alternative considered**: Fully independent schemas per protocol. Rejected because it duplicates `backendPort` validation, `#RouteHeaderMatch`, and attachment fields across three schemas.
 
 ### 3. Separate traits per protocol (HTTP, gRPC, TCP)
 
@@ -78,25 +97,21 @@ Protocol-specific schemas embed the base and add their own match fields:
 
 **Rationale**: Aligns with OPM composability (Principle III) — attach only what you need. Each schema validates exactly its protocol's fields without conditionals, maintaining type safety (Principle I). Maps 1:1 to K8s Gateway API resources.
 
-### 4. No gateway reference in route traits
+### 4. Optional platform attachment on route traits
 
-**Decision**: Route traits do not include `gatewayRef`, `parentRef`, or any reference to gateway infrastructure.
+**Decision**: Route traits include optional `gatewayRef`, `tls`, and `ingressClassName` fields via the shared `#RouteAttachmentSchema`. All fields are optional — module authors may express routing attachment intent, but platform operators can override or default these through Scope/provider configuration.
 
-**Rationale**: Gateway attachment is a platform concern, not a module-author concern. The Module Author declares "my workload needs HTTP routing with these rules." The Platform Operator decides which gateway handles it. This follows Principle II (Separation of Concerns) and Principle V (Portability by Design). Gateway binding will be resolved through the Scope/deployment context in a future design.
+**Rationale**: Module authors often know which gateway class or TLS mode their workload needs. Making these fields optional preserves Separation of Concerns (Principle II) — the platform operator is not forced to infer intent. When unset, the platform provides defaults. This also enables the K8s Ingress transformer to derive `ingressClassName` and `tls` directly from the route trait without needing a separate Ingress-specific trait.
 
-### 5. No TLS on route traits
+**Previous position**: Earlier iterations excluded gateway references and TLS from route traits entirely, treating them as pure platform concerns. Revised because: (1) the K8s Ingress transformer needs `ingressClassName` and `tls` data and there is no natural place for it other than the route trait, (2) Gateway API's HTTPRoute itself carries `parentRefs` and the OPM model should be able to express the same intent, (3) keeping them optional preserves the separation — omitting them is equivalent to the old behavior.
 
-**Decision**: TLS termination is not modeled on route traits. No `tls` field.
-
-**Rationale**: TLS termination happens at the gateway/platform level. The Platform Operator configures TLS on the Gateway resource. Module Authors should not need to manage certificates or TLS configuration. This keeps route traits focused on application-level routing intent.
-
-### 6. Route traits semantically depend on Expose
+### 5. Route traits semantically depend on Expose
 
 **Decision**: Route traits require the Expose trait to function (a route needs a Service to forward to). This dependency is enforced at the transformer level (`requiredTraits` includes both Route and Expose), not at the trait definition level.
 
-**Rationale**: Follows OPM's composability principle — traits compose independently at the definition level. Cross-trait dependencies are a transformer concern.
+**Rationale**: Follows OPM's composability principle — traits compose independently at the definition level. Cross-trait dependencies are a transformer concern. Exception: the K8s Ingress transformer requires only HTTPRoute (not Expose) because `backendPort` is already on the route rules and the service name is derived from the component name.
 
-### 7. DisruptionBudget mutual exclusion enforcement
+### 6. DisruptionBudget mutual exclusion enforcement
 
 **Decision**: Use CUE disjunction to enforce that exactly one of `minAvailable` or `maxUnavailable` is set:
 
@@ -106,21 +121,102 @@ Protocol-specific schemas embed the base and add their own match fields:
 
 **Alternative considered**: Two optional fields with runtime validation. Rejected because CUE can enforce this at definition time (Principle I).
 
-### 8. Placement `platformOverrides` as open struct
+### 7. Placement `platformOverrides` as open struct
 
 **Decision**: Use `{...}` (open struct) for `platformOverrides` to allow arbitrary provider-specific fields.
 
 **Alternative considered**: Typed per-provider structs. Rejected because it would couple the schemas module to provider-specific knowledge, violating Principle V.
 
-### 9. All traits appliesTo Container resource
+### 8. All traits appliesTo Container resource
 
 **Decision**: All seven traits declare `appliesTo: [workload_resources.#ContainerResource]`, consistent with every existing trait.
 
-### 10. Route rules require minimum one entry
+### 9. Route rules require minimum one entry
 
 **Decision**: Use CUE list constraint (`[#RuleSchema, ...#RuleSchema]`) to enforce at least one rule in all route schemas.
 
 **Rationale**: A route with no rules is never valid. Enforce structurally at definition time.
+
+## Example: HttpRoute (illustrative)
+
+The HttpRoute trait is the most complete route trait. GrpcRoute and TcpRoute follow the same structural pattern (embed `#RouteAttachmentSchema`, wrap in trait, provide component mixin).
+
+### Schema (`schemas/network.cue`)
+
+```cue
+#HttpRouteMatchSchema: {
+    path?: {
+        type:   *"Prefix" | "Exact" | "RegularExpression"
+        value!: string
+    }
+    headers?: [...#RouteHeaderMatch]
+    method?:  "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS"
+}
+
+#HttpRouteRuleSchema: #RouteRuleBase & {
+    matches?: [...#HttpRouteMatchSchema]
+}
+
+#HttpRouteSchema: #RouteAttachmentSchema & {
+    hostnames?: [...string]
+    rules: [#HttpRouteRuleSchema, ...#HttpRouteRuleSchema]
+}
+```
+
+### Trait (`traits/network/http_route.cue`)
+
+```cue
+package network
+
+import (
+    core "opmodel.dev/core@v0"
+    schemas "opmodel.dev/schemas@v0"
+    workload_resources "opmodel.dev/resources/workload@v0"
+)
+
+#HttpRouteTrait: close(core.#Trait & {
+    metadata: {
+        apiVersion:  "opmodel.dev/traits/network@v0"
+        name:        "httpRoute"
+        description: "HTTP routing rules for a workload"
+    }
+
+    appliesTo: [workload_resources.#ContainerResource]
+
+    #defaults: #HttpRouteDefaults
+
+    #spec: httpRoute: schemas.#HttpRouteSchema
+})
+
+#HttpRoute: close(core.#Component & {
+    #traits: {(#HttpRouteTrait.metadata.fqn): #HttpRouteTrait}
+})
+
+#HttpRouteDefaults: close(schemas.#HttpRouteSchema & {
+    rules: [{backendPort: 8080}]
+})
+```
+
+### Usage in a component
+
+```cue
+myApp: core.#Component & #Container & #Expose & #HttpRoute & {
+    spec: {
+        container: image: "myapp:latest"
+        expose: ports: http: { targetPort: 8080 }
+        httpRoute: {
+            hostnames: ["app.example.com"]
+            ingressClassName: "nginx"
+            tls: mode: "Terminate"
+            gatewayRef: name: "main-gateway"
+            rules: [{
+                matches: [{path: {value: "/api"}}]
+                backendPort: 8080
+            }]
+        }
+    }
+}
+```
 
 ## Risks / Trade-offs
 
@@ -130,7 +226,7 @@ Protocol-specific schemas embed the base and add their own match fields:
 
 **[Closed workload schemas need separate updates]** → `#StatelessWorkloadSchema` etc. are `close()`d. New traits won't be usable from blueprints until those schemas add the optional fields. This is intentional (explicit > implicit).
 
-**[Gateway binding is deferred]** → Route traits don't specify which gateway handles them. This is a known gap that requires a separate design for Scope-level gateway configuration. Route traits are still useful — they declare intent — but the full routing pipeline isn't complete until gateway binding is designed.
+**[Platform attachment fields may be ignored]** → Module authors may set `gatewayRef` or `ingressClassName` but the platform operator's configuration takes precedence. This is by design — the trait expresses intent, the platform resolves it. Documentation should make the override semantics clear.
 
 ## Migration Plan
 
