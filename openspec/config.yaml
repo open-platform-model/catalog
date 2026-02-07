@@ -91,20 +91,47 @@ context: |
 
 rules:
   proposal:
+    - "Focus: WHY we're doing this, WHAT's in/out of scope"
+    - "Updates when: Scope changes, intent clarifies, approach fundamentally shifts"
     - Complexity additions MUST include justification (Principle VII)
     - Identify portability impacts if introducing provider-specific concerns
     - State whether this is MAJOR/MINOR/PATCH change per SemVer
     - Identify which CUE module(s) are affected
     - State if changes affect module API (breaking vs non-breaking)
-  specs:
-    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY) to indicate requirement strength
-    - Focus on WHAT should exist, not HOW to create it (Principle IV)
-    - Ensure requirements are runtime-agnostic (Principle V)
+
   design:
+    - "Focus: HOW we'll implement it technically"
+    - "Updates when: Implementation reveals better approach, constraints change"
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY) to indicate requirement strength
+    - MUST include "Research & Decisions" section when exploration was done
+    - Document what was explored, alternatives considered, and rationale
+    - Format: |
+        ## Research & Decisions
+        
+        ### [Topic]
+        **Context**: [Why this decision was needed]
+        **Explored**: [What was investigated - link to exploration notes]
+        **Options considered**:
+        1. [Option A] - [pros/cons]
+        2. [Option B] - [pros/cons]
+        **Decision**: [Chosen option]
+        **Rationale**: [Why this option was selected]
     - Document how type safety is maintained (Principle I)
     - Explain composition strategy - how pieces fit together (Principle III)
     - Identify ownership boundaries between Developer/Platform/Consumer (Principle II)
+
+  specs:
+    - "Focus: WHAT behavior is changing (not HOW it's implemented)"
+    - "Updates when: New or changed requirements emerge"
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+    - Focus on WHAT should exist, not HOW to create it (Principle IV)
+    - Ensure requirements are runtime-agnostic (Principle V)
+
   tasks:
+    - "Focus: STEPS to take for implementation"
+    - "Updates when: Tasks complete, new tasks discovered, blockers identified"
+    - Break tasks into chunks of max 2 hours
+    - Each task should be independently testable
     - Include validation gates as final tasks (task fmt, task vet)
     - Group by logical phases (schema changes, implementation, validation)
     - Use "task vet" (with "CONCRETE=true" to force concreteness) as final step to ensure all changes validate before merge.
