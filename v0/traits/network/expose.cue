@@ -23,7 +23,7 @@ import (
 	appliesTo: [workload_resources.#ContainerResource] // Full CUE reference (not FQN string)
 
 	// Default values for expose trait
-	#defaults: #ExposeTraitDefaults
+	#defaults: #ExposeDefaults
 
 	#spec: expose: schemas.#ExposeSchema
 })
@@ -32,6 +32,6 @@ import (
 	#traits: {(#ExposeTrait.metadata.fqn): #ExposeTrait}
 })
 
-#ExposeTraitDefaults: close(schemas.#ExposeSchema & {
+#ExposeDefaults: close(schemas.#ExposeSchema & {
 	type: "ClusterIP"
 })
