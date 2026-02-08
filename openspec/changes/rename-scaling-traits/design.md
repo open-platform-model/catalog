@@ -16,6 +16,7 @@ The catalog is pre-1.0, making this the right time for breaking renames. The `ad
 - Add VPA stub (`auto?`) to Sizing schema for future vertical autoscaling
 - Maintain type safety: all existing validation constraints carry forward
 - Keep transformers functional: static `count` path produces identical K8s output
+- Add `sizing?` and `securityContext?` fields to all `close()`d workload schemas so downstream transformers can read them from `#component.spec`
 
 **Non-Goals:**
 
@@ -158,6 +159,16 @@ The stub is not implemented by any transformer — it's a forward declaration on
     controlledResources?: [...("cpu" | "memory")]
 }
 ```
+
+### 9. Add `sizing?` and `securityContext?` to all workload schemas
+
+**Decision**: While touching the `close()`d workload schemas to rename `replicas` → `scaling`, also add `sizing?` and `securityContext?` fields to all five workload schemas (`#StatelessWorkloadSchema`, `#StatefulWorkloadSchema`, `#DaemonWorkloadSchema`, `#TaskWorkloadSchema`, `#ScheduledTaskWorkloadSchema`).
+
+**Rationale**: The `add-transformers` change needs to wire Sizing (renamed from ResourceLimit) and SecurityContext traits into workload transformer outputs. Transformers read from `#component.spec.*`, which is constrained by these `close()`d schemas. Without these fields, components using these traits would fail validation before reaching the transformer. Adding them here avoids touching the same schemas a second time.
+
+Both fields are optional, matching the pattern of existing trait fields (`healthCheck?`, `scaling?`).
+
+The `securityContext?` field references `#SecurityContextSchema` from `schemas/security.cue` (added by the completed `add-more-traits` change). This requires adding an import of the security schemas package to `schemas/workload.cue`.
 
 ## Risks / Trade-offs
 

@@ -2,16 +2,16 @@
 
 ### Requirement: HPA transformer definition
 
-The Kubernetes provider SHALL include a `#HPATransformer` that conforms to `core.#Transformer`. It SHALL declare `requiredTraits` containing the Replication trait FQN. The transformer SHALL only produce output when the component's `replication.auto` field is present.
+The Kubernetes provider SHALL include a `#HPATransformer` that conforms to `core.#Transformer`. It SHALL declare `requiredTraits` containing the Scaling trait FQN. The transformer SHALL only produce output when the component's `scaling.auto` field is present.
 
-#### Scenario: Transformer matches component with Replication auto config
+#### Scenario: Transformer matches component with Scaling auto config
 
-- **WHEN** a component has the Replication trait and `replication.auto` is defined
+- **WHEN** a component has the Scaling trait and `scaling.auto` is defined
 - **THEN** the `#HPATransformer` SHALL match and produce output
 
-#### Scenario: Transformer does not produce output for static replication
+#### Scenario: Transformer does not produce output for static scaling
 
-- **WHEN** a component has the Replication trait with only `replication.count` (no `auto`)
+- **WHEN** a component has the Scaling trait with only `scaling.count` (no `auto`)
 - **THEN** the `#HPATransformer` SHALL not produce output
 
 ### Requirement: HPA output structure
@@ -20,17 +20,17 @@ The transformer SHALL emit a valid Kubernetes `autoscaling/v2/HorizontalPodAutos
 
 #### Scenario: CPU-based autoscaling
 
-- **WHEN** a component defines `replication.auto` with `min: 2`, `max: 10`, and a CPU metric targeting `averageUtilization: 80`
+- **WHEN** a component defines `scaling.auto` with `min: 2`, `max: 10`, and a CPU metric targeting `averageUtilization: 80`
 - **THEN** the output SHALL be an HPA with `spec.minReplicas: 2`, `spec.maxReplicas: 10`, and a CPU resource metric with `target.averageUtilization: 80`
 
 #### Scenario: Multiple metrics
 
-- **WHEN** a component defines `replication.auto` with both CPU and memory metrics
+- **WHEN** a component defines `scaling.auto` with both CPU and memory metrics
 - **THEN** the output HPA SHALL include both metrics in `spec.metrics`
 
 #### Scenario: Custom metric
 
-- **WHEN** a component defines `replication.auto` with a custom metric type and `metricName: "requests_per_second"`
+- **WHEN** a component defines `scaling.auto` with a custom metric type and `metricName: "requests_per_second"`
 - **THEN** the output HPA SHALL include a pods metric with the specified name
 
 ### Requirement: HPA scaleTargetRef
@@ -39,30 +39,30 @@ The HPA `spec.scaleTargetRef` SHALL reference the workload resource (Deployment,
 
 #### Scenario: HPA targets a Deployment
 
-- **WHEN** a stateless component with `replication.auto` is transformed
+- **WHEN** a stateless component with `scaling.auto` is transformed
 - **THEN** the HPA `spec.scaleTargetRef` SHALL have `kind: "Deployment"` and `name` matching the component name
 
 #### Scenario: HPA targets a StatefulSet
 
-- **WHEN** a stateful component with `replication.auto` is transformed
+- **WHEN** a stateful component with `scaling.auto` is transformed
 - **THEN** the HPA `spec.scaleTargetRef` SHALL have `kind: "StatefulSet"` and `name` matching the component name
 
 ### Requirement: Workload transformers use auto.min for static replicas
 
-When `replication.auto` is present, workload transformers SHALL use `replication.auto.min` as the value for `spec.replicas` instead of `replication.count`, so the static value matches the HPA floor.
+When `scaling.auto` is present, workload transformers SHALL use `scaling.auto.min` as the value for `spec.replicas` instead of `scaling.count`, so the static value matches the HPA floor.
 
 #### Scenario: Deployment replicas set to auto.min
 
-- **WHEN** a stateless component has `replication: { count: 1, auto: { min: 3, max: 10, metrics: [...] } }`
+- **WHEN** a stateless component has `scaling: { count: 1, auto: { min: 3, max: 10, metrics: [...] } }`
 - **THEN** the Deployment transformer SHALL emit `spec.replicas: 3` (from `auto.min`, not `count`)
 
 ### Requirement: Scaling behavior
 
-When `replication.auto.behavior` is specified, the HPA SHALL include `spec.behavior` with scale-up and scale-down stabilization windows.
+When `scaling.auto.behavior` is specified, the HPA SHALL include `spec.behavior` with scale-up and scale-down stabilization windows.
 
 #### Scenario: Custom stabilization window
 
-- **WHEN** a component defines `replication.auto.behavior.scaleDown.stabilizationWindowSeconds: 300`
+- **WHEN** a component defines `scaling.auto.behavior.scaleDown.stabilizationWindowSeconds: 300`
 - **THEN** the HPA SHALL include `spec.behavior.scaleDown.stabilizationWindowSeconds: 300`
 
 ### Requirement: Provider registration

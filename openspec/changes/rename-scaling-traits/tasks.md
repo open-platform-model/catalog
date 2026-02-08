@@ -9,8 +9,8 @@
 
 - [ ] 2.1 Add `#VerticalAutoscalingSpec` definition to `v0/schemas/workload.cue`
 - [ ] 2.2 Rename `#ResourceLimitSchema` to `#SizingSchema` and add `auto?: #VerticalAutoscalingSpec` field in `v0/schemas/workload.cue`
-- [ ] 2.3 Rename `resourceLimit?:` to `sizing?:` in `#StatelessWorkloadSchema` if present
-- [ ] 2.4 Rename `resourceLimit?:` to `sizing?:` in `#StatefulWorkloadSchema` if present
+- [ ] 2.3 Add `sizing?:` field (referencing `#SizingSchema`) to `#StatelessWorkloadSchema`, `#StatefulWorkloadSchema`, `#DaemonWorkloadSchema`, `#TaskWorkloadSchema`, `#ScheduledTaskWorkloadSchema`
+- [ ] 2.4 Add `securityContext?:` field (referencing `#SecurityContextSchema`) to `#StatelessWorkloadSchema`, `#StatefulWorkloadSchema`, `#DaemonWorkloadSchema`, `#TaskWorkloadSchema`, `#ScheduledTaskWorkloadSchema`
 
 ## 3. Scaling Trait Definition
 

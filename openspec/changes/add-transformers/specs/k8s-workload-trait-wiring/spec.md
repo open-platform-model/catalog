@@ -34,28 +34,28 @@ The Deployment, StatefulSet, and DaemonSet transformers SHALL extract the Health
 - **WHEN** a component defines `healthCheck` with `readinessProbe.initialDelaySeconds: 10` and `readinessProbe.periodSeconds: 5`
 - **THEN** the transformer output SHALL include those timing parameters on the readiness probe
 
-### Requirement: ResourceLimit trait wired into workload transformer output
+### Requirement: Sizing trait wired into workload transformer output
 
-All workload transformers (Deployment, StatefulSet, DaemonSet, Job, CronJob) SHALL declare ResourceLimit as an optional trait, extract it from the component spec, and emit `resources` (requests and limits) on the main container in the K8s output.
+All workload transformers (Deployment, StatefulSet, DaemonSet, Job, CronJob) SHALL declare Sizing as an optional trait, extract it from the component spec, and emit `resources` (requests and limits) on the main container in the K8s output.
 
 #### Scenario: Component with CPU and memory limits
 
-- **WHEN** a stateless component defines `resourceLimit` with `cpu: { request: "100m", limit: "500m" }` and `memory: { request: "128Mi", limit: "256Mi" }`
+- **WHEN** a stateless component defines `sizing` with `cpu: { request: "100m", limit: "500m" }` and `memory: { request: "128Mi", limit: "256Mi" }`
 - **THEN** the Deployment transformer output SHALL include `resources.requests.cpu: "100m"`, `resources.limits.cpu: "500m"`, `resources.requests.memory: "128Mi"`, `resources.limits.memory: "256Mi"` on the main container
 
 #### Scenario: Component with only memory limits
 
-- **WHEN** a component defines `resourceLimit` with only `memory: { request: "64Mi", limit: "128Mi" }`
+- **WHEN** a component defines `sizing` with only `memory: { request: "64Mi", limit: "128Mi" }`
 - **THEN** the transformer output SHALL include memory resources and SHALL NOT include CPU resources
 
-#### Scenario: Component without ResourceLimit trait
+#### Scenario: Component without Sizing trait
 
-- **WHEN** a component does not define `resourceLimit`
+- **WHEN** a component does not define `sizing`
 - **THEN** the transformer output SHALL NOT include a `resources` field on the container (beyond any resources already in the Container schema)
 
-#### Scenario: ResourceLimit on Job workload
+#### Scenario: Sizing on Job workload
 
-- **WHEN** a task component defines `resourceLimit`
+- **WHEN** a task component defines `sizing`
 - **THEN** the Job transformer output SHALL include `resources` on the main container
 
 ### Requirement: SecurityContext trait wired into workload transformer output
@@ -88,7 +88,7 @@ Adding new optional traits to existing workload transformers SHALL NOT change th
 
 #### Scenario: Deployment without new traits produces same output
 
-- **WHEN** a stateless component with only a Container resource (no HealthCheck, ResourceLimit, or SecurityContext) is transformed
+- **WHEN** a stateless component with only a Container resource (no HealthCheck, Sizing, or SecurityContext) is transformed
 - **THEN** the Deployment output SHALL be identical to the output before this change
 
 ### Requirement: Updated test data

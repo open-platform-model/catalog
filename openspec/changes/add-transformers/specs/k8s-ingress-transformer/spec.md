@@ -59,11 +59,11 @@ When the HttpRoute trait specifies TLS configuration (via `#RouteAttachmentSchem
 
 ### Requirement: Ingress class
 
-When the HttpRoute trait specifies `className` (via `#RouteAttachmentSchema`), the output SHALL include `spec.ingressClassName`.
+When the HttpRoute trait specifies `ingressClassName` (via `#RouteAttachmentSchema`), the output SHALL include `spec.ingressClassName`.
 
 #### Scenario: Custom ingress class
 
-- **WHEN** a component defines an HttpRoute trait with `className: "nginx"`
+- **WHEN** a component defines an HttpRoute trait with `ingressClassName: "nginx"`
 - **THEN** the output Ingress SHALL include `spec.ingressClassName: "nginx"`
 
 ### Requirement: Provider registration
