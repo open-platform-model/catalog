@@ -9,12 +9,11 @@ import (
 //// NetworkRules Policy Definition
 /////////////////////////////////////////////////////////////////
 
-#NetworkRulesPolicy: close(core.#Policy & {
+#NetworkRulesPolicy: close(core.#PolicyRule & {
 	metadata: {
 		apiVersion:  "opmodel.dev/policies/connectivity@v0"
 		name:        "network-rules"
 		description: "Defines network traffic rules"
-		target:      "scope"
 	}
 
 	enforcement: {
@@ -25,6 +24,6 @@ import (
 	#spec: networkRules: [ruleName=string]: schemas.#NetworkRuleSchema
 })
 
-#NetworkRules: close(core.#Scope & {
-	#policies: {(#NetworkRulesPolicy.metadata.fqn): #NetworkRulesPolicy}
+#NetworkRules: close(core.#Policy & {
+	#rules: {(#NetworkRulesPolicy.metadata.fqn): #NetworkRulesPolicy}
 })

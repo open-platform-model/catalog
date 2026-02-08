@@ -23,10 +23,10 @@ package core
 	// Components defined in this module release
 	components: #module.#components
 
-	// Module-level scopes (if any)
-	scopes?: [Id=string]: #Scope
-	if #module.#scopes != _|_ {
-		scopes: #module.#scopes
+	// Module-level policies (if any)
+	policies?: [Id=string]: #Policy
+	if #module.#policies != _|_ {
+		policies: #module.#policies
 	}
 
 	// Concrete values (everything closed/concrete)

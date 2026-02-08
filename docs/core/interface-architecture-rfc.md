@@ -168,7 +168,7 @@ Interface joins the existing definition types as a new first-class concept:
 |------|---------------------|-------|
 | **Resource** | "What exists?" | Component |
 | **Trait** | "How does it behave?" | Component |
-| **Policy** | "What must be true?" | Scope |
+| **PolicyRule** | "What must be true?" | Policy |
 | **Blueprint** | "What is the pattern?" | Component |
 | **Interface** | "What does it communicate?" | Component |
 | **Lifecycle** | "What happens on transitions?" | Component/Module |
@@ -581,10 +581,10 @@ The platform is responsible for **fulfilling** all `requires` declarations. Fulf
 
 ### Strategy 1: Cross-Module Matching
 
-When a component in one module `requires` an interface that a component in another module `provides`, and both are deployed in the same Scope, the platform can auto-wire them. This is the primary use case for interfaces — connecting modules that don't know about each other.
+When a component in one module `requires` an interface that a component in another module `provides`, and both are deployed in the same Policy, the platform can auto-wire them. This is the primary use case for interfaces — connecting modules that don't know about each other.
 
 ```text
-┌─ Scope: production ──────────────────────────────────────────────┐
+┌─ Policy: production ─────────────────────────────────────────────┐
 │                                                                  │
 │  ┌─ Module: app ───────────┐   ┌─ Module: data-tier ──────────┐  │
 │  │                         │   │                              │  │
@@ -612,7 +612,7 @@ Note: this is specifically for **cross-module** dependencies. Within a single mo
 When no in-scope component provides the required interface, the platform can provision infrastructure:
 
 ```text
-┌─ Scope: production ───────────────────────────────────────────────┐
+┌─ Policy: production ──────────────────────────────────────────────┐
 │                                                                   │
 │  user-service                                                     │
 │  ┌─────────────────────┐                                          │
@@ -645,7 +645,7 @@ This is the **DaaS (Database as a Service)** model. The platform advertises whic
 The platform binds the requirement to an external, pre-existing service:
 
 ```cue
-Platform binding configuration (Scope-level or Bundle-level):
+Platform binding configuration (Policy-level or Bundle-level):
 
 bindings: {
     "user-service": {
@@ -877,7 +877,7 @@ import (
 ### Platform Fulfillment for Example 2
 
 ```cue
-scope: #Scope & {
+policy: #Policy & {
     metadata: { name: "production" }
 
     #modules: {
@@ -938,8 +938,8 @@ scope: #Scope & {
 │            │ A StatelessWorkload blueprint could include a default        │
 │            │ provides: #HttpServer.                                       │
 ├────────────┼──────────────────────────────────────────────────────────────┤
-│ Scope      │ Scopes are where provides/requires are resolved.             │
-│            │ The platform matches requires to provides within a Scope.    │
+│ Policy     │ Policies are where provides/requires are resolved.            │
+│            │ The platform matches requires to provides within a Policy.   │
 ├────────────┼──────────────────────────────────────────────────────────────┤
 │ Transformer│ Transformers render traits. Interface resolvers render       │
 │            │ interfaces. Each path has its own rendering pipeline.       │
@@ -987,7 +987,7 @@ These are **different approaches**, not equivalent representations. Path A gives
 | **Platform portability** | Module says `requires: #Postgres`, platform decides HOW (RDS, Cloud SQL, self-hosted). Module unchanged. |
 | **Dependency graph** | Platform can build and validate the full service dependency graph. Detect cycles, missing dependencies, version conflicts. |
 | **DaaS / managed services** | Platform can provision infrastructure to fulfill interfaces. `requires: #Postgres` → platform spins up RDS. |
-| **Auto-wiring** | When provider and consumer are in the same Scope, platform can auto-connect them without manual configuration. |
+| **Auto-wiring** | When provider and consumer are in the same Policy, platform can auto-connect them without manual configuration. |
 | **Documentation as code** | `provides` is machine-readable documentation of what a service offers. Service catalogs become automatic. |
 | **Incremental adoption** | Traits remain a fully independent path. Teams can use interfaces for new services without changing existing trait-based definitions. |
 | **Extensible** | Platform operators define custom interfaces for their organization's services. |
@@ -1047,13 +1047,13 @@ These are **different approaches**, not equivalent representations. Path A gives
 
 ### Q3: Multiple Providers for Same Interface
 
-**Question**: What happens when two components in a Scope both `provides: #Postgres`?
+**Question**: What happens when two components in a Policy both `provides: #Postgres`?
 
 **Options**:
 
 - A. Ambiguity error — consumer must specify which provider via `ref`
 - B. Platform selects based on naming convention or labels
-- C. Explicit binding configuration at Scope level
+- C. Explicit binding configuration at Policy level
 
 **Recommendation**: Option A with Option C as override. Ambiguity should be an error, not silently resolved.
 
@@ -1124,7 +1124,7 @@ OPM's differentiator: **compile-time type safety via CUE + provider-agnostic ful
 
 - Define fulfillment contract (how platforms advertise capabilities)
 - Implement in-scope auto-wiring (match requires to provides)
-- Implement Scope-level binding configuration
+- Implement Policy-level binding configuration
 - Define DaaS provisioning interface
 
 ### Phase 4: Ecosystem

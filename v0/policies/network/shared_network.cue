@@ -9,12 +9,11 @@ import (
 //// SharedNetwork Policy Definition
 /////////////////////////////////////////////////////////////////
 
-#SharedNetworkPolicy: close(core.#Policy & {
+#SharedNetworkPolicy: close(core.#PolicyRule & {
 	metadata: {
 		apiVersion:  "opmodel.dev/policies/connectivity@v0"
 		name:        "shared-network"
-		description: "Allows all network traffic between components in the same scope based on their exposed ports"
-		target:      "scope"
+		description: "Allows all network traffic between components in the same policy based on their exposed ports"
 	}
 
 	enforcement: {
@@ -25,6 +24,6 @@ import (
 	#spec: sharedNetwork: schemas.#SharedNetworkSchema
 })
 
-#SharedNetwork: close(core.#Scope & {
-	#policies: {(#SharedNetworkPolicy.metadata.fqn): #SharedNetworkPolicy}
+#SharedNetwork: close(core.#Policy & {
+	#rules: {(#SharedNetworkPolicy.metadata.fqn): #SharedNetworkPolicy}
 })

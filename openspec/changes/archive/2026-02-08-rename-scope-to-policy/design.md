@@ -51,7 +51,7 @@ OPM's `#Scope` already works like KubeVela's replacement — it's a policy appli
 
 `#Component` composes Resources + Traits + Blueprints → `spec`. The renamed `#Policy` composes PolicyRules → `spec`. Same pattern:
 
-```
+```text
 #Component                          #Policy (renamed from #Scope)
 ├── #resources: [FQN]: #Resource    ├── #rules: [FQN]: #PolicyRule
 ├── #traits?: [FQN]: #Trait         │

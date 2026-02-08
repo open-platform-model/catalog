@@ -32,11 +32,11 @@ package core
 	}
 
 	// List of all components in this module
-	// Useful for scopes that want to apply to all components
+	// Useful for policies that want to apply to all components
 	// #allComponents: [for _, c in #components {c}]
 
-	// Module-level scopes (developer-defined, optional. May be added to by the platform-team)
-	#scopes?: [Id=string]: #Scope
+	// Module-level policies (developer-defined, optional. May be added to by the platform-team)
+	#policies?: [Id=string]: #Policy
 
 	// Value schema - constraints only, NO defaults
 	// Developers define the configuration contract and reference it in their components.

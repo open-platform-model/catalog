@@ -1,59 +1,53 @@
 package core
 
-import (
-	"strings"
-)
-
-// #Policy: Encodes governance rules, security requirements,
-// compliance controls, and operational guardrails.
-// Policies define what MUST be true, not suggestions.
+// #Policy: Groups PolicyRules and targets them to a set of
+// components via label matching or explicit references.
+// Policies enable cross-cutting governance without coupling
+// rules to individual components.
 #Policy: close({
 	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Policy"
 
 	metadata: {
-		apiVersion!: #APIVersionType // Example: "opmodel.dev/policies/security@v0"
-		name!:       #NameType       // Example: "encryption"
-		_definitionName: (#KebabToPascal & {"in": name}).out
-		fqn: #FQNType & "\(apiVersion)#\(_definitionName)" // Example: "opmodel.dev/policies/security@v0#Encryption"
-
-		description?: string
-
-		// Where this policy can be applied
-		// scope: Policy applies only to scopes
-		target!: "scope"
+		name!: #NameType
 
 		labels?:      #LabelsAnnotationsType
 		annotations?: #LabelsAnnotationsType
 	}
 
-	// Policy enforcement configuration
-	// Note: CUE always validates the structure/schema of the policy spec itself.
-	// This field controls WHERE and WHEN the policy is ENFORCED by the platform.
-	enforcement!: {
-		// When enforcement happens
-		// deployment: Enforced when resources are deployed (admission controllers, pre-flight checks)
-		// runtime: Enforced continuously while running (monitoring, auditing, ongoing validation)
-		// both: Enforced at both deployment time and continuously at runtime
-		mode!: "deployment" | "runtime" | "both"
-
-		// What happens when policy is violated
-		// block: Reject the operation (deployment fails, request denied)
-		// warn: Log warning but allow operation to proceed
-		// audit: Record violation for compliance review without blocking
-		onViolation!: "block" | "warn" | "audit"
-
-		// Optional: platform-specific enforcement configuration
-		// This is where platforms specify HOW to enforce (Kyverno, OPA, admission webhooks, etc.)
-		// The structure is intentionally flexible to support different enforcement mechanisms
-		platform?: _
+	// PolicyRules grouped by this policy
+	#rules: [RuleFQN=string]: #PolicyRule & {
+		metadata: {
+			name: string | *RuleFQN
+		}
 	}
 
-	// MUST be an OpenAPIv3 compatible schema
-	// The field and schema exposed by this definition
-	// Use # to allow inconcrete fields
-	// TODO: Add OpenAPIv3 schema validation
-	#spec!: (strings.ToCamel(metadata._definitionName)): _
+	// Which components this policy applies to
+	// At least one of matchLabels or components must be specified
+	appliesTo: {
+		// Label-based matching — select components whose labels are a superset
+		matchLabels?: #LabelsAnnotationsType
+
+		// Explicit component references
+		components?: [...#Component]
+	}
+
+	_allFields: {
+		if #rules != _|_ {
+			for _, rule in #rules {
+				if rule.#spec != _|_ {
+					for k, v in rule.#spec {
+						(k): v
+					}
+				}
+			}
+		}
+	}
+
+	// Fields exposed by this policy
+	// Automatically turned into a spec
+	// Must be made concrete by the user
+	spec: close(_allFields)
 })
 
-#PolicyMap: [string]: _
+#PolicyMap: [string]: #Policy
