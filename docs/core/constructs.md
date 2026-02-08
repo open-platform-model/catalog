@@ -456,7 +456,7 @@ Transformers use a multi-dimensional matching system: required labels, required 
 Component
 ├── metadata.labels: {"core.opmodel.dev/workload-type": "stateless", ...}
 ├── #resources: {"...#Container": ...}
-└── #traits: {"...#Replicas": ..., "...#Expose": ...}
+└── #traits: {"...#Scaling": ..., "...#Expose": ...}
 
                     ▼ #Matches checks:
 

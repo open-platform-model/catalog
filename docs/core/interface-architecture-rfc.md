@@ -47,8 +47,8 @@ Consider a typical microservice:
 │  user-service                                                   │
 │                                                                 │
 │  What OPM knows today:                                          │
-│    - Container image and resource limits                        │
-│    - Number of replicas                                         │
+│    - Container image and resource sizing                        │
+│    - Scaling configuration                                      │
 │    - Health checks                                              │
 │    - It's exposed on port 8080                                  │
 │                                                                 │

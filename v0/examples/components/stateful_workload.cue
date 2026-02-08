@@ -22,14 +22,14 @@ statefulWorkload: core.#Component & {
 	// Compose resources and traits using helpers
 	workload_resources.#Container
 	storage_resources.#Volumes
-	workload_traits.#Replicas
+	workload_traits.#Scaling
 	workload_traits.#RestartPolicy
 	workload_traits.#UpdateStrategy
 	workload_traits.#HealthCheck
 	workload_traits.#InitContainers
 
 	spec: {
-		replicas:      int | *1
+		scaling: count: int | *1
 		restartPolicy: "Always"
 		updateStrategy: {
 			type: "RollingUpdate"

@@ -19,7 +19,7 @@ multiTierModule: core.#Module & {
 	#components: {
 		database: components.statefulWorkload & {
 			spec: {
-				replicas: #config.database.replicas
+				scaling: count:   #config.database.scaling
 				container: image: #config.database.image
 			}
 		}
@@ -43,8 +43,8 @@ multiTierModule: core.#Module & {
 
 	#config: {
 		database: {
-			replicas: int
-			image:    string
+			scaling: int
+			image:   string
 		}
 		logAgent: {
 			image: string
@@ -60,8 +60,8 @@ multiTierModule: core.#Module & {
 
 	values: {
 		database: {
-			replicas: 1
-			image:    "postgres:14"
+			scaling: 1
+			image:   "postgres:14"
 		}
 		logAgent: {
 			image: "prom/node-exporter:v1.6.1"
@@ -84,8 +84,8 @@ multiTierModuleRelease: core.#ModuleRelease & {
 	#module: multiTierModule
 	values: {
 		database: {
-			replicas: 2
-			image:    "postgres:14.5"
+			scaling: 2
+			image:   "postgres:14.5"
 		}
 		logAgent: {
 			image: "prom/node-exporter:v1.7.0"

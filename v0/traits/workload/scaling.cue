@@ -7,14 +7,14 @@ import (
 )
 
 /////////////////////////////////////////////////////////////////
-//// Replicas Trait Definition
+//// Scaling Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#ReplicasTrait: close(core.#Trait & {
+#ScalingTrait: close(core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
-		name:        "replicas"
-		description: "A trait to specify the number of replicas for a workload"
+		name:        "scaling"
+		description: "A trait to specify scaling behavior for a workload"
 		labels: {
 			"core.opmodel.dev/category": "workload"
 		}
@@ -22,14 +22,14 @@ import (
 
 	appliesTo: [workload_resources.#ContainerResource] // Full CUE reference (not FQN string)
 
-	// Default values for replicas trait
-	#defaults: #ReplicasDefaults
+	// Default values for scaling trait
+	#defaults: #ScalingDefaults
 
-	#spec: replicas: schemas.#ReplicasSchema
+	#spec: scaling: schemas.#ScalingSchema
 })
 
-#Replicas: close(core.#Component & {
-	#traits: {(#ReplicasTrait.metadata.fqn): #ReplicasTrait}
+#Scaling: close(core.#Component & {
+	#traits: {(#ScalingTrait.metadata.fqn): #ScalingTrait}
 })
 
-#ReplicasDefaults: schemas.#ReplicasSchema & int | *1
+#ScalingDefaults: schemas.#ScalingSchema

@@ -23,11 +23,11 @@ basicComponent: core.#Component & {
 	// Compose resources and traits using helpers
 	workload_resources.#Container
 	storage_resources.#Volumes
-	workload_traits.#Replicas
+	workload_traits.#Scaling
 
 	// Compose resources and traits, providing concrete values for the spec.
 	spec: {
-		replicas: int | *1
+		scaling: count: int | *1
 		container: {
 			name:            "nginx-container"
 			image:           string | *"nginx:latest"

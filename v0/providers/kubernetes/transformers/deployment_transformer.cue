@@ -38,7 +38,7 @@ import (
 
 	// Optional traits that enhance deployment behavior
 	optionalTraits: {
-		"opmodel.dev/traits/workload@v0#Replicas":          workload_traits.#ReplicasTrait
+		"opmodel.dev/traits/workload@v0#Scaling":           workload_traits.#ScalingTrait
 		"opmodel.dev/traits/workload@v0#RestartPolicy":     workload_traits.#RestartPolicyTrait
 		"opmodel.dev/traits/workload@v0#UpdateStrategy":    workload_traits.#UpdateStrategyTrait
 		"opmodel.dev/traits/workload@v0#HealthCheck":       workload_traits.#HealthCheckTrait
@@ -55,9 +55,9 @@ import (
 		_container: #component.spec.container
 
 		// Apply defaults for optional traits
-		_replicas: *optionalTraits["opmodel.dev/traits/workload@v0#Replicas"].#defaults | int
-		if #component.spec.replicas != _|_ {
-			_replicas: #component.spec.replicas
+		_scalingCount: *optionalTraits["opmodel.dev/traits/workload@v0#Scaling"].#defaults.count | int
+		if #component.spec.scaling != _|_ {
+			_scalingCount: #component.spec.scaling.count
 		}
 
 		_restartPolicy: *optionalTraits["opmodel.dev/traits/workload@v0#RestartPolicy"].#defaults | string
@@ -105,7 +105,7 @@ import (
 				}
 			}
 			spec: {
-				replicas: _replicas
+				replicas: _scalingCount
 				selector: matchLabels: #context.componentLabels
 				template: {
 					metadata: labels: #context.componentLabels

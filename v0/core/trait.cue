@@ -11,9 +11,9 @@ import (
 
 	metadata: {
 		apiVersion!: #APIVersionType // Example: "opmodel.dev/traits/workload@v0"
-		name!:       #NameType       // Example: "replicas"
+		name!:       #NameType       // Example: "scaling"
 		_definitionName: (#KebabToPascal & {"in": name}).out
-		fqn: #FQNType & "\(apiVersion)#\(_definitionName)" // Example: "opmodel.dev/traits/workload@v0#Replicas"
+		fqn: #FQNType & "\(apiVersion)#\(_definitionName)" // Example: "opmodel.dev/traits/workload@v0#Scaling"
 
 		// Human-readable description of the definition
 		description?: string

@@ -22,10 +22,10 @@ mongodbComponent: core.#Component & {
 	// Compose resources and traits using helpers
 	workload_resources.#Container
 	storage_resources.#Volumes
-	workload_traits.#Replicas
+	workload_traits.#Scaling
 
 	spec: {
-		replicas: 1
+		scaling: count: 1
 		container: {
 			name:  "mongodb"
 			image: "mongo:6.0"
@@ -75,10 +75,10 @@ postgresComponent: core.#Component & {
 	// Compose resources and traits using helpers
 	workload_resources.#Container
 	storage_resources.#Volumes
-	workload_traits.#Replicas
+	workload_traits.#Scaling
 
 	spec: {
-		replicas: 1
+		scaling: count: 1
 		container: {
 			name:  "postgres"
 			image: string | *"postgres:14"
@@ -126,10 +126,10 @@ redisComponent: core.#Component & {
 
 	// Compose resources and traits using helpers
 	workload_resources.#Container
-	workload_traits.#Replicas
+	workload_traits.#Scaling
 
 	spec: {
-		replicas: 1
+		scaling: count: 1
 		container: {
 			name:  "redis"
 			image: "redis:7.0"

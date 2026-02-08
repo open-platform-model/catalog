@@ -50,6 +50,7 @@ package core
 
 #ModuleMap: [string]: #Module
 
+
 // Simplified module definition for testing purposes
 _testModule: #Module & {
 	metadata: {
@@ -61,7 +62,7 @@ _testModule: #Module & {
 	#components: {
 		"test-deployment": _testComponent & {
 			spec: container: image: #config.image
-			spec: replicas: #config.replicaCount
+			spec: scaling: count:   #config.replicaCount
 		}
 	}
 

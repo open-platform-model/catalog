@@ -29,7 +29,7 @@ import (
 	]
 
 	composedTraits: [
-		workload_traits.#ReplicasTrait,
+		workload_traits.#ScalingTrait,
 		workload_traits.#RestartPolicyTrait,
 		workload_traits.#HealthCheckTrait,
 	]
@@ -42,7 +42,7 @@ import (
 
 	workload_resources.#Container
 	storage_resources.#Volumes
-	workload_traits.#Replicas
+	workload_traits.#Scaling
 	workload_traits.#RestartPolicy
 	workload_traits.#HealthCheck
 
@@ -147,8 +147,8 @@ import (
 			}
 		}
 
-		// Set replicas to 1 (databases typically run single instance)
-		replicas: 1
+		// Set scaling count to 1 (databases typically run single instance)
+		scaling: count: 1
 
 		// Always restart
 		restartPolicy: "Always"

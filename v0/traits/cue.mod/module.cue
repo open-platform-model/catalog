@@ -7,12 +7,12 @@ source: {
 }
 deps: {
 	"opmodel.dev/core@v0": {
-		v: "v0.1.2"
+		v: "v0.1.7"
 	}
 	"opmodel.dev/resources@v0": {
-		v: "v0.1.1"
+		v: "v0.1.7"
 	}
 	"opmodel.dev/schemas@v0": {
-		v: "v0.1.1"
+		v: "v0.1.4"
 	}
 }

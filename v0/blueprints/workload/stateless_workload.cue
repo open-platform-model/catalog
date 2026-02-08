@@ -27,7 +27,7 @@ import (
 	]
 
 	composedTraits: [
-		workload_traits.#ReplicasTrait,
+		workload_traits.#ScalingTrait,
 	]
 
 	#spec: statelessWorkload: schemas.#StatelessWorkloadSchema
@@ -37,7 +37,7 @@ import (
 	#blueprints: (#StatelessWorkloadBlueprint.metadata.fqn): #StatelessWorkloadBlueprint
 
 	workload_resources.#Container
-	workload_traits.#Replicas
+	workload_traits.#Scaling
 	workload_traits.#RestartPolicy
 	workload_traits.#UpdateStrategy
 	workload_traits.#HealthCheck
@@ -47,8 +47,8 @@ import (
 	#spec: {
 		statelessWorkload: schemas.#StatelessWorkloadSchema
 		container:         statelessWorkload.container
-		if statelessWorkload.replicas != _|_ {
-			replicas: statelessWorkload.replicas
+		if statelessWorkload.scaling != _|_ {
+			scaling: statelessWorkload.scaling
 		}
 		if statelessWorkload.restartPolicy != _|_ {
 			restartPolicy: statelessWorkload.restartPolicy

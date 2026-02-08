@@ -85,7 +85,7 @@ Ask yourself:
 
 ## Trait
 
-A **Trait** represents a behavioral characteristic or configuration modifier that attaches to a Resource. Traits are the "adjectives" of OPM — they answer the question "how does this thing behave?" or "how is this thing configured?" A Trait cannot exist in isolation; it requires a Resource to make sense. Examples include Replicas (how many instances run), HealthCheck (how liveness is monitored), Expose (how the workload is accessible), RestartPolicy (what happens on failure), and ResourceLimit (how much CPU/memory to allocate).
+A **Trait** represents a behavioral characteristic or configuration modifier that attaches to a Resource. Traits are the "adjectives" of OPM — they answer the question "how does this thing behave?" or "how is this thing configured?" A Trait cannot exist in isolation; it requires a Resource to make sense. Examples include Scaling (how many instances run and autoscaling behavior), HealthCheck (how liveness is monitored), Expose (how the workload is accessible), RestartPolicy (what happens on failure), and Sizing (how much CPU/memory to allocate).
 
 Traits are separate from Resources because they describe **modification** rather than existence. They are separate from PolicyRules because they express **preference** rather than enforcement — a Trait says "I want this behavior" while a PolicyRule says "this behavior is required."
 
@@ -103,7 +103,7 @@ Ask yourself:
 - Is this a preference/configuration rather than a mandate?
 - Can this only make sense when attached to a Resource?
 
-**Examples**: Replicas, HealthCheck, Expose, RestartPolicy, ResourceLimit, UpdateStrategy
+**Examples**: Scaling, HealthCheck, Expose, RestartPolicy, Sizing, UpdateStrategy
 
 ### Trait Structure
 
@@ -114,7 +114,7 @@ Ask yourself:
 
     metadata: {
         apiVersion!:  string  // e.g., "opmodel.dev/traits/workload@v0"
-        name!:        string  // e.g., "replicas"
+        name!:        string  // e.g., "scaling"
         fqn:          string  // Computed: "{apiVersion}#{Name}"
         description?: string
         labels?:      {...}
@@ -138,16 +138,19 @@ Trait → appliesTo → Resource
 ### Trait Example
 
 ```cue
-#ReplicasTrait: core.#Trait & {
+#ScalingTrait: core.#Trait & {
     metadata: {
         apiVersion:  "opmodel.dev/traits/workload@v0"
-        name:        "replicas"
-        description: "Number of replicas for a workload"
+        name:        "scaling"
+        description: "Scaling behavior for a workload"
     }
 
     appliesTo: [#ContainerResource]
 
-    #spec: replicas: int & >=0
+    #spec: scaling: {
+        count: int & >=1 & <=1000 | *1
+        auto?: #AutoscalingSpec
+    }
 }
 ```
 
@@ -159,7 +162,7 @@ Trait → appliesTo → Resource
 
 A **Blueprint** represents a reusable pattern that composes Resources and Traits into a higher-level abstraction. Blueprints are the "templates" of OPM — they answer the question "what is the standardized pattern?" A Blueprint simplifies complex configurations by grouping related definitions under a single schema, hiding the complexity of individual definitions from the end user.
 
-Blueprints are used to define standardized workload types (like "StatelessWorkload" or "SimpleDatabase") that are composed of specific Resources (like Container, Volume) and Traits (like Replicas, Expose).
+Blueprints are used to define standardized workload types (like "StatelessWorkload" or "SimpleDatabase") that are composed of specific Resources (like Container, Volume) and Traits (like Scaling, Expose).
 
 ### What Blueprint Infers
 
@@ -215,13 +218,13 @@ Ask yourself:
     ]
 
     composedTraits: [
-        #ReplicasTrait,
+        #ScalingTrait,
         #ExposeTrait
     ]
 
     #spec: statelessWorkload: {
         image!:    string
-        replicas:  int | *1
+        scaling:   { count: int | *1 }
         port?:     int
     }
 }

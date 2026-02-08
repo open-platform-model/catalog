@@ -47,16 +47,42 @@ package schemas
 }
 
 //////////////////////////////////////////////////////////////////
-//// Replicas Schema
+//// Scaling Schema
 //////////////////////////////////////////////////////////////////
 
-#ReplicasSchema: int & >=1 & <=1000 | *1
+#ScalingSchema: {
+	count: int & >=1 & <=1000 | *1
+	auto?: #AutoscalingSpec
+}
+
+#AutoscalingSpec: {
+	min!: int & >=1
+	max!: int & >=1
+	metrics!: [_, ...#MetricSpec]
+	behavior?: {
+		scaleUp?: {stabilizationWindowSeconds?: int}
+		scaleDown?: {stabilizationWindowSeconds?: int}
+	}
+}
+
+#MetricSpec: {
+	type!:   "cpu" | "memory" | "custom"
+	target!: #MetricTargetSpec
+	if type == "custom" {
+		metricName!: string
+	}
+}
+
+#MetricTargetSpec: {
+	averageUtilization?: int & >=1 & <=100
+	averageValue?:       string
+}
 
 //////////////////////////////////////////////////////////////////
-//// ResourceLimit Schema
+//// Sizing Schema
 //////////////////////////////////////////////////////////////////
 
-#ResourceLimitSchema: {
+#SizingSchema: {
 	cpu?: {
 		request!: string & =~"^[0-9]+m$"
 		limit!:   string & =~"^[0-9]+m$"
@@ -65,6 +91,12 @@ package schemas
 		request!: string & =~"^[0-9]+[MG]i$"
 		limit!:   string & =~"^[0-9]+[MG]i$"
 	}
+	auto?: #VerticalAutoscalingSpec
+}
+
+#VerticalAutoscalingSpec: {
+	updateMode?: "Auto" | "Initial" | "Off" | *"Auto"
+	controlledResources?: [...("cpu" | "memory")]
 }
 
 //////////////////////////////////////////////////////////////////
@@ -171,12 +203,14 @@ package schemas
 
 #StatelessWorkloadSchema: close({
 	container:          #ContainerSchema
-	replicas?:          #ReplicasSchema
+	scaling?:           #ScalingSchema
 	restartPolicy?:     #RestartPolicySchema
 	updateStrategy?:    #UpdateStrategySchema
 	healthCheck?:       #HealthCheckSchema
 	sidecarContainers?: #SidecarContainersSchema
 	initContainers?:    #InitContainersSchema
+	sizing?:            #SizingSchema
+	securityContext?:   #SecurityContextSchema
 })
 
 //////////////////////////////////////////////////////////////////
@@ -185,7 +219,7 @@ package schemas
 
 #StatefulWorkloadSchema: close({
 	container:          #ContainerSchema
-	replicas?:          #ReplicasSchema
+	scaling?:           #ScalingSchema
 	restartPolicy?:     #RestartPolicySchema
 	updateStrategy?:    #UpdateStrategySchema
 	healthCheck?:       #HealthCheckSchema
@@ -193,6 +227,8 @@ package schemas
 	initContainers?:    #InitContainersSchema
 	serviceName?:       string
 	volumes: [string]: #VolumeSchema
+	sizing?:          #SizingSchema
+	securityContext?: #SecurityContextSchema
 })
 
 //////////////////////////////////////////////////////////////////
@@ -206,6 +242,8 @@ package schemas
 	healthCheck?:       #HealthCheckSchema
 	sidecarContainers?: #SidecarContainersSchema
 	initContainers?:    #InitContainersSchema
+	sizing?:            #SizingSchema
+	securityContext?:   #SecurityContextSchema
 })
 
 //////////////////////////////////////////////////////////////////
@@ -218,6 +256,8 @@ package schemas
 	jobConfig?:         #JobConfigSchema
 	sidecarContainers?: #SidecarContainersSchema
 	initContainers?:    #InitContainersSchema
+	sizing?:            #SizingSchema
+	securityContext?:   #SecurityContextSchema
 })
 
 //////////////////////////////////////////////////////////////////
@@ -230,6 +270,8 @@ package schemas
 	cronJobConfig!:     #CronJobConfigSchema
 	sidecarContainers?: #SidecarContainersSchema
 	initContainers?:    #InitContainersSchema
+	sizing?:            #SizingSchema
+	securityContext?:   #SecurityContextSchema
 })
 
 //////////////////////////////////////////////////////////////////

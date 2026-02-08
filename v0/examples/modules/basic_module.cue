@@ -25,7 +25,7 @@ basicModule: core.#Module & {
 	#components: {
 		web: components.basicComponent & {
 			spec: {
-				replicas: #config.web.replicas
+				scaling: count:   #config.web.scaling
 				container: image: #config.web.image
 			}
 		}
@@ -41,8 +41,8 @@ basicModule: core.#Module & {
 
 	#config: {
 		web: {
-			replicas: int
-			image:    string
+			scaling: int
+			image:   string
 		}
 		db: {
 			image:      string
@@ -52,8 +52,8 @@ basicModule: core.#Module & {
 
 	values: {
 		web: {
-			replicas: 1
-			image:    "nginx:1.20.0"
+			scaling: 1
+			image:   "nginx:1.20.0"
 		}
 		db: {
 			image:      "postgres:14.0"
@@ -74,8 +74,8 @@ basicModuleRelease: core.#ModuleRelease & {
 	#module: basicModule
 	values: {
 		web: {
-			replicas: 3
-			image:    "nginx:1.21.6"
+			scaling: 3
+			image:   "nginx:1.21.6"
 		}
 		db: {
 			image:      "postgres:14.5"
