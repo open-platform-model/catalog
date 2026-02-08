@@ -2,11 +2,11 @@
 # Format: module_name: vMAJOR.MINOR.PATCH (SemVer 2.0.0)
 # Modules listed in dependency order
 
-core: v0.1.0
-schemas: v0.1.0
-resources: v0.1.0
-traits: v0.1.0
-blueprints: v0.1.0
-policies: v0.1.0
-providers: v0.1.0
-examples: v0.1.0
+core: v0.1.2
+schemas: v0.1.1
+resources: v0.1.1
+traits: v0.1.1
+blueprints: v0.1.1
+policies: v0.1.1
+providers: v0.1.1
+examples: v0.1.1

@@ -30,42 +30,42 @@ vars:
     - name: core
       path: core
       enabled: true
-      desc: "Core OPM definitions (no deps)"
+      deps: ""
 
     - name: schemas
       path: schemas
       enabled: true
-      desc: "Shared schemas (no deps)"
+      deps: ""
 
     - name: resources
       path: resources
       enabled: true
-      desc: "Resource implementations"
-
-    - name: traits
-      path: traits
-      enabled: true
-      desc: "Trait implementations"
-
-    - name: blueprints
-      path: blueprints
-      enabled: true
-      desc: "Blueprint implementations"
+      deps: "core schemas"
 
     - name: policies
       path: policies
       enabled: true
-      desc: "Policy implementations"
+      deps: "core schemas"
+
+    - name: traits
+      path: traits
+      enabled: true
+      deps: "core schemas resources"
+
+    - name: blueprints
+      path: blueprints
+      enabled: true
+      deps: "core schemas resources traits"
 
     - name: providers
       path: providers
       enabled: true
-      desc: "Provider implementations"
+      deps: "core schemas resources traits"
 
     - name: examples
       path: examples
       enabled: true
-      desc: "Example implementations"
+      deps: "core schemas resources traits"
 
 tasks:
   default:
@@ -267,9 +267,9 @@ tasks:
         echo "Catalog Modules:"
         {{range $mod := .CATALOG_MODULES}}
         {{if $mod.enabled}}
-        echo "  {{$mod.name}}: {{$mod.desc}}"
+        echo "  {{$mod.name}} ({{$mod.path}})"
         {{else}}
-        echo "  {{$mod.name}}: {{$mod.desc}} (disabled)"
+        echo "  {{$mod.name}} ({{$mod.path}}) (disabled)"
         {{end}}
         {{end}}
 
@@ -420,3 +420,204 @@ tasks:
         {{end}}{{end}}
         
         echo "All catalog modules published to {{.LOCAL_REGISTRY}}"
+
+  publish:smart:
+    desc: Auto-detect changes, cascade bump, and publish
+    summary: |
+      Detect which modules have source changes, compute the dependency cascade,
+      bump versions, update dependency pins, tidy, and publish in topological order.
+
+      Usage:
+        task publish:smart                    # Detect, bump patch, publish
+        task publish:smart DRY_RUN=true       # Preview without executing
+        task publish:smart TYPE=minor         # Minor bump instead of patch
+    vars:
+      DRY_RUN: '{{.DRY_RUN | default "false"}}'
+      TYPE: '{{.TYPE | default "patch"}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+      - sh: command -v cue >/dev/null 2>&1
+        msg: "cue is required. Install: go install cuelang.org/go/cmd/cue@latest"
+      - sh: command -v git >/dev/null 2>&1
+        msg: "git is required"
+    cmds:
+      - |
+        set -euo pipefail
+
+        # ── Config (injected from Go templates) ─────────────────────
+        V0_DIR="{{.V0_DIR}}"
+        VERSION_FILE="{{.VERSION_FILE}}"
+        DRY_RUN="{{.DRY_RUN}}"
+        BUMP_TYPE="{{.TYPE}}"
+
+        MODULES=({{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}"{{$mod.name}}" {{end}}{{end}})
+        PATHS=({{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}"{{$mod.path}}" {{end}}{{end}})
+        {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
+        DEPS_{{$mod.name}}="{{$mod.deps}}"{{end}}{{end}}
+
+        # ── Helper functions ─────────────────────────────────────────
+
+        # Get module path by index
+        get_path() {
+          echo "${PATHS[$1]}"
+        }
+
+        # Get current version from versions.yml
+        get_version() {
+          yq ".$1" "$VERSION_FILE"
+        }
+
+        # Bump a version string: bump_version v0.1.0 patch → v0.1.1
+        bump_version() {
+          local ver="$1"
+          local type="$2"
+          local stripped="${ver#v}"
+          IFS='.' read -r major minor patch <<< "$stripped"
+          case "$type" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+          esac
+          echo "v${major}.${minor}.${patch}"
+        }
+
+        # Affected set as space-separated string
+        AFFECTED=""
+
+        is_affected() {
+          [[ " $AFFECTED " == *" $1 "* ]]
+        }
+
+        mark_affected() {
+          if ! is_affected "$1"; then
+            AFFECTED="$AFFECTED $1"
+          fi
+        }
+
+        # ── Phase 1: Detect changes ─────────────────────────────────
+
+        echo "Phase 1: Detecting changes..."
+        CHANGED=""
+
+        for i in "${!MODULES[@]}"; do
+          mod="${MODULES[$i]}"
+          path="${PATHS[$i]}"
+          version=$(get_version "$mod")
+          tag="catalog/${mod}/${version}"
+
+          if ! git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "  $mod: changed (no baseline tag)"
+            CHANGED="$CHANGED $mod"
+          elif ! git diff --quiet "$tag" -- "$V0_DIR/$path/" ":(exclude)$V0_DIR/$path/cue.mod/" 2>/dev/null; then
+            echo "  $mod: changed"
+            CHANGED="$CHANGED $mod"
+          else
+            echo "  $mod: unchanged"
+          fi
+        done
+
+        if [ -z "$CHANGED" ]; then
+          echo ""
+          echo "No changes detected. Nothing to publish."
+          exit 0
+        fi
+
+        # ── Phase 2: Compute cascade ────────────────────────────────
+
+        echo ""
+        echo "Phase 2: Computing cascade..."
+
+        # Seed AFFECTED with directly changed modules
+        for mod in $CHANGED; do
+          mark_affected "$mod"
+        done
+
+        # Walk topo order, add dependents
+        for mod in "${MODULES[@]}"; do
+          if is_affected "$mod"; then
+            continue
+          fi
+          dep_var="DEPS_${mod}"
+          for dep in ${!dep_var}; do
+            if is_affected "$dep"; then
+              mark_affected "$mod"
+              echo "  $mod: added (depends on $dep)"
+              break
+            fi
+          done
+        done
+
+        echo ""
+        echo "Affected modules:$AFFECTED"
+
+        # ── Dry run exit ─────────────────────────────────────────────
+
+        if [ "$DRY_RUN" = "true" ]; then
+          echo ""
+          echo "Dry run — planned actions:"
+          for mod in "${MODULES[@]}"; do
+            if is_affected "$mod"; then
+              version=$(get_version "$mod")
+              new_version=$(bump_version "$version" "$BUMP_TYPE")
+              echo "  $mod: $version -> $new_version (bump + publish)"
+            fi
+          done
+          echo ""
+          echo "No changes made (dry run)."
+          exit 0
+        fi
+
+        # ── Phase 3: Bump, update pins, tidy, publish, tag ──────────
+
+        echo ""
+        echo "Phase 3: Publishing..."
+
+        # Store new versions for pin updates
+        declare -A NEW_VERSIONS
+
+        for i in "${!MODULES[@]}"; do
+          mod="${MODULES[$i]}"
+          path="${PATHS[$i]}"
+
+          if ! is_affected "$mod"; then
+            continue
+          fi
+
+          # 1. Bump version
+          old_version=$(get_version "$mod")
+          new_version=$(bump_version "$old_version" "$BUMP_TYPE")
+          yq -i ".${mod} = \"${new_version}\"" "$VERSION_FILE"
+          NEW_VERSIONS[$mod]="$new_version"
+          echo ""
+          echo "[$mod] $old_version -> $new_version"
+
+          # 2. Update dependency pins
+          dep_var="DEPS_${mod}"
+          for dep in ${!dep_var}; do
+            if [ -n "${NEW_VERSIONS[$dep]+x}" ]; then
+              dep_new_ver="${NEW_VERSIONS[$dep]}"
+              sed -i '/"opmodel.dev\/'"$dep"'@v0":/,/}/ s/v: ".*"/v: "'"$dep_new_ver"'"/' \
+                "$V0_DIR/$path/cue.mod/module.cue"
+              echo "  Updated pin: $dep -> $dep_new_ver"
+            fi
+          done
+
+          # 3. Tidy
+          echo "  Tidying..."
+          (cd "$V0_DIR/$path" && cue mod tidy)
+
+          # 4. Publish
+          echo "  Publishing ${mod}@${new_version}..."
+          if ! (cd "$V0_DIR/$path" && cue mod publish "$new_version"); then
+            echo "  Failed to publish $mod"
+            exit 1
+          fi
+
+          # 5. Tag
+          git tag "catalog/${mod}/${new_version}"
+          echo "  Tagged catalog/${mod}/${new_version}"
+        done
+
+        echo ""
+        echo "Done. Published:$AFFECTED"
