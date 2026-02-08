@@ -1,4 +1,4 @@
-# AGENTS.md - Core Repository (CUE Definitions)
+# AGENTS.md - Catalog Repository (CUE Definitions)
 
 ## Overview
 
@@ -8,16 +8,6 @@ Core OPM CUE definitions published as `opmodel.dev/core@v0`. Contains schemas fo
 
 This project follows the **Open Platform Model Constitution**.
 All agents MUST read and adhere to `openspec/config.yaml`.
-
-**Core Principles:**
-
-1. **Type Safety First**: All definitions in CUE. Validation at definition time.
-2. **Separation of Concerns**: Module (Dev) -> ModuleRelease (Consumer). Clear ownership boundaries.
-3. **Composability**: Definitions compose without implicit coupling. Resources, Traits, Blueprints are independent.
-4. **Declarative Intent**: Express WHAT, not HOW. Provider-specific steps in ProviderDefinitions.
-5. **Portability by Design**: Definitions must be runtime-agnostic.
-6. **Semantic Versioning**: SemVer v2.0.0 and Conventional Commits v1 required.
-7. **Simplicity & YAGNI**: Justify complexity. Prefer explicit over implicit.
 
 **Governance**: The constitution supersedes this file in case of conflict.
 
@@ -35,11 +25,6 @@ All agents MUST read and adhere to `openspec/config.yaml`.
 - No preamble or postamble
 - Skip explanations unless asked
 - Only show changed code, not entire files
-
-## Versioning
-
-- **Follow [Semantic Versioning v2.0.0](https://semver.org) for all repositories.**
-- **Follow [Conventional Commits v1](https://www.conventionalcommits.org/en/v1.0.0/) for all repositories.**
 
 ## Code Style
 
@@ -62,47 +47,52 @@ export CUE_CACHE_DIR=/var/home/emil/Dev/open-platform-model/.cue-cache
 ## Project Structure
 
 ```text
-├── v0/                # Core CUE definitions (opmodel.dev/core@v0)
-│   ├── cue.mod/       # CUE module configuration
-│   ├── module.cue     # ModuleDefinition, Module, ModuleRelease
-│   ├── component.cue  # Component schema
-│   ├── resource.cue   # ResourceDefinition schema
-│   ├── trait.cue      # TraitDefinition schema
-│   ├── blueprint.cue  # BlueprintDefinition schema
-│   ├── policy.cue     # PolicyDefinition schema
-│   ├── provider.cue   # ProviderDefinition schema
-│   ├── scope.cue      # Scope schema
-│   ├── transformer.cue # Transformer schema
-│   └── common.cue     # Shared types (#NameType, #FQNType, etc.)
-├── docs/              # Documentation
+├── v0/                        # CUE module definitions
+│   ├── core/                  # Core definitions (module, component, resource, trait, etc.)
+│   ├── schemas/               # Shared schemas (common, network, workload, storage, etc.)
+│   ├── resources/             # Resource implementations
+│   │   ├── config/            # ConfigMap, Secret
+│   │   ├── security/          # WorkloadIdentity
+│   │   ├── storage/           # Volume
+│   │   └── workload/          # Container
+│   ├── traits/                # Trait implementations
+│   │   ├── network/           # Expose, HTTPRoute, GRPCRoute, TCPRoute
+│   │   ├── security/          # SecurityContext, Encryption
+│   │   └── workload/          # Replicas, HealthCheck, ResourceLimit, etc.
+│   ├── blueprints/            # Blueprint implementations
+│   │   ├── data/              # SimpleDatabase
+│   │   └── workload/          # Stateless, Stateful, Daemon, Task, ScheduledTask
+│   ├── policies/              # Policy implementations
+│   │   └── network/           # NetworkRules, SharedNetwork
+│   ├── providers/             # Provider implementations
+│   │   └── kubernetes/        # K8s provider + transformers
+│   └── examples/              # Usage examples
+├── openspec/                  # OpenSpec change management
+│   ├── config.yaml            # Project constitution
+│   └── changes/               # Active and archived changes
+├── docs/                      # Documentation
 └── README.md
 ```
 
-## Maintenance Notes
+## Git & Commits
 
-- **Project Structure Tree**: Update the tree above when adding new CUE files or directories.
+Follow [Conventional Commits v1](https://www.conventionalcommits.org/en/v1.0.0/) and [Semantic Versioning v2.0.0](https://semver.org).
 
-## Key Files
+Format: `type(scope): description`
+Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
+Scope: module name when applicable (e.g., `feat(core): add X`)
 
-- `v0/module.cue` - ModuleDefinition, Module, ModuleRelease schemas
-- `v0/resource.cue` - ResourceDefinition schema
-- `v0/trait.cue` - TraitDefinition schema
-- `v0/component.cue` - ComponentDefinition schema
-- `v0/common.cue` - Shared types (#NameType, #FQNType, #VersionType)
+No AI attribution in commit messages.
 
-## Patterns
+### Change-related commits
 
-- FQN format: `"{apiVersion}#{name}"` (e.g., `"opmodel.dev/core@v1#Container"`)
-- Function pattern: `#Func: {X1="in": {...}, out: {...}}`
-- Closed definitions: Use `close({...})` to prevent extra fields
+When a commit is related to an OpenSpec change, include the change name. Each phase CAN be a separate commit:
+
+- **Creating a change**: `chore(openspec): add <change-name> change`
+- **Implementing a change**: `feat(scope): implement <change-name> change`
+  - Implementation includes a verification step before committing
+- **Syncing & archiving a change**: `chore(openspec): archive <change-name> change`
 
 ## Glossary
 
-See [full glossary](../opm/docs/glossary.md) for detailed definitions.
-
-### Personas
-
-- **Infrastructure Operator** - Operates underlying infrastructure (clusters, cloud, networking)
-- **Module Author** - Develops and maintains ModuleDefinitions with sane defaults
-- **Platform Operator** - Curates module catalog, bridges infrastructure and end-users
-- **End-user** - Consumes modules via ModuleRelease with concrete values
+See [full glossary](docs/glossary.md) for detailed definitions.
