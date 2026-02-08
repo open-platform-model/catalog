@@ -293,12 +293,12 @@ tasks:
     cmds:
       - |
         if [ -n "{{.MODULE}}" ]; then
-          VERSION=$(yq '.{{.MODULE}}' {{.VERSION_FILE}})
+          VERSION=$(yq '.{{.MODULE}}.version' {{.VERSION_FILE}})
           echo "{{.MODULE}}: $VERSION"
         else
           echo "Catalog Module Versions"
           echo "======================="
-          yq '.' {{.VERSION_FILE}}
+          yq '.[] | key + ": " + .version' {{.VERSION_FILE}}
         fi
 
   version:bump:
@@ -321,7 +321,7 @@ tasks:
         msg: "yq is required. Install: brew install yq"
     cmds:
       - |
-        CURRENT=$(yq '.{{.MODULE}}' {{.VERSION_FILE}} | sed 's/^v//')
+        CURRENT=$(yq '.{{.MODULE}}.version' {{.VERSION_FILE}} | sed 's/^v//')
         
         if [ "$CURRENT" = "null" ]; then
           echo "Error: Module '{{.MODULE}}' not found in {{.VERSION_FILE}}"
@@ -350,7 +350,7 @@ tasks:
         esac
         
         NEW="v${MAJOR}.${MINOR}.${PATCH}"
-        yq -i '.{{.MODULE}} = "'$NEW'"' {{.VERSION_FILE}}
+        yq -i '.{{.MODULE}}.version = "'$NEW'"' {{.VERSION_FILE}}
         echo "Bumped {{.MODULE}}: v${CURRENT} -> ${NEW}"
 
   # ============================================================================
@@ -376,7 +376,7 @@ tasks:
     cmds:
       - |
         if [ -z "{{.VERSION}}" ]; then
-          VERSION=$(yq '.{{.MODULE}}' {{.VERSION_FILE}})
+          VERSION=$(yq '.{{.MODULE}}.version' {{.VERSION_FILE}})
         else
           VERSION="{{.VERSION}}"
         fi
@@ -406,7 +406,7 @@ tasks:
         echo ""
         
         {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
-        VERSION=$(yq '.{{$mod.name}}' {{$.VERSION_FILE}})
+        VERSION=$(yq '.{{$mod.name}}.version' {{$.VERSION_FILE}})
         echo "Publishing {{$mod.name}}@$VERSION..."
         
         if (cd "{{$.V0_DIR}}/{{$mod.path}}" && \
@@ -424,8 +424,12 @@ tasks:
   publish:smart:
     desc: Auto-detect changes, cascade bump, and publish
     summary: |
-      Detect which modules have source changes, compute the dependency cascade,
-      bump versions, update dependency pins, tidy, and publish in topological order.
+      Detect which modules have source changes (via checksum comparison),
+      compute the dependency cascade, bump versions, update dependency pins,
+      tidy, and publish in topological order.
+
+      Change detection uses SHA-256 checksums of .cue files (excluding cue.mod/)
+      stored in versions.yml. This works regardless of git commit state.
 
       Usage:
         task publish:smart                    # Detect, bump patch, publish
@@ -456,16 +460,31 @@ tasks:
         {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
         DEPS_{{$mod.name}}="{{$mod.deps}}"{{end}}{{end}}
 
-        # ── Helper functions ─────────────────────────────────────────
+        # ── Colors ────────────────────────────────────────────────────
+        BOLD='\033[1m'
+        DIM='\033[2m'
+        RED='\033[0;31m'
+        GREEN='\033[0;32m'
+        YELLOW='\033[0;33m'
+        CYAN='\033[0;36m'
+        RESET='\033[0m'
 
-        # Get module path by index
-        get_path() {
-          echo "${PATHS[$1]}"
-        }
+        # ── Helper functions ─────────────────────────────────────────
 
         # Get current version from versions.yml
         get_version() {
-          yq ".$1" "$VERSION_FILE"
+          yq ".$1.version" "$VERSION_FILE"
+        }
+
+        # Get stored checksum from versions.yml
+        get_stored_checksum() {
+          yq ".$1.checksum // \"\"" "$VERSION_FILE"
+        }
+
+        # Compute checksum of .cue files in a module (excluding cue.mod/)
+        compute_checksum() {
+          local path="$1"
+          find "$V0_DIR/$path" -name '*.cue' -not -path '*/cue.mod/*' | sort | xargs sha256sum | sha256sum | awk '{print $1}'
         }
 
         # Bump a version string: bump_version v0.1.0 patch → v0.1.1
@@ -495,38 +514,42 @@ tasks:
           fi
         }
 
-        # ── Phase 1: Detect changes ─────────────────────────────────
+        # ── Phase 1: Detect changes (checksum-based) ────────────────
 
-        echo "Phase 1: Detecting changes..."
+        echo -e "${BOLD}Phase 1: Detecting changes...${RESET}"
         CHANGED=""
+
+        # Store computed checksums for later
+        declare -A CURRENT_CHECKSUMS
 
         for i in "${!MODULES[@]}"; do
           mod="${MODULES[$i]}"
           path="${PATHS[$i]}"
-          version=$(get_version "$mod")
-          tag="catalog/${mod}/${version}"
+          stored=$(get_stored_checksum "$mod")
+          current=$(compute_checksum "$path")
+          CURRENT_CHECKSUMS[$mod]="$current"
 
-          if ! git rev-parse "$tag" >/dev/null 2>&1; then
-            echo "  $mod: changed (no baseline tag)"
+          if [ -z "$stored" ]; then
+            echo -e "  ${YELLOW}$mod${RESET}: ${YELLOW}changed${RESET} (no stored checksum)"
             CHANGED="$CHANGED $mod"
-          elif ! git diff --quiet "$tag" -- "$V0_DIR/$path/" ":(exclude)$V0_DIR/$path/cue.mod/" 2>/dev/null; then
-            echo "  $mod: changed"
+          elif [ "$stored" != "$current" ]; then
+            echo -e "  ${YELLOW}$mod${RESET}: ${YELLOW}changed${RESET}"
             CHANGED="$CHANGED $mod"
           else
-            echo "  $mod: unchanged"
+            echo -e "  ${DIM}$mod: unchanged${RESET}"
           fi
         done
 
         if [ -z "$CHANGED" ]; then
           echo ""
-          echo "No changes detected. Nothing to publish."
+          echo -e "${GREEN}No changes detected. Nothing to publish.${RESET}"
           exit 0
         fi
 
         # ── Phase 2: Compute cascade ────────────────────────────────
 
         echo ""
-        echo "Phase 2: Computing cascade..."
+        echo -e "${BOLD}Phase 2: Computing cascade...${RESET}"
 
         # Seed AFFECTED with directly changed modules
         for mod in $CHANGED; do
@@ -542,39 +565,36 @@ tasks:
           for dep in ${!dep_var}; do
             if is_affected "$dep"; then
               mark_affected "$mod"
-              echo "  $mod: added (depends on $dep)"
+              echo -e "  ${CYAN}$mod${RESET}: added (depends on ${YELLOW}$dep${RESET})"
               break
             fi
           done
         done
 
         echo ""
-        echo "Affected modules:$AFFECTED"
+        echo -e "Affected modules:${YELLOW}$AFFECTED${RESET}"
 
         # ── Dry run exit ─────────────────────────────────────────────
 
         if [ "$DRY_RUN" = "true" ]; then
           echo ""
-          echo "Dry run — planned actions:"
+          echo -e "${BOLD}Dry run — planned actions:${RESET}"
           for mod in "${MODULES[@]}"; do
             if is_affected "$mod"; then
               version=$(get_version "$mod")
               new_version=$(bump_version "$version" "$BUMP_TYPE")
-              echo "  $mod: $version -> $new_version (bump + publish)"
+              echo -e "  ${YELLOW}$mod${RESET}: $version -> ${GREEN}$new_version${RESET} (bump + publish)"
             fi
           done
           echo ""
-          echo "No changes made (dry run)."
+          echo -e "${DIM}No changes made (dry run).${RESET}"
           exit 0
         fi
 
         # ── Phase 3: Bump, update pins, tidy, publish, tag ──────────
 
         echo ""
-        echo "Phase 3: Publishing..."
-
-        # Store new versions for pin updates
-        declare -A NEW_VERSIONS
+        echo -e "${BOLD}Phase 3: Publishing...${RESET}"
 
         for i in "${!MODULES[@]}"; do
           mod="${MODULES[$i]}"
@@ -587,19 +607,18 @@ tasks:
           # 1. Bump version
           old_version=$(get_version "$mod")
           new_version=$(bump_version "$old_version" "$BUMP_TYPE")
-          yq -i ".${mod} = \"${new_version}\"" "$VERSION_FILE"
-          NEW_VERSIONS[$mod]="$new_version"
+          yq -i ".${mod}.version = \"${new_version}\"" "$VERSION_FILE"
           echo ""
-          echo "[$mod] $old_version -> $new_version"
+          echo -e "${BOLD}${GREEN}[$mod]${RESET} $old_version -> ${GREEN}$new_version${RESET}"
 
-          # 2. Update dependency pins
+          # 2. Update dependency pins (deps already bumped in versions.yml due to topo order)
           dep_var="DEPS_${mod}"
           for dep in ${!dep_var}; do
-            if [ -n "${NEW_VERSIONS[$dep]+x}" ]; then
-              dep_new_ver="${NEW_VERSIONS[$dep]}"
+            if is_affected "$dep"; then
+              dep_new_ver=$(get_version "$dep")
               sed -i '/"opmodel.dev\/'"$dep"'@v0":/,/}/ s/v: ".*"/v: "'"$dep_new_ver"'"/' \
                 "$V0_DIR/$path/cue.mod/module.cue"
-              echo "  Updated pin: $dep -> $dep_new_ver"
+              echo -e "  Updated pin: $dep -> ${CYAN}$dep_new_ver${RESET}"
             fi
           done
 
@@ -610,14 +629,19 @@ tasks:
           # 4. Publish
           echo "  Publishing ${mod}@${new_version}..."
           if ! (cd "$V0_DIR/$path" && cue mod publish "$new_version"); then
-            echo "  Failed to publish $mod"
+            echo -e "  ${RED}Failed to publish $mod${RESET}"
             exit 1
           fi
 
           # 5. Tag
           git tag "catalog/${mod}/${new_version}"
           echo "  Tagged catalog/${mod}/${new_version}"
+
+          # 6. Store checksum (recompute after tidy may have changed cue.mod/)
+          new_checksum=$(compute_checksum "$path")
+          yq -i ".${mod}.checksum = \"${new_checksum}\"" "$VERSION_FILE"
+          echo -e "  Checksum: ${DIM}${new_checksum:0:12}...${RESET}"
         done
 
         echo ""
-        echo "Done. Published:$AFFECTED"
+        echo -e "${BOLD}${GREEN}Done.${RESET} Published:${YELLOW}$AFFECTED${RESET}"
