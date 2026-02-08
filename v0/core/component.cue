@@ -167,14 +167,16 @@ _testComponent: #Component & {
 	}
 
 	#traits: {
-		"opmodel.dev/traits/workload@v0#Replicas": close(#Trait & {
+		"opmodel.dev/traits/workload@v0#Scaling": close(#Trait & {
 			metadata: {
 				apiVersion:  "opmodel.dev/traits/workload@v0"
-				name:        "replicas"
-				description: "A trait to specify the number of replicas for a workload"
+				name:        "scaling"
+				description: "A trait to specify scaling behavior for a workload"
 			}
-			// OpenAPIv3-compatible schema defining the structure of the replicas trait spec
-			#spec: replicas: int & >=1 & <=1000
+			// OpenAPIv3-compatible schema defining the structure of the scaling trait spec
+			#spec: scaling: {
+				count: int & >=1 & <=1000 | *1
+			}
 		})
 	}
 
@@ -201,6 +203,6 @@ _testComponent: #Component & {
 				}
 			}
 		}
-		replicas: int
+		scaling: count: int
 	}
 }

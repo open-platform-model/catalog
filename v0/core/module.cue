@@ -50,7 +50,6 @@ package core
 
 #ModuleMap: [string]: #Module
 
-
 // Simplified module definition for testing purposes
 _testModule: #Module & {
 	metadata: {
