@@ -231,3 +231,37 @@ package schemas
 	sidecarContainers?: #SidecarContainersSchema
 	initContainers?:    #InitContainersSchema
 })
+
+//////////////////////////////////////////////////////////////////
+//// DisruptionBudget Schema
+//////////////////////////////////////////////////////////////////
+
+// Availability constraints during voluntary disruptions.
+// Exactly one of minAvailable or maxUnavailable must be set.
+#DisruptionBudgetSchema: {minAvailable!: int | string & =~"^[0-9]+%$"} | {maxUnavailable!: int | string & =~"^[0-9]+%$"}
+
+//////////////////////////////////////////////////////////////////
+//// GracefulShutdown Schema
+//////////////////////////////////////////////////////////////////
+
+// Termination behavior for graceful workload shutdown
+#GracefulShutdownSchema: {
+	// Grace period before forceful termination (must be non-negative)
+	terminationGracePeriodSeconds: uint | *30
+	// Command to run before SIGTERM is sent
+	preStopCommand?: [...string]
+}
+
+//////////////////////////////////////////////////////////////////
+//// Placement Schema
+//////////////////////////////////////////////////////////////////
+
+// Provider-agnostic workload placement intent
+#PlacementSchema: {
+	// Failure domain distribution target
+	spreadAcross?: *"zones" | "regions" | "hosts"
+	// Node/host selection criteria (string-to-string map)
+	requirements?: [string]: string
+	// Escape hatch for provider-specific placement details
+	platformOverrides?: {...}
+}

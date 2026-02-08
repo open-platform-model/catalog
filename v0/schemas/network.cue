@@ -74,3 +74,95 @@ import (
 		}
 	}
 }
+
+//////////////////////////////////////////////////////////////////
+//// Route Shared Base Schemas
+//////////////////////////////////////////////////////////////////
+
+// Header match for route rules
+#RouteHeaderMatch: {
+	name!:  string
+	value!: string
+}
+
+// Base fields shared by all route rules
+#RouteRuleBase: {
+	backendPort!: uint & >=1 & <=65535
+	...
+}
+
+// Shared attachment fields for route schemas (gateway, TLS, className)
+#RouteAttachmentSchema: {
+	gatewayRef?: {
+		name!:      string
+		namespace?: string
+	}
+	tls?: {
+		mode?: *"Terminate" | "Passthrough"
+		certificateRef?: {
+			name!:      string
+			namespace?: string
+		}
+	}
+	ingressClassName?: string
+	...
+}
+
+//////////////////////////////////////////////////////////////////
+//// HTTP Route Schemas
+//////////////////////////////////////////////////////////////////
+
+// Match criteria for an HTTP route rule
+#HttpRouteMatchSchema: {
+	path?: {
+		type:   *"Prefix" | "Exact" | "RegularExpression"
+		value!: string
+	}
+	headers?: [...#RouteHeaderMatch]
+	method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS"
+}
+
+// A single HTTP route rule (embeds RouteRuleBase)
+#HttpRouteRuleSchema: #RouteRuleBase & {
+	matches?: [...#HttpRouteMatchSchema]
+}
+
+// HTTP route specification (embeds RouteAttachmentSchema)
+#HttpRouteSchema: #RouteAttachmentSchema & {
+	hostnames?: [...string]
+	rules: [#HttpRouteRuleSchema, ...#HttpRouteRuleSchema]
+}
+
+//////////////////////////////////////////////////////////////////
+//// gRPC Route Schemas
+//////////////////////////////////////////////////////////////////
+
+// Match criteria for a gRPC route rule
+#GrpcRouteMatchSchema: {
+	service?: string
+	method?:  string
+	headers?: [...#RouteHeaderMatch]
+}
+
+// A single gRPC route rule (embeds RouteRuleBase)
+#GrpcRouteRuleSchema: #RouteRuleBase & {
+	matches?: [...#GrpcRouteMatchSchema]
+}
+
+// gRPC route specification (embeds RouteAttachmentSchema)
+#GrpcRouteSchema: #RouteAttachmentSchema & {
+	hostnames?: [...string]
+	rules: [#GrpcRouteRuleSchema, ...#GrpcRouteRuleSchema]
+}
+
+//////////////////////////////////////////////////////////////////
+//// TCP Route Schemas
+//////////////////////////////////////////////////////////////////
+
+// A single TCP route rule (embeds RouteRuleBase, no L7 match fields)
+#TcpRouteRuleSchema: #RouteRuleBase
+
+// TCP route specification (embeds RouteAttachmentSchema)
+#TcpRouteSchema: #RouteAttachmentSchema & {
+	rules: [#TcpRouteRuleSchema, ...#TcpRouteRuleSchema]
+}
