@@ -423,6 +423,9 @@ tasks:
 
   publish:smart:
     desc: Auto-detect changes, cascade bump, and publish
+    deps:
+      - fmt
+      - vet
     summary: |
       Detect which modules have source changes (via checksum comparison),
       compute the dependency cascade, bump versions, update dependency pins,
