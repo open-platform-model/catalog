@@ -17,9 +17,6 @@ import (
 		labels: {
 			"core.opmodel.dev/persistence": "true"
 		}
-		annotations: {
-			"transformer.opmodel.dev/list-output": true
-		}
 	}
 
 	// Default values for volumes resource
@@ -30,6 +27,10 @@ import (
 })
 
 #Volumes: close(core.#Component & {
+	metadata: annotations: {
+		"transformer.opmodel.dev/list-output": true
+	}
+
 	#resources: {(#VolumesResource.metadata.fqn): #VolumesResource}
 })
 

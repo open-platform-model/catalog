@@ -14,10 +14,6 @@ import (
 		apiVersion:  "opmodel.dev/resources/config@v0"
 		name:        "config-maps"
 		description: "A ConfigMap definition for external configuration"
-		labels: {}
-		annotations: {
-			"transformer.opmodel.dev/list-output": true
-		}
 	}
 
 	// Default values for ConfigMaps resource
@@ -28,6 +24,10 @@ import (
 })
 
 #ConfigMaps: close(core.#Component & {
+	metadata: annotations: {
+		"transformer.opmodel.dev/list-output": true
+	}
+
 	#resources: {(#ConfigMapsResource.metadata.fqn): #ConfigMapsResource}
 })
 

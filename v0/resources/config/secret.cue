@@ -14,10 +14,6 @@ import (
 		apiVersion:  "opmodel.dev/resources/config@v0"
 		name:        "secrets"
 		description: "A Secret definition for sensitive configuration"
-		labels: {}
-		annotations: {
-			"transformer.opmodel.dev/list-output": true
-		}
 	}
 
 	// Default values for Secrets resource
@@ -28,6 +24,10 @@ import (
 })
 
 #Secrets: close(core.#Component & {
+	metadata: annotations: {
+		"transformer.opmodel.dev/list-output": true
+	}
+
 	#resources: {(#SecretsResource.metadata.fqn): #SecretsResource}
 })
 
