@@ -6,28 +6,31 @@ import (
 )
 
 /////////////////////////////////////////////////////////////////
-//// Secret Resource Definition
+//// Secrets Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#SecretResource: close(core.#Resource & {
+#SecretsResource: close(core.#Resource & {
 	metadata: {
 		apiVersion:  "opmodel.dev/resources/config@v0"
-		name:        "secret"
+		name:        "secrets"
 		description: "A Secret definition for sensitive configuration"
 		labels: {}
+		annotations: {
+			"transformer.opmodel.dev/list-output": true
+		}
 	}
 
-	// Default values for Secret resource
-	#defaults: #SecretDefaults
+	// Default values for Secrets resource
+	#defaults: #SecretsDefaults
 
-	// OpenAPIv3-compatible schema defining the structure of the Secret spec
-	#spec: secret: schemas.#SecretSchema
+	// OpenAPIv3-compatible schema defining the structure of the Secrets spec
+	#spec: secrets: [name=string]: schemas.#SecretSchema & {type: string | *"Opaque"}
 })
 
-#Secret: close(core.#Component & {
-	#resources: {(#SecretResource.metadata.fqn): #SecretResource}
+#Secrets: close(core.#Component & {
+	#resources: {(#SecretsResource.metadata.fqn): #SecretsResource}
 })
 
-#SecretDefaults: close(schemas.#SecretSchema & {
+#SecretsDefaults: close(schemas.#SecretSchema & {
 	type: "Opaque"
 })

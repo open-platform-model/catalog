@@ -10,20 +10,20 @@ schemas:
   version: v0.1.4
   checksum: "1de75084f9cab5158b3487ac4a908f7768f238a32246c06086343e29126e4df8"
 resources:
-  version: v0.1.12
-  checksum: "ab9d851ebfa4a1f19b303c9a63eca88ca76f57ebbac92dc082138e0ed33330b7"
+  version: v0.2.2
+  checksum: "bab800c895fca3eae71418303b6e803586a247f741905f1ef64908fd2b2d0707"
 traits:
-  version: v0.1.12
+  version: v0.1.14
   checksum: "75f6858c1a72d2b2f04f5aa6398310ccc90a58a5723a74cb9cfef608d9dba628"
 blueprints:
-  version: v0.1.11
+  version: v0.1.13
   checksum: "aba9acce785a1586482a9dce90a7423769845a090f7f9c6c3f16e890682ea9fd"
 policies:
   version: v0.1.8
   checksum: "ff50daefcfa4bf6984021902f171741b458d50b60f607157cc99c157736bac77"
 providers:
-  version: v0.1.12
-  checksum: "4adca1e43477f7d2470040c226fa7e9f7644426cb1e72301dd249d787b0eeb2b"
+  version: v0.1.14
+  checksum: "69425546e406489ebbb21a6877d4940fba7842c505525774993b4a1fa7b66cd9"
 examples:
-  version: v0.1.11
+  version: v0.1.13
   checksum: "36cf42ebe2dee9c1fd93cf32324b85675f36fab15fc75972e0779a9a812bd568"

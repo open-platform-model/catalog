@@ -266,7 +266,7 @@ _testDeploymentWithTraits: #DeploymentTransformer.#transform & {
 	#context:   _testContext
 }
 
-// Test component for ConfigMap
+// Test component for ConfigMaps
 _testConfigMapComponent: core.#Component & {
 	metadata: {
 		name: "test-configmap"
@@ -274,18 +274,20 @@ _testConfigMapComponent: core.#Component & {
 	}
 
 	#resources: {
-		"opmodel.dev/resources/config@v0#ConfigMap": config_resources.#ConfigMapResource
+		"opmodel.dev/resources/config@v0#ConfigMaps": config_resources.#ConfigMapsResource
 	}
 
-	spec: configMap: {
-		data: {
-			"app.conf":      "key=value"
-			"settings.json": "{}"
+	spec: configMaps: {
+		"app-config": {
+			data: {
+				"app.conf":      "key=value"
+				"settings.json": "{}"
+			}
 		}
 	}
 }
 
-// Test component for Secret
+// Test component for Secrets
 _testSecretComponent: core.#Component & {
 	metadata: {
 		name: "test-secret"
@@ -293,13 +295,15 @@ _testSecretComponent: core.#Component & {
 	}
 
 	#resources: {
-		"opmodel.dev/resources/config@v0#Secret": config_resources.#SecretResource
+		"opmodel.dev/resources/config@v0#Secrets": config_resources.#SecretsResource
 	}
 
-	spec: secret: {
-		type: "Opaque"
-		data: {
-			password: "cGFzc3dvcmQ="
+	spec: secrets: {
+		"db-creds": {
+			type: "Opaque"
+			data: {
+				password: "cGFzc3dvcmQ="
+			}
 		}
 	}
 }

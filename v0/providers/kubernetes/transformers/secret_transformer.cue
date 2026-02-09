@@ -5,12 +5,12 @@ import (
 	config_resources "opmodel.dev/resources/config@v0"
 )
 
-// SecretTransformer converts Secret resources to Kubernetes Secrets
+// SecretTransformer converts Secrets resources to Kubernetes Secrets
 #SecretTransformer: core.#Transformer & {
 	metadata: {
 		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
 		name:        "secret-transformer"
-		description: "Converts Secret resources to Kubernetes Secrets"
+		description: "Converts Secrets resources to Kubernetes Secrets"
 
 		labels: {
 			"core.opmodel.dev/resource-category": "config"
@@ -20,9 +20,9 @@ import (
 
 	requiredLabels: {}
 
-	// Required resources - Secret MUST be present
+	// Required resources - Secrets MUST be present
 	requiredResources: {
-		"opmodel.dev/resources/config@v0#Secret": config_resources.#SecretResource
+		"opmodel.dev/resources/config@v0#Secrets": config_resources.#SecretsResource
 	}
 
 	optionalResources: {}
@@ -33,18 +33,23 @@ import (
 		#component: _
 		#context:   core.#TransformerContext
 
-		_secret: #component.spec.secret
+		_secrets: #component.spec.secrets
 
+		// Generate a K8s Secret for each entry in the map
 		output: {
-			apiVersion: "v1"
-			kind:       "Secret"
-			metadata: {
-				name:      #component.metadata.name
-				namespace: #context.namespace
-				labels:    #context.labels
+			for secretName, secret in _secrets {
+				"\(secretName)": {
+					apiVersion: "v1"
+					kind:       "Secret"
+					metadata: {
+						name:      secretName
+						namespace: #context.namespace
+						labels:    #context.labels
+					}
+					type: secret.type
+					data: secret.data
+				}
 			}
-			type: _secret.type
-			data: _secret.data
 		}
 	}
 }

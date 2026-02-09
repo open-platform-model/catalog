@@ -6,26 +6,29 @@ import (
 )
 
 /////////////////////////////////////////////////////////////////
-//// ConfigMap Resource Definition
+//// ConfigMaps Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#ConfigMapResource: close(core.#Resource & {
+#ConfigMapsResource: close(core.#Resource & {
 	metadata: {
 		apiVersion:  "opmodel.dev/resources/config@v0"
-		name:        "config-map"
+		name:        "config-maps"
 		description: "A ConfigMap definition for external configuration"
 		labels: {}
+		annotations: {
+			"transformer.opmodel.dev/list-output": true
+		}
 	}
 
-	// Default values for ConfigMap resource
-	#defaults: #ConfigMapDefaults
+	// Default values for ConfigMaps resource
+	#defaults: #ConfigMapsDefaults
 
-	// OpenAPIv3-compatible schema defining the structure of the ConfigMap spec
-	#spec: configMap: schemas.#ConfigMapSchema
+	// OpenAPIv3-compatible schema defining the structure of the ConfigMaps spec
+	#spec: configMaps: [name=string]: schemas.#ConfigMapSchema
 })
 
-#ConfigMap: close(core.#Component & {
-	#resources: {(#ConfigMapResource.metadata.fqn): #ConfigMapResource}
+#ConfigMaps: close(core.#Component & {
+	#resources: {(#ConfigMapsResource.metadata.fqn): #ConfigMapsResource}
 })
 
-#ConfigMapDefaults: close(schemas.#ConfigMapSchema & {})
+#ConfigMapsDefaults: close(schemas.#ConfigMapSchema & {})

@@ -5,12 +5,12 @@ import (
 	config_resources "opmodel.dev/resources/config@v0"
 )
 
-// ConfigMapTransformer converts ConfigMap resources to Kubernetes ConfigMaps
+// ConfigMapTransformer converts ConfigMaps resources to Kubernetes ConfigMaps
 #ConfigMapTransformer: core.#Transformer & {
 	metadata: {
 		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
 		name:        "configmap-transformer"
-		description: "Converts ConfigMap resources to Kubernetes ConfigMaps"
+		description: "Converts ConfigMaps resources to Kubernetes ConfigMaps"
 
 		labels: {
 			"core.opmodel.dev/resource-category": "config"
@@ -20,9 +20,9 @@ import (
 
 	requiredLabels: {}
 
-	// Required resources - ConfigMap MUST be present
+	// Required resources - ConfigMaps MUST be present
 	requiredResources: {
-		"opmodel.dev/resources/config@v0#ConfigMap": config_resources.#ConfigMapResource
+		"opmodel.dev/resources/config@v0#ConfigMaps": config_resources.#ConfigMapsResource
 	}
 
 	optionalResources: {}
@@ -33,17 +33,22 @@ import (
 		#component: _
 		#context:   core.#TransformerContext
 
-		_configMap: #component.spec.configMap
+		_configMaps: #component.spec.configMaps
 
+		// Generate a K8s ConfigMap for each entry in the map
 		output: {
-			apiVersion: "v1"
-			kind:       "ConfigMap"
-			metadata: {
-				name:      #component.metadata.name
-				namespace: #context.namespace
-				labels:    #context.labels
+			for cmName, cm in _configMaps {
+				"\(cmName)": {
+					apiVersion: "v1"
+					kind:       "ConfigMap"
+					metadata: {
+						name:      cmName
+						namespace: #context.namespace
+						labels:    #context.labels
+					}
+					data: cm.data
+				}
 			}
-			data: _configMap.data
 		}
 	}
 }
