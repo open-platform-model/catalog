@@ -28,6 +28,7 @@ package core
 	#components: [Id=string]: #Component & {
 		metadata: {
 			name: string | *Id
+			labels: "component.opmodel.dev/name": name
 		}
 	}
 

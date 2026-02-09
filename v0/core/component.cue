@@ -14,9 +14,6 @@ package core
 		// Labels are inherited from definitions and used for transformer matching.
 		// If definitions have conflicting labels, CUE unification will fail (automatic validation).
 		labels: #LabelsAnnotationsType & {
-			// Standard label for component name
-			"component.opmodel.dev/name": name
-
 			// Inherit labels from resources
 			for _, resource in #resources if resource.metadata.labels != _|_ {
 				for lk, lv in resource.metadata.labels {

@@ -4,6 +4,8 @@ import (
 	core "opmodel.dev/core@v0"
 	workload_resources "opmodel.dev/resources/workload@v0"
 	workload_traits "opmodel.dev/traits/workload@v0"
+	security_traits "opmodel.dev/traits/security@v0"
+	security_resources "opmodel.dev/resources/security@v0"
 	"list"
 )
 
@@ -30,8 +32,10 @@ import (
 		"opmodel.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
 	}
 
-	// No optional resources
-	optionalResources: {}
+	// Optional resources
+	optionalResources: {
+		"opmodel.dev/resources/security@v0#WorkloadIdentity": security_resources.#WorkloadIdentityResource
+	}
 
 	// No required traits
 	requiredTraits: {}
@@ -42,8 +46,10 @@ import (
 		"opmodel.dev/traits/workload@v0#RestartPolicy":     workload_traits.#RestartPolicyTrait
 		"opmodel.dev/traits/workload@v0#UpdateStrategy":    workload_traits.#UpdateStrategyTrait
 		"opmodel.dev/traits/workload@v0#HealthCheck":       workload_traits.#HealthCheckTrait
+		"opmodel.dev/traits/workload@v0#Sizing":            workload_traits.#SizingTrait
 		"opmodel.dev/traits/workload@v0#SidecarContainers": workload_traits.#SidecarContainersTrait
 		"opmodel.dev/traits/workload@v0#InitContainers":    workload_traits.#InitContainersTrait
+		"opmodel.dev/traits/security@v0#SecurityContext":   security_traits.#SecurityContextTrait
 	}
 
 	// Transform function
@@ -56,7 +62,10 @@ import (
 
 		// Apply defaults for optional traits
 		_scalingCount: *optionalTraits["opmodel.dev/traits/workload@v0#Scaling"].#defaults.count | int
-		if #component.spec.scaling != _|_ {
+		if #component.spec.scaling != _|_ if #component.spec.scaling.auto != _|_ {
+			_scalingCount: #component.spec.scaling.auto.min
+		}
+		if #component.spec.scaling != _|_ if #component.spec.scaling.auto == _|_ {
 			_scalingCount: #component.spec.scaling.count
 		}
 
@@ -75,6 +84,63 @@ import (
 			}
 		}
 
+		// Build main container with optional trait fields
+		_mainContainer: {
+			_container
+
+			// HealthCheck: emit probes on main container
+			if #component.spec.healthCheck != _|_ {
+				if #component.spec.healthCheck.livenessProbe != _|_ {
+					livenessProbe: #component.spec.healthCheck.livenessProbe
+				}
+				if #component.spec.healthCheck.readinessProbe != _|_ {
+					readinessProbe: #component.spec.healthCheck.readinessProbe
+				}
+			}
+
+			// Sizing: emit resources on main container
+			if #component.spec.sizing != _|_ {
+				resources: {
+					if #component.spec.sizing.cpu != _|_ || #component.spec.sizing.memory != _|_ {
+						requests: {
+							if #component.spec.sizing.cpu != _|_ {
+								cpu: #component.spec.sizing.cpu.request
+							}
+							if #component.spec.sizing.memory != _|_ {
+								memory: #component.spec.sizing.memory.request
+							}
+						}
+						limits: {
+							if #component.spec.sizing.cpu != _|_ {
+								cpu: #component.spec.sizing.cpu.limit
+							}
+							if #component.spec.sizing.memory != _|_ {
+								memory: #component.spec.sizing.memory.limit
+							}
+						}
+					}
+				}
+			}
+
+			// SecurityContext: container-level fields
+			if #component.spec.securityContext != _|_ {
+				let _sc = #component.spec.securityContext
+				if _sc.readOnlyRootFilesystem != _|_ || _sc.allowPrivilegeEscalation != _|_ || _sc.capabilities != _|_ {
+					securityContext: {
+						if _sc.readOnlyRootFilesystem != _|_ {
+							readOnlyRootFilesystem: _sc.readOnlyRootFilesystem
+						}
+						if _sc.allowPrivilegeEscalation != _|_ {
+							allowPrivilegeEscalation: _sc.allowPrivilegeEscalation
+						}
+						if _sc.capabilities != _|_ {
+							capabilities: _sc.capabilities
+						}
+					}
+				}
+			}
+		}
+
 		// Build container list (main container + optional sidecars)
 		_sidecarContainers: *optionalTraits["opmodel.dev/traits/workload@v0#SidecarContainers"].#defaults | [...]
 		if #component.spec.sidecarContainers != _|_ {
@@ -82,7 +148,7 @@ import (
 		}
 
 		_containers: list.Concat([
-			[_container],
+			[_mainContainer],
 			_sidecarContainers,
 		])
 
@@ -117,6 +183,29 @@ import (
 						}
 
 						restartPolicy: _restartPolicy
+
+						// SecurityContext: pod-level fields
+						if #component.spec.securityContext != _|_ {
+							let _sc = #component.spec.securityContext
+							if _sc.runAsNonRoot != _|_ || _sc.runAsUser != _|_ || _sc.runAsGroup != _|_ {
+								securityContext: {
+									if _sc.runAsNonRoot != _|_ {
+										runAsNonRoot: _sc.runAsNonRoot
+									}
+									if _sc.runAsUser != _|_ {
+										runAsUser: _sc.runAsUser
+									}
+									if _sc.runAsGroup != _|_ {
+										runAsGroup: _sc.runAsGroup
+									}
+								}
+							}
+						}
+
+						// ServiceAccount reference
+						if #component.spec.workloadIdentity != _|_ {
+							serviceAccountName: #component.spec.workloadIdentity.name
+						}
 					}
 				}
 
