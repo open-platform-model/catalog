@@ -1,5 +1,7 @@
 # OPM Core
 
+**⚠️ This project is under heavy development. APIs and schemas may change.**
+
 ## Definition Types
 
 In OPM, everything is a **Definition**.

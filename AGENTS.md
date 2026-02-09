@@ -4,6 +4,8 @@
 
 Core OPM CUE definitions published as `opmodel.dev/core@v0`. Contains schemas for all definition types.
 
+**⚠️ This project is under heavy development. APIs and schemas may change.**
+
 ## Constitution
 
 This project follows the **Open Platform Model Constitution**.
