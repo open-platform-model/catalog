@@ -1,8 +1,4 @@
-## Purpose
-
-Specifies the Kubernetes Secret transformer, which converts OPM Secrets resources into Kubernetes `v1/Secret` objects.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Secret transformer definition
 

@@ -90,7 +90,13 @@ otherwise → single output
 
 ### 4. Only plural resources carry the annotation
 
-Currently only `#VolumesResource` is plural (its `#spec` uses `[volumeName=string]: ...`). Singular resources (`#ContainerResource`, `#ConfigMapResource`, `#SecretResource`, `#WorkloadIdentityResource`) do not set the annotation.
+Plural resources are those whose `#spec` uses a map pattern (`[key=string]: ...`). These resources carry the annotation:
+
+- `#VolumesResource` — `volumes: [volumeName=string]: ...`
+- `#ConfigMapsResource` — `configMaps: [name=string]: ...`
+- `#SecretsResource` — `secrets: [name=string]: ...`
+
+Singular resources (`#ContainerResource`, `#WorkloadIdentityResource`) do not set the annotation.
 
 Future plural resources follow the same pattern: add `"transformer.opmodel.dev/list-output": true` to their metadata annotations.
 

@@ -1,9 +1,8 @@
 # TODO
 
-- [ ] Add a field to #Component. The field is called called listOutput and defaults to false. When a resource like #Volume is added to a component it updates the value to true. This can be used in the transformers to know when to generate list outputs.
-  - Only resources that already are plural require this field to be set.
-  - change is called: allow-list-output
-  - sibling change in CLI is called: allow-list-output
+- [x] Add `transformer.opmodel.dev/list-output` annotation to plural resources (#VolumesResource, #ConfigMapsResource, #SecretsResource). Propagates to #Component via existing annotation inheritance.
+  - change: allow-list-output (implemented as annotation instead of top-level field per design decision)
+  - sibling change in CLI: allow-list-output
 - [ ] Investigate how to include a "well-known" context into a #Module. Something developers can reference but is only concrete at deployment time.
 - [ ] Refactor ConfigMap and Secret to have an immutable field. The immutable field will force the resource to be regenerated when a change is detected.
   - Question: How do we prevent users from changing the field "immutable: true" to false?

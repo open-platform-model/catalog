@@ -1,8 +1,4 @@
-## Purpose
-
-Specifies the Kubernetes ConfigMap transformer, which converts OPM ConfigMaps resources into Kubernetes `v1/ConfigMap` objects.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: ConfigMap transformer definition
 
