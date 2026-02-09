@@ -10,20 +10,20 @@ schemas:
   version: v0.1.4
   checksum: "1de75084f9cab5158b3487ac4a908f7768f238a32246c06086343e29126e4df8"
 resources:
-  version: v0.1.10
-  checksum: "8b7731b4623b3bd2f0eb1452f70691da0ee2afd5857a6d3aa38fbf812b5d054d"
+  version: v0.1.12
+  checksum: "ab9d851ebfa4a1f19b303c9a63eca88ca76f57ebbac92dc082138e0ed33330b7"
 traits:
-  version: v0.1.10
-  checksum: "bf971f204574e519f9a6f2c1d75bac942fa235ad50d2354bd3175eeb6517c67b"
+  version: v0.1.12
+  checksum: "75f6858c1a72d2b2f04f5aa6398310ccc90a58a5723a74cb9cfef608d9dba628"
 blueprints:
-  version: v0.1.10
+  version: v0.1.11
   checksum: "aba9acce785a1586482a9dce90a7423769845a090f7f9c6c3f16e890682ea9fd"
 policies:
   version: v0.1.8
   checksum: "ff50daefcfa4bf6984021902f171741b458d50b60f607157cc99c157736bac77"
 providers:
-  version: v0.1.10
-  checksum: "232e50d39a34fc5c305b30ceb18315a1070b5e2d6fc6f820065a839d808674a7"
+  version: v0.1.12
+  checksum: "4adca1e43477f7d2470040c226fa7e9f7644426cb1e72301dd249d787b0eeb2b"
 examples:
-  version: v0.1.10
+  version: v0.1.11
   checksum: "36cf42ebe2dee9c1fd93cf32324b85675f36fab15fc75972e0779a9a812bd568"
