@@ -5,7 +5,6 @@ import (
 	workload_resources "opmodel.dev/resources/workload@v0"
 	workload_traits "opmodel.dev/traits/workload@v0"
 	security_traits "opmodel.dev/traits/security@v0"
-	security_resources "opmodel.dev/resources/security@v0"
 	"list"
 )
 
@@ -33,9 +32,7 @@ import (
 	}
 
 	// Optional resources
-	optionalResources: {
-		"opmodel.dev/resources/security@v0#WorkloadIdentity": security_resources.#WorkloadIdentityResource
-	}
+	optionalResources: {}
 
 	// Required traits - JobConfig is mandatory for Job
 	requiredTraits: {
@@ -49,6 +46,7 @@ import (
 		"opmodel.dev/traits/workload@v0#SidecarContainers": workload_traits.#SidecarContainersTrait
 		"opmodel.dev/traits/workload@v0#InitContainers":    workload_traits.#InitContainersTrait
 		"opmodel.dev/traits/security@v0#SecurityContext":   security_traits.#SecurityContextTrait
+		"opmodel.dev/traits/security@v0#WorkloadIdentity":  security_traits.#WorkloadIdentityTrait
 	}
 
 	#transform: {

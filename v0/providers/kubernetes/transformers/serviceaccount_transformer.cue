@@ -2,15 +2,15 @@ package transformers
 
 import (
 	core "opmodel.dev/core@v0"
-	security_resources "opmodel.dev/resources/security@v0"
+	security_traits "opmodel.dev/traits/security@v0"
 )
 
-// ServiceAccountTransformer converts WorkloadIdentity resources to Kubernetes ServiceAccounts
+// ServiceAccountTransformer converts WorkloadIdentity traits to Kubernetes ServiceAccounts
 #ServiceAccountTransformer: core.#Transformer & {
 	metadata: {
 		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
 		name:        "serviceaccount-transformer"
-		description: "Converts WorkloadIdentity resources to Kubernetes ServiceAccounts"
+		description: "Converts WorkloadIdentity traits to Kubernetes ServiceAccounts"
 
 		labels: {
 			"core.opmodel.dev/resource-category": "security"
@@ -19,14 +19,14 @@ import (
 	}
 
 	requiredLabels: {}
+	requiredResources: {}
+	optionalResources: {}
 
-	// Required resources - WorkloadIdentity MUST be present
-	requiredResources: {
-		"opmodel.dev/resources/security@v0#WorkloadIdentity": security_resources.#WorkloadIdentityResource
+	// Required traits - WorkloadIdentity MUST be present
+	requiredTraits: {
+		"opmodel.dev/traits/security@v0#WorkloadIdentity": security_traits.#WorkloadIdentityTrait
 	}
 
-	optionalResources: {}
-	requiredTraits: {}
 	optionalTraits: {}
 
 	#transform: {

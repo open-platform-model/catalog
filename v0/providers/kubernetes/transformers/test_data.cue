@@ -8,7 +8,6 @@ import (
 	network_traits "opmodel.dev/traits/network@v0"
 	storage_resources "opmodel.dev/resources/storage@v0"
 	config_resources "opmodel.dev/resources/config@v0"
-	security_resources "opmodel.dev/resources/security@v0"
 )
 
 // Shared test context
@@ -305,7 +304,7 @@ _testSecretComponent: core.#Component & {
 	}
 }
 
-// Test component for ServiceAccount (WorkloadIdentity resource)
+// Test component for ServiceAccount (WorkloadIdentity trait)
 _testServiceAccountComponent: core.#Component & {
 	metadata: {
 		name: "test-serviceaccount"
@@ -315,8 +314,11 @@ _testServiceAccountComponent: core.#Component & {
 	}
 
 	#resources: {
-		"opmodel.dev/resources/workload@v0#Container":        workload_resources.#ContainerResource
-		"opmodel.dev/resources/security@v0#WorkloadIdentity": security_resources.#WorkloadIdentityResource
+		"opmodel.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
+	}
+
+	#traits: {
+		"opmodel.dev/traits/security@v0#WorkloadIdentity": security_traits.#WorkloadIdentityTrait
 	}
 
 	spec: {

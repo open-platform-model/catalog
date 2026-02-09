@@ -3,21 +3,23 @@ package security
 import (
 	core "opmodel.dev/core@v0"
 	schemas "opmodel.dev/schemas@v0"
+	workload_resources "opmodel.dev/resources/workload@v0"
 )
 
 /////////////////////////////////////////////////////////////////
-//// WorkloadIdentity Resource Definition
+//// WorkloadIdentity Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#WorkloadIdentityResource: close(core.#Resource & {
+#WorkloadIdentityTrait: close(core.#Trait & {
 	metadata: {
-		apiVersion:  "opmodel.dev/resources/security@v0"
+		apiVersion:  "opmodel.dev/traits/security@v0"
 		name:        "workload-identity"
 		description: "A workload identity definition for service identity"
-		labels: {}
 	}
 
-	// Default values for WorkloadIdentity resource
+	appliesTo: [workload_resources.#ContainerResource]
+
+	// Default values for WorkloadIdentity trait
 	#defaults: #WorkloadIdentityDefaults
 
 	// OpenAPIv3-compatible schema defining the structure of the WorkloadIdentity spec
@@ -25,7 +27,7 @@ import (
 })
 
 #WorkloadIdentity: close(core.#Component & {
-	#resources: {(#WorkloadIdentityResource.metadata.fqn): #WorkloadIdentityResource}
+	#traits: {(#WorkloadIdentityTrait.metadata.fqn): #WorkloadIdentityTrait}
 })
 
 #WorkloadIdentityDefaults: close(schemas.#WorkloadIdentitySchema & {
