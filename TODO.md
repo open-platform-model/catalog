@@ -15,3 +15,5 @@
 
 - [ ] Look into the possibility to have support for different versions of Kubernetes and its APIs and how to support multiple versions.
 - [ ] Investigate how to include a "well-known" platform context into a #Module. Something developers can reference but is only concrete at deployment time.
+- [ ] Look into changeing #TransformerContext.output.#component into #TransformerContext.output.component. Should work because it MUST be concrete when passed to the context.
+- [ ] Look into changeing #TransformerContext.output.#context into #TransformerContext.output.context. Should work because it MUST be concrete when passed to the context.
