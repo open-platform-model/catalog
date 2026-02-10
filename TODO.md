@@ -3,6 +3,7 @@
 ## Features
 
 - [ ] Integrate the upstream Kubernetes schemas into the transformers, making sure the output is always correct
+  - Make sure to pin against a specific version (e.g. v1.34) and force the transformers to comply with that version.
 - [ ] Add #Policy into the workflow. This means adding it to #Modules, #ModuleReleases, #Transformers.
 - [ ] Add support for immuatble ConfigMaps and Secrets. The immutable field will force the resource to be regenerated when a change is detected, working the same as a configMapGenerator or secretGenerator in kustomize.
   - Question: How do we prevent users from changing the field "immutable: true" to false?
