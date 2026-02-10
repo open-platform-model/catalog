@@ -5,6 +5,7 @@ import (
 	workload_resources "opmodel.dev/resources/workload@v0"
 	workload_traits "opmodel.dev/traits/workload@v0"
 	security_traits "opmodel.dev/traits/security@v0"
+	storage_resources "opmodel.dev/resources/storage@v0"
 	"list"
 )
 
@@ -32,7 +33,9 @@ import (
 	}
 
 	// Optional resources
-	optionalResources: {}
+	optionalResources: {
+		"opmodel.dev/resources/storage@v0#Volumes": storage_resources.#VolumesResource
+	}
 
 	// Required traits - JobConfig is mandatory for Job
 	requiredTraits: {
@@ -188,6 +191,18 @@ import (
 
 						if #component.spec.workloadIdentity != _|_ {
 							serviceAccountName: #component.spec.workloadIdentity.name
+						}
+
+						// Volumes: map persistent claim volumes to PVC references
+						if #component.spec.volumes != _|_ {
+							volumes: {
+								for vName, vol in #component.spec.volumes if vol.persistentClaim != _|_ {
+									(vName): {
+										name: vol.name | *vName
+										persistentVolumeClaim: claimName: vol.name | *vName
+									}
+								}
+							}
 						}
 					}
 				}

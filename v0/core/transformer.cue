@@ -83,16 +83,28 @@ package core
 	namespace: string // Injected during rendering (target namespace)
 
 	moduleLabels: {
-		if #moduleMetadata.labels != _|_ {#moduleMetadata.labels}
+		if #moduleMetadata.labels != _|_ {
+			for k, v in #moduleMetadata.labels {
+				(k): "\(v)"
+			}
+		}
 	}
 
 	componentLabels: {
 		"app.kubernetes.io/name": #componentMetadata.name
-		if #componentMetadata.labels != _|_ {#componentMetadata.labels}
+		if #componentMetadata.labels != _|_ {
+			for k, v in #componentMetadata.labels {
+				(k): "\(v)"
+			}
+		}
 	}
 
 	componentAnnotations: {
-		if #componentMetadata.annotations != _|_ {#componentMetadata.annotations}
+		if #componentMetadata.annotations != _|_ {
+			for k, v in #componentMetadata.annotations {
+				(k): "\(v)"
+			}
+		}
 	}
 
 	controllerLabels: {
