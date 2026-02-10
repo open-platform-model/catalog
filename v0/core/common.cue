@@ -21,6 +21,14 @@ import (
 // Example: github.com/myorg/elements@v1#CustomWorkload
 #FQNType: string & =~"^([a-z0-9.-]+(?:/[a-z0-9.-]+)*)@v([0-9]+)#([A-Z][a-zA-Z0-9]*)$"
 
+// UUIDType: RFC 4122 UUID in standard format (lowercase hex)
+#UUIDType: string & =~"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+
+// OPM namespace UUID for identity computations via uuid.SHA1 (UUID v5).
+// This UUID MUST remain immutable across all versions — it is the root namespace
+// for all OPM identity generation. The CLI uses the same constant.
+_OPMNamespace: "11bc6112-a6e8-4021-bec9-b3ad246f9466"
+
 // KebabToPascal converts a kebab-case string to PascalCase.
 // Usage: (#KebabToPascal & {"in": "stateless-workload"}).out => "StatelessWorkload"
 #KebabToPascal: {

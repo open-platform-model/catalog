@@ -1,5 +1,9 @@
 package core
 
+import (
+	"uuid"
+)
+
 // #Module: The portable application blueprint created by developers and/or platform teams
 #Module: close({
 	apiVersion: "opmodel.dev/core/v0"
@@ -11,6 +15,7 @@ package core
 		_definitionName: (#KebabToPascal & {"in": name}).out
 		fqn:      #FQNType & "\(apiVersion)#\(_definitionName)" // Example: "example.com/modules@v0#ExampleModule"
 		version!: #VersionType                                  // Semantic version of this module definition
+		identity: #UUIDType & uuid.SHA1(_OPMNamespace, "\(fqn):\(version)")
 
 		defaultNamespace?: string
 		description?:      string

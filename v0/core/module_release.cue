@@ -1,5 +1,9 @@
 package core
 
+import (
+	"uuid"
+)
+
 // #ModuleRelease: The concrete deployment instance
 // Contains: Reference to Module, concrete values (closed), target namespace
 // Users/deployment systems create this to deploy a specific version
@@ -12,6 +16,7 @@ package core
 		namespace!: string // Required for releases (target environment)
 		fqn:        #module.metadata.fqn
 		version:    #module.metadata.version
+		identity:   #UUIDType & uuid.SHA1(_OPMNamespace, "\(fqn):\(name):\(namespace)")
 
 		labels?: #LabelsAnnotationsType & {if #module.metadata.labels != _|_ {#module.metadata.labels}}
 		annotations?: #LabelsAnnotationsType & {if #module.metadata.annotations != _|_ {#module.metadata.annotations}}
