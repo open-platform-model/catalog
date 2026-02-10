@@ -87,8 +87,8 @@ Modules enforce a clear separation between the configuration contract (`#config`
     #components: [Id=string]: #Component  // The application's deployable pieces
     #policies?:  [Id=string]: #Policy     // Cross-cutting governance
 
-    #config: _      // Value schema — constraints only, NO defaults
-    values: #config  // Concrete values — sane defaults satisfying #config
+    #config: _  // Value schema — constraints only, NO defaults
+    values: _   // Concrete default values for development/testing
 }
 ```
 
@@ -246,7 +246,9 @@ Bundles have their own `#config` and `values` that configure the contained modul
 
 A **ModuleRelease** is the concrete deployment instance of a Module. It binds a Module to a target namespace with concrete, closed values that satisfy the module's `#config` schema.
 
-The separation between Module and ModuleRelease is fundamental to OPM's delivery flow. The Module Author publishes a portable definition with sane defaults. The End-user (or deployment system) creates a ModuleRelease that overrides those defaults with environment-specific values. CUE ensures the provided values satisfy the `#config` contract at definition time.
+The separation between Module and ModuleRelease is fundamental to OPM's delivery flow. The Module Author publishes a portable definition with sane defaults. The End-user (or deployment system) creates a ModuleRelease that provides environment-specific values. CUE ensures the provided values satisfy the `#config` contract at definition time.
+
+Internally, `_#module` unifies the referenced module with `{#config: values}`, which means the release's concrete values flow through `#config` into component specs. This is what makes `release.components` contain fully-resolved, concrete component definitions rather than templates with unresolved config references.
 
 #### What ModuleRelease Infers
 
@@ -264,14 +266,17 @@ The separation between Module and ModuleRelease is fundamental to OPM's delivery
     metadata: {
         name!:      string  // Release name
         namespace!: string  // Target namespace
-        fqn:        string  // Inherited from module
-        version:    string  // Inherited from module
+        fqn:        string  // From #moduleMetadata
+        version:    string  // From #moduleMetadata
     }
 
-    #module!:   #Module                // Reference to the Module to deploy
-    components: #module.#components    // Inherited components
-    policies?:  [Id=string]: #Policy   // Inherited policies (if any)
-    values:     close(#module.#config) // Concrete values satisfying the contract
+    #module!:        #Module                // Reference to the Module to deploy
+    #moduleMetadata: #module.metadata       // Module metadata (avoids structural cycle with _#module)
+    _#module:        #module & {#config: values} // Module evaluated with release values
+
+    components: _#module.#components    // Components resolved with concrete values
+    policies?:  [Id=string]: #Policy    // Inherited policies (if any)
+    values:     close(#module.#config)  // Concrete values satisfying the contract
 }
 ```
 

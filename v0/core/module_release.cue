@@ -14,31 +14,36 @@ import (
 	metadata: {
 		name!:      #NameType
 		namespace!: string // Required for releases (target environment)
-		fqn:        #module.metadata.fqn
-		version:    #module.metadata.version
+		fqn:        #moduleMetadata.fqn
+		version:    #moduleMetadata.version
 		identity:   #UUIDType & uuid.SHA1(OPMNamespace, "\(fqn):\(name):\(namespace)")
 
 		labels?: #LabelsAnnotationsType
-		labels: {if #module.metadata.labels != _|_ {#module.metadata.labels}} & {
+		labels: {if #moduleMetadata.labels != _|_ {#moduleMetadata.labels}} & {
 			// Standard labels for module release identification
 			"module-release.opmodel.dev/name":    "\(name)"
 			"module-release.opmodel.dev/version": "\(version)"
 			"module-release.opmodel.dev/uuid":    "\(identity)"
 		}
 		annotations?: #LabelsAnnotationsType
-		annotations: {if #module.metadata.annotations != _|_ {#module.metadata.annotations}}
+		annotations: {if #moduleMetadata.annotations != _|_ {#moduleMetadata.annotations}}
 	}
 
 	// Reference to the Module to deploy
-	#module!: #Module
+	#module!:        #Module
+	#moduleMetadata: #module.metadata
+
+	// Concrete values for this release (everything closed/concrete)
+	// Must satisfy the value schema from #module
+	_#module: #module & {#config: values}
 
 	// Components defined in this module release
-	components: #module.#components
+	components: _#module.#components
 
 	// Module-level policies (if any)
 	policies?: [Id=string]: #Policy
-	if #module.#policies != _|_ {
-		policies: #module.#policies
+	if _#module.#policies != _|_ {
+		policies: _#module.#policies
 	}
 
 	// Concrete values (everything closed/concrete)

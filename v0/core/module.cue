@@ -50,9 +50,9 @@ import (
 	// MUST be OpenAPIv3 compliant (no CUE templating - for/if statements)
 	#config: _
 
-	// Concrete values - should contain sane default values
-	// Used as the basis for #ModuleRelease.values, but can be overridden by users/deployers when creating a release.
-	values: #config
+	// Concrete values - should contain sane default values from the author
+	// These values are used when testing the module during development, and can be used as defaults when creating a ModuleRelease
+	values: _
 })
 
 #ModuleMap: [string]: #Module
