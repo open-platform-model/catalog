@@ -4,26 +4,26 @@
 # Checksums cover .cue files excluding cue.mod/ — used by publish:smart
 
 core:
-  version: v0.1.11
-  checksum: "8f4435366822b5d0120b577061a597290748c87e327607414c7348d23988e809"
+  version: v0.1.14
+  checksum: "1d090e79f47a4aa02b8ec214f781585cdacb7692a7078af26ed81df3ffabd0c6"
 schemas:
   version: v0.1.4
   checksum: "1de75084f9cab5158b3487ac4a908f7768f238a32246c06086343e29126e4df8"
 resources:
-  version: v0.2.5
-  checksum: "170073c689e1a367cc4192aa8c5bc4de98bb9e8bba1980ea328b2af6d8f83705"
+  version: v0.2.8
+  checksum: "92f3656411d11f1938c84d899f5f61e02bc92e5a8b9559571930b11aa97613bc"
 traits:
-  version: v0.1.17
+  version: v0.1.20
   checksum: "75f6858c1a72d2b2f04f5aa6398310ccc90a58a5723a74cb9cfef608d9dba628"
 blueprints:
-  version: v0.1.16
+  version: v0.1.19
   checksum: "aba9acce785a1586482a9dce90a7423769845a090f7f9c6c3f16e890682ea9fd"
 policies:
-  version: v0.1.9
+  version: v0.1.12
   checksum: "ff50daefcfa4bf6984021902f171741b458d50b60f607157cc99c157736bac77"
 providers:
-  version: v0.1.18
-  checksum: "552d392df27bc13143bfdc7216653ec1244ca9e35ce9bee2e68cb78b4f1137e5"
+  version: v0.1.21
+  checksum: "d6fcee143a64ac93d16114248800a45d283b38b7cd579a52f2a636ccf9f7b4ce"
 examples:
-  version: v0.1.16
+  version: v0.1.19
   checksum: "36cf42ebe2dee9c1fd93cf32324b85675f36fab15fc75972e0779a9a812bd568"

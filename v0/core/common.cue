@@ -27,7 +27,7 @@ import (
 // OPM namespace UUID for identity computations via uuid.SHA1 (UUID v5).
 // This UUID MUST remain immutable across all versions — it is the root namespace
 // for all OPM identity generation. The CLI uses the same constant.
-_OPMNamespace: "11bc6112-a6e8-4021-bec9-b3ad246f9466"
+OPMNamespace: "11bc6112-a6e8-4021-bec9-b3ad246f9466"
 
 // KebabToPascal converts a kebab-case string to PascalCase.
 // Usage: (#KebabToPascal & {"in": "stateless-workload"}).out => "StatelessWorkload"

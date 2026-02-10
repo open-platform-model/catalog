@@ -16,9 +16,14 @@ import (
 		namespace!: string // Required for releases (target environment)
 		fqn:        #module.metadata.fqn
 		version:    #module.metadata.version
-		identity:   #UUIDType & uuid.SHA1(_OPMNamespace, "\(fqn):\(name):\(namespace)")
+		identity:   #UUIDType & uuid.SHA1(OPMNamespace, "\(fqn):\(name):\(namespace)")
 
-		labels?: #LabelsAnnotationsType & {if #module.metadata.labels != _|_ {#module.metadata.labels}}
+		labels?: #LabelsAnnotationsType & {if #module.metadata.labels != _|_ {#module.metadata.labels}} & {
+			// Standard labels for module release identification
+			"module-release.opmodel.dev/name":    "\(name)"
+			"module-release.opmodel.dev/version": "\(version)"
+			"module-release.opmodel.dev/uuid":    "\(identity)"
+		}
 		annotations?: #LabelsAnnotationsType & {if #module.metadata.annotations != _|_ {#module.metadata.annotations}}
 	}
 

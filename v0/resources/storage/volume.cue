@@ -14,9 +14,6 @@ import (
 		apiVersion:  "opmodel.dev/resources/storage@v0"
 		name:        "volumes"
 		description: "A volume definition for workloads"
-		labels: {
-			"core.opmodel.dev/persistence": "true"
-		}
 	}
 
 	// Default values for volumes resource

@@ -6,7 +6,7 @@ This is the **catalog side** of a two-part change. A companion CLI change with t
 
 ## What Changes
 
-- Add a `_OPMNamespace` UUID constant to `core/common.cue` — a fixed UUID v5 namespace for all OPM identity computations
+- Add a `OPMNamespace` UUID constant to `core/common.cue` — a fixed UUID v5 namespace for all OPM identity computations
 - Add `metadata.identity` (computed, read-only) to `#Module` — UUID v5 of `"{fqn}:{version}"`
 - Add `metadata.identity` (computed, read-only) to `#ModuleRelease` — UUID v5 of `"{fqn}:{name}:{namespace}"` (version deliberately excluded for stability across upgrades)
 - Add `import "uuid"` to the affected CUE files
@@ -16,7 +16,7 @@ This is the **catalog side** of a two-part change. A companion CLI change with t
 
 ### New Capabilities
 
-- `module-identity`: Defines the `_OPMNamespace` constant, the `#UUIDType` constraint, the identity computation on `#Module.metadata`, and the identity computation on `#ModuleRelease.metadata`
+- `module-identity`: Defines the `OPMNamespace` constant, the `#UUIDType` constraint, the identity computation on `#Module.metadata`, and the identity computation on `#ModuleRelease.metadata`
 
 ### Modified Capabilities
 
@@ -27,7 +27,7 @@ _(none — no existing catalog specs are affected at the requirement level)_
 - **SemVer**: MINOR — new computed field added to existing definitions. No breaking changes. All existing modules continue to validate unchanged. The `identity` field is auto-computed from existing required fields.
 - **CUE module affected**: `core` (`opmodel.dev/core@v0`)
 - **Files changed**:
-  - `v0/core/common.cue` — `_OPMNamespace` constant, `#UUIDType`
+  - `v0/core/common.cue` — `OPMNamespace` constant, `#UUIDType`
   - `v0/core/module.cue` — `import "uuid"`, `metadata.identity` field
   - `v0/core/module_release.cue` — `import "uuid"`, `metadata.identity` field
 - **API surface**: Non-breaking addition. `metadata.identity` is a computed field — module authors don't set it, it derives from existing fields. The `close()` on both definitions means it must be added inside the struct, not externally.

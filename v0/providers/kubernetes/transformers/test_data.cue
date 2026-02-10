@@ -180,9 +180,6 @@ _testServiceComponent: core.#Component & {
 _testPVCComponent: core.#Component & {
 	metadata: {
 		name: "test-pvc"
-		labels: {
-			"core.opmodel.dev/persistence": "true"
-		}
 	}
 
 	#resources: {

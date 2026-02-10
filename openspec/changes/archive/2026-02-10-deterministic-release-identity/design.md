@@ -34,7 +34,7 @@ Both are wrapped in `close({...})`, so new fields must be added inside the struc
 
 **Goals:**
 
-- Add `_OPMNamespace` constant and `#UUIDType` to `common.cue`
+- Add `OPMNamespace` constant and `#UUIDType` to `common.cue`
 - Add computed `metadata.identity` to `#Module` (from fqn + version)
 - Add computed `metadata.identity` to `#ModuleRelease` (from fqn + release name + namespace, version excluded)
 - Ensure identity is non-overridable by users (CUE unification semantics enforce this naturally)
@@ -48,9 +48,9 @@ Both are wrapped in `close({...})`, so new fields must be added inside the struc
 
 ## Decisions
 
-### Decision 1: `_OPMNamespace` as a hidden definition in `common.cue`
+### Decision 1: `OPMNamespace` as a hidden definition in `common.cue`
 
-**Choice:** Define the OPM namespace UUID as `_OPMNamespace` (hidden definition, exported via `_#` prefix) in `common.cue`.
+**Choice:** Define the OPM namespace UUID as `OPMNamespace` (hidden definition, exported via `_#` prefix) in `common.cue`.
 
 **Alternative considered:** Define it in `module.cue` or a new `identity.cue` file.
 
@@ -83,7 +83,7 @@ The UUID will be generated once, documented as immutable, and shared with the CL
 ```cue
 metadata: {
     // ... existing fields ...
-    identity: #UUIDType & uuid.SHA1(_OPMNamespace, "\(fqn):\(version)")
+    identity: #UUIDType & uuid.SHA1(OPMNamespace, "\(fqn):\(version)")
 }
 ```
 
@@ -129,7 +129,7 @@ test.identity: conflicting values "27f96e3f-..." and "some-custom-value"
 
 ## Migration Plan
 
-1. Add `_OPMNamespace`, `#UUIDType` to `common.cue`
+1. Add `OPMNamespace`, `#UUIDType` to `common.cue`
 2. Add `identity` to `#Module.metadata` and `#ModuleRelease.metadata`
 3. Run `cue vet ./...` to validate all existing test fixtures and examples still pass
 4. Publish updated `opmodel.dev/core` module to registry

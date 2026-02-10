@@ -75,16 +75,30 @@ package core
 
 // Provider context passed to transformers
 #TransformerContext: close({
-	#moduleMetadata: _ // Injected during rendering
+	#moduleReleaseMetadata: #ModuleRelease.metadata
 
-	#componentMetadata: _ // Injected during rendering
+	#componentMetadata: #Component.metadata
 
 	name:      string // Injected during rendering (release name)
 	namespace: string // Injected during rendering (target namespace)
 
+	// Labels and annotations inheritance logic:
+	// - moduleLabels: labels from #moduleReleaseMetadata.labels (if defined)
+	// - moduleAnnotations: annotations from #moduleReleaseMetadata.annotations (if defined)
+	// - componentLabels: labels from #componentMetadata.labels (if defined) + "app.kubernetes.io/name" = component name
+	// - componentAnnotations: annotations from #componentMetadata.annotations (if defined)
+	// - controllerLabels: standard controller labels based on component and module metadata
 	moduleLabels: {
-		if #moduleMetadata.labels != _|_ {
-			for k, v in #moduleMetadata.labels {
+		if #moduleReleaseMetadata.labels != _|_ {
+			for k, v in #moduleReleaseMetadata.labels {
+				(k): "\(v)"
+			}
+		}
+	}
+
+	moduleAnnotations: {
+		if #moduleReleaseMetadata.annotations != _|_ {
+			for k, v in #moduleReleaseMetadata.annotations {
 				(k): "\(v)"
 			}
 		}
@@ -111,9 +125,10 @@ package core
 		"app.kubernetes.io/managed-by": "open-platform-model"
 		"app.kubernetes.io/name":       #componentMetadata.name
 		"app.kubernetes.io/instance":   #componentMetadata.name
-		"app.kubernetes.io/version":    #moduleMetadata.version
+		"app.kubernetes.io/version":    #moduleReleaseMetadata.version
 	}
 
+	// Final labels and annotations applied to the output resource
 	labels: {[string]: string}
 	labels: {
 		for k, v in moduleLabels {
@@ -123,6 +138,16 @@ package core
 			(k): "\(v)"
 		}
 		for k, v in controllerLabels {
+			(k): "\(v)"
+		}
+		...
+	}
+	annotations: {[string]: string}
+	annotations: {
+		for k, v in moduleAnnotations {
+			(k): "\(v)"
+		}
+		for k, v in componentAnnotations {
 			(k): "\(v)"
 		}
 		...

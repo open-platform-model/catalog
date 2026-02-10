@@ -15,7 +15,7 @@ import (
 		_definitionName: (#KebabToPascal & {"in": name}).out
 		fqn:      #FQNType & "\(apiVersion)#\(_definitionName)" // Example: "example.com/modules@v0#ExampleModule"
 		version!: #VersionType                                  // Semantic version of this module definition
-		identity: #UUIDType & uuid.SHA1(_OPMNamespace, "\(fqn):\(version)")
+		identity: #UUIDType & uuid.SHA1(OPMNamespace, "\(fqn):\(version)")
 
 		defaultNamespace?: string
 		description?:      string
@@ -26,6 +26,7 @@ import (
 			// Standard labels for module identification
 			"module.opmodel.dev/name":    "\(fqn)"
 			"module.opmodel.dev/version": "\(version)"
+			"module.opmodel.dev/uuid":    "\(identity)"
 		}
 	}
 

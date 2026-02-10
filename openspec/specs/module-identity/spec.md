@@ -6,17 +6,17 @@ Defines deterministic identity computation for `#Module` and `#ModuleRelease` de
 
 ### Requirement: OPM UUID v5 namespace constant
 
-The `core` module SHALL define a hidden definition `_OPMNamespace` in `common.cue` containing a fixed UUID string. This UUID serves as the RFC 4122 namespace for all OPM identity computations via `uuid.SHA1`. It MUST never change once published.
+The `core` module SHALL define a hidden definition `OPMNamespace` in `common.cue` containing a fixed UUID string. This UUID serves as the RFC 4122 namespace for all OPM identity computations via `uuid.SHA1`. It MUST never change once published.
 
 #### Scenario: Namespace constant is a valid UUID
 
-- **WHEN** `_OPMNamespace` is evaluated
+- **WHEN** `OPMNamespace` is evaluated
 - **THEN** it SHALL be a valid UUID v4 string in standard format (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`)
 
 #### Scenario: Namespace constant is stable
 
 - **WHEN** the `core` module is published at any version
-- **THEN** `_OPMNamespace` SHALL have the same value as in every prior version
+- **THEN** `OPMNamespace` SHALL have the same value as in every prior version
 
 ### Requirement: UUID type constraint
 
@@ -34,7 +34,7 @@ The `core` module SHALL define a `#UUIDType` constraint in `common.cue` that val
 
 ### Requirement: Module identity computation
 
-`#Module.metadata` SHALL include a computed `identity` field of type `#UUIDType`. The value SHALL be `uuid.SHA1(_OPMNamespace, "{fqn}:{version}")` where `fqn` and `version` are the module's existing metadata fields.
+`#Module.metadata` SHALL include a computed `identity` field of type `#UUIDType`. The value SHALL be `uuid.SHA1(OPMNamespace, "{fqn}:{version}")` where `fqn` and `version` are the module's existing metadata fields.
 
 #### Scenario: Same module produces same identity
 
@@ -68,7 +68,7 @@ Module authors MUST NOT be able to override `metadata.identity`. The field SHALL
 
 ### Requirement: Release identity computation
 
-`#ModuleRelease.metadata` SHALL include a computed `identity` field of type `#UUIDType`. The value SHALL be `uuid.SHA1(_OPMNamespace, "{fqn}:{name}:{namespace}")` where `fqn` comes from the referenced module and `name`/`namespace` are the release's own metadata fields. Version SHALL NOT be an input to the release identity.
+`#ModuleRelease.metadata` SHALL include a computed `identity` field of type `#UUIDType`. The value SHALL be `uuid.SHA1(OPMNamespace, "{fqn}:{name}:{namespace}")` where `fqn` comes from the referenced module and `name`/`namespace` are the release's own metadata fields. Version SHALL NOT be an input to the release identity.
 
 #### Scenario: Same release slot produces same identity across versions
 
