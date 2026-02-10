@@ -18,13 +18,15 @@ import (
 		version:    #module.metadata.version
 		identity:   #UUIDType & uuid.SHA1(OPMNamespace, "\(fqn):\(name):\(namespace)")
 
-		labels?: #LabelsAnnotationsType & {if #module.metadata.labels != _|_ {#module.metadata.labels}} & {
+		labels?: #LabelsAnnotationsType
+		labels: {if #module.metadata.labels != _|_ {#module.metadata.labels}} & {
 			// Standard labels for module release identification
 			"module-release.opmodel.dev/name":    "\(name)"
 			"module-release.opmodel.dev/version": "\(version)"
 			"module-release.opmodel.dev/uuid":    "\(identity)"
 		}
-		annotations?: #LabelsAnnotationsType & {if #module.metadata.annotations != _|_ {#module.metadata.annotations}}
+		annotations?: #LabelsAnnotationsType
+		annotations: {if #module.metadata.annotations != _|_ {#module.metadata.annotations}}
 	}
 
 	// Reference to the Module to deploy

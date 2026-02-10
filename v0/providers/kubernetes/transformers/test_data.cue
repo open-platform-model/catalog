@@ -10,23 +10,44 @@ import (
 	config_resources "opmodel.dev/resources/config@v0"
 )
 
+// Test module for transformer context
+_testModule: core.#Module & {
+	metadata: {
+		apiVersion: "test.module.dev/modules@v0"
+		name:       "test-module"
+		version:    "0.1.0"
+	}
+
+	#config: {
+		replicaCount: int & >=1
+		image:        string
+	}
+
+	values: {
+		replicaCount: 2
+		image:        "nginx:12"
+	}
+}
+
+// Test module release for transformer context
+_testModuleRelease: core.#ModuleRelease & {
+	metadata: {
+		name:      "test-release"
+		namespace: "default"
+	}
+	#module: _testModule
+	values: {
+		replicaCount: 3
+		image:        "nginx:latest"
+	}
+}
+
 // Shared test context
 _testContext: core.#TransformerContext & {
-	#moduleMetadata: {
-		name:    "test-module"
-		version: "0.1.0"
-		labels: {
-			"test-context": "true"
-		}
-	}
-	#componentMetadata: {
-		name: "test-component"
-		labels: {
-			"test-component": "true"
-		}
-	}
-	name:      "test-release"
-	namespace: "default"
+	#moduleReleaseMetadata: _testModuleRelease.metadata
+	#componentMetadata:     _testComponent.metadata
+	name:                   "test-release"
+	namespace:              "default"
 }
 
 // Test component for Deployment (stateless workload with Container)

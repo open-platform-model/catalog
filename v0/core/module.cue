@@ -22,7 +22,7 @@ import (
 		labels?:           #LabelsAnnotationsType
 		annotations?:      #LabelsAnnotationsType
 
-		labels: #LabelsAnnotationsType & {
+		labels: {
 			// Standard labels for module identification
 			"module.opmodel.dev/name":    "\(fqn)"
 			"module.opmodel.dev/version": "\(version)"

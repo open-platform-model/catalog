@@ -1,5 +1,7 @@
 package core
 
+import "strings"
+
 // #Transformer: Declares how to convert OPM components into platform-specific resources.
 //
 // Transformers use label-based matching to determine which components they can handle.
@@ -107,7 +109,8 @@ package core
 	componentLabels: {
 		"app.kubernetes.io/name": #componentMetadata.name
 		if #componentMetadata.labels != _|_ {
-			for k, v in #componentMetadata.labels {
+			for k, v in #componentMetadata.labels
+			if !strings.HasPrefix(k, "transformer.opmodel.dev/") {
 				(k): "\(v)"
 			}
 		}
@@ -115,7 +118,8 @@ package core
 
 	componentAnnotations: {
 		if #componentMetadata.annotations != _|_ {
-			for k, v in #componentMetadata.annotations {
+			for k, v in #componentMetadata.annotations
+			if !strings.HasPrefix(k, "transformer.opmodel.dev/") {
 				(k): "\(v)"
 			}
 		}
