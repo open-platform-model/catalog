@@ -4,6 +4,7 @@ import (
 	core "opmodel.dev/core@v0"
 	workload_resources "opmodel.dev/resources/workload@v0"
 	network_traits "opmodel.dev/traits/network@v0"
+	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v0"
 )
 
 // ServiceTransformer creates Kubernetes Services from components with Expose trait
@@ -66,15 +67,15 @@ import (
 		]
 
 		// Build Service resource
-		output: {
+		output: k8scorev1.#Service & {
 			apiVersion: "v1"
 			kind:       "Service"
 			metadata: {
 				name:      #component.metadata.name
 				namespace: #context.namespace | *"default"
 				labels:    #context.labels
-				if #component.metadata.annotations != _|_ {
-					annotations: #component.metadata.annotations
+				if #context.componentAnnotations != _|_ {
+					annotations: #context.componentAnnotations
 				}
 			}
 			spec: {

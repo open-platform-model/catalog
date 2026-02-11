@@ -3,6 +3,7 @@ package transformers
 import (
 	core "opmodel.dev/core@v0"
 	security_traits "opmodel.dev/traits/security@v0"
+	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v0"
 )
 
 // ServiceAccountTransformer converts WorkloadIdentity traits to Kubernetes ServiceAccounts
@@ -35,7 +36,7 @@ import (
 
 		_workloadIdentity: #component.spec.workloadIdentity
 
-		output: {
+		output: k8scorev1.#ServiceAccount & {
 			apiVersion: "v1"
 			kind:       "ServiceAccount"
 			metadata: {

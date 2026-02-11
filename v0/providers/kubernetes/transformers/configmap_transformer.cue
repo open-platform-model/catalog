@@ -3,6 +3,7 @@ package transformers
 import (
 	core "opmodel.dev/core@v0"
 	config_resources "opmodel.dev/resources/config@v0"
+	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v0"
 )
 
 // ConfigMapTransformer converts ConfigMaps resources to Kubernetes ConfigMaps
@@ -38,7 +39,7 @@ import (
 		// Generate a K8s ConfigMap for each entry in the map
 		output: {
 			for cmName, cm in _configMaps {
-				"\(cmName)": {
+				"\(cmName)": k8scorev1.#ConfigMap & {
 					apiVersion: "v1"
 					kind:       "ConfigMap"
 					metadata: {

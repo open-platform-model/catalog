@@ -9,6 +9,9 @@ core:
 schemas:
   version: v0.1.4
   checksum: "1de75084f9cab5158b3487ac4a908f7768f238a32246c06086343e29126e4df8"
+schemas_kubernetes:
+  version: v0.0.2
+  checksum: "a201168a991b500928822b0edcd287f292341c1cb40d48846b18e78c6ead1a20"
 resources:
   version: v0.2.12
   checksum: "92f3656411d11f1938c84d899f5f61e02bc92e5a8b9559571930b11aa97613bc"
@@ -22,8 +25,8 @@ policies:
   version: v0.1.16
   checksum: "ff50daefcfa4bf6984021902f171741b458d50b60f607157cc99c157736bac77"
 providers:
-  version: v0.1.25
-  checksum: "11572baf73ca31feb07355620d5af637b6d86a0842100a2e436e9a2f95c5b20d"
+  version: v0.1.27
+  checksum: "d5fbdf2d51729358557f535027de3b1a25ed32569d4bd997ba55f29ff5e663c3"
 examples:
   version: v0.1.23
   checksum: "ac70778fd1638cea2e7c454b88ab4b6c6aded8ec50ab853576ee7a103edd4271"

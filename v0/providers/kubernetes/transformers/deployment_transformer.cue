@@ -6,6 +6,7 @@ import (
 	workload_traits "opmodel.dev/traits/workload@v0"
 	security_traits "opmodel.dev/traits/security@v0"
 	storage_resources "opmodel.dev/resources/storage@v0"
+	k8sappsv1 "opmodel.dev/schemas/kubernetes/apps/v1@v0"
 	"list"
 )
 
@@ -160,7 +161,7 @@ import (
 		}
 
 		// Build Deployment resource
-		output: {
+		output: k8sappsv1.#Deployment & {
 			apiVersion: "apps/v1"
 			kind:       "Deployment"
 			metadata: {
@@ -210,14 +211,12 @@ import (
 
 						// Volumes: map persistent claim volumes to PVC references
 						if #component.spec.volumes != _|_ {
-							volumes: {
+							volumes: [
 								for vName, vol in #component.spec.volumes if vol.persistentClaim != _|_ {
-									(vName): {
-										name: vol.name | *vName
-										persistentVolumeClaim: claimName: vol.name | *vName
-									}
-								}
-							}
+									name: vol.name | *vName
+									persistentVolumeClaim: claimName: vol.name | *vName
+								},
+							]
 						}
 					}
 				}

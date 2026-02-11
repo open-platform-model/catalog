@@ -37,6 +37,11 @@ vars:
       enabled: true
       deps: ""
 
+    - name: schemas_kubernetes
+      path: schemas_kubernetes
+      enabled: true
+      deps: ""
+
     - name: resources
       path: resources
       enabled: true

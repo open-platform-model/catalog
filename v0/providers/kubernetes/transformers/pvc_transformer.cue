@@ -3,6 +3,7 @@ package transformers
 import (
 	core "opmodel.dev/core@v0"
 	storage_resources "opmodel.dev/resources/storage@v0"
+	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v0"
 )
 
 // PVCTransformer creates standalone PersistentVolumeClaims from Volume resources
@@ -44,15 +45,15 @@ import (
 		// Generate PVC for each volume that has a persistentClaim defined
 		output: {
 			for volumeName, volume in _volumes if volume.persistentClaim != _|_ {
-				"\(volumeName)": {
+				"\(volumeName)": k8scorev1.#PersistentVolumeClaim & {
 					apiVersion: "v1"
 					kind:       "PersistentVolumeClaim"
 					metadata: {
 						name:      volume.name | *volumeName
 						namespace: #context.namespace | *"default"
 						labels:    #context.labels
-						if #component.metadata.annotations != _|_ {
-							annotations: #component.metadata.annotations
+						if #context.componentAnnotations != _|_ {
+							annotations: #context.componentAnnotations
 						}
 					}
 					spec: {

@@ -3,6 +3,7 @@ package transformers
 import (
 	core "opmodel.dev/core@v0"
 	network_traits "opmodel.dev/traits/network@v0"
+	k8snetv1 "opmodel.dev/schemas/kubernetes/networking/v1@v0"
 )
 
 // IngressTransformer converts HttpRoute trait to Kubernetes Ingress
@@ -67,7 +68,7 @@ import (
 			},
 		]
 
-		output: {
+		output: k8snetv1.#Ingress & {
 			apiVersion: "networking.k8s.io/v1"
 			kind:       "Ingress"
 			metadata: {

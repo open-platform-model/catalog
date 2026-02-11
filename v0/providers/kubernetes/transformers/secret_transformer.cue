@@ -3,6 +3,7 @@ package transformers
 import (
 	core "opmodel.dev/core@v0"
 	config_resources "opmodel.dev/resources/config@v0"
+	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v0"
 )
 
 // SecretTransformer converts Secrets resources to Kubernetes Secrets
@@ -38,7 +39,7 @@ import (
 		// Generate a K8s Secret for each entry in the map
 		output: {
 			for secretName, secret in _secrets {
-				"\(secretName)": {
+				"\(secretName)": k8scorev1.#Secret & {
 					apiVersion: "v1"
 					kind:       "Secret"
 					metadata: {
