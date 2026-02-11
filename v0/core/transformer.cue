@@ -76,10 +76,22 @@ import "strings"
 #TransformerMap: [#FQNType]: #Transformer
 
 // Provider context passed to transformers
-#TransformerContext: close({
-	#moduleReleaseMetadata: #ModuleRelease.metadata
+#TransformerContext: {
+	#moduleReleaseMetadata: {
+		name!:        #NameType
+		namespace!:   #NameType // Required for releases (target environment)
+		fqn:          string
+		version:      string
+		identity:     #UUIDType
+		labels?:      #LabelsAnnotationsType
+		annotations?: #LabelsAnnotationsType
+	}
 
-	#componentMetadata: #Component.metadata
+	#componentMetadata: {
+		name!:        #NameType
+		labels?:      #LabelsAnnotationsType
+		annotations?: #LabelsAnnotationsType
+	}
 
 	name:      string // Injected during rendering (release name)
 	namespace: string // Injected during rendering (target namespace)
@@ -109,18 +121,20 @@ import "strings"
 	componentLabels: {
 		"app.kubernetes.io/name": #componentMetadata.name
 		if #componentMetadata.labels != _|_ {
-			for k, v in #componentMetadata.labels
-			if !strings.HasPrefix(k, "transformer.opmodel.dev/") {
-				(k): "\(v)"
+			for k, v in #componentMetadata.labels {
+				if !strings.HasPrefix(k, "transformer.opmodel.dev/") {
+					(k): "\(v)"
+				}
 			}
 		}
 	}
 
 	componentAnnotations: {
 		if #componentMetadata.annotations != _|_ {
-			for k, v in #componentMetadata.annotations
-			if !strings.HasPrefix(k, "transformer.opmodel.dev/") {
-				(k): "\(v)"
+			for k, v in #componentMetadata.annotations {
+				if !strings.HasPrefix(k, "transformer.opmodel.dev/") {
+					(k): "\(v)"
+				}
 			}
 		}
 	}
@@ -156,7 +170,7 @@ import "strings"
 		}
 		...
 	}
-})
+}
 
 // #Matches evaluates whether a transformer's requirements are satisfied by a component.
 // Implements the ALL-match semantics from 004-render-and-lifecycle-spec Section 4:

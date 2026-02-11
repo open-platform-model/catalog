@@ -27,7 +27,7 @@ scheduledTaskWorkload: core.#Component & {
 	spec: {
 		restartPolicy: "OnFailure"
 		cronJobConfig: {
-			scheduleCron:               "0 2 * * *"
+			scheduleCron:               string | *"0 0 * * *" // Default to daily at midnight
 			concurrencyPolicy:          "Forbid"
 			startingDeadlineSeconds:    300
 			successfulJobsHistoryLimit: 3
@@ -35,7 +35,7 @@ scheduledTaskWorkload: core.#Component & {
 		}
 		initContainers: [{
 			name:  "pre-backup-check"
-			image: string | *"postgres:14"
+			image: string | *"alpine:latest"
 			env: {
 				PGHOST: {
 					name:  "PGHOST"
@@ -45,7 +45,7 @@ scheduledTaskWorkload: core.#Component & {
 		}]
 		container: {
 			name:            "backup"
-			image:           "postgres:14"
+			image:           string | *"postgres-backup:latest"
 			imagePullPolicy: "IfNotPresent"
 			env: {
 				PGHOST: {
