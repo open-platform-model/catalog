@@ -1,13 +1,14 @@
 package transformers
 
 import (
+	"list"
+	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v0"
+	k8sbatchv1 "opmodel.dev/schemas/kubernetes/batch/v1@v0"
 	core "opmodel.dev/core@v0"
 	workload_resources "opmodel.dev/resources/workload@v0"
 	workload_traits "opmodel.dev/traits/workload@v0"
 	security_traits "opmodel.dev/traits/security@v0"
 	storage_resources "opmodel.dev/resources/storage@v0"
-	k8sbatchv1 "opmodel.dev/schemas/kubernetes/batch/v1@v0"
-	"list"
 )
 
 // CronJobTransformer converts scheduled task components to Kubernetes CronJobs
@@ -70,8 +71,41 @@ import (
 		}
 
 		// Build main container with optional trait fields
-		_mainContainer: {
-			_container
+		_mainContainer: k8scorev1.#Container & {
+			// Copy all container fields except env/ports/volumeMounts (which need conversion)
+			name:            _container.name
+			image:           _container.image
+			imagePullPolicy: _container.imagePullPolicy
+			if _container.command != _|_ {
+				command: _container.command
+			}
+			if _container.args != _|_ {
+				args: _container.args
+			}
+			if _container.ports != _|_ {
+				ports: [for _, p in _container.ports {
+					name:          p.name
+					containerPort: p.targetPort
+					protocol:      p.protocol
+					if p.hostIP != _|_ {
+						hostIP: p.hostIP
+					}
+					if p.hostPort != _|_ {
+						hostPort: p.hostPort
+					}
+				}]
+			}
+
+			// Convert env from struct to list
+			if _container.env != _|_ {
+				env: [for _, e in _container.env {e}]
+			}
+			if _container.resources != _|_ {
+				resources: _container.resources
+			}
+			if _container.volumeMounts != _|_ {
+				volumeMounts: [for _, vm in _container.volumeMounts {vm}]
+			}
 
 			if #component.spec.sizing != _|_ {
 				resources: {

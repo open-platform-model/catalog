@@ -17,7 +17,7 @@ deps: {
 		v: "v0.2.12"
 	}
 	"opmodel.dev/schemas/kubernetes@v0": {
-		v: "v0.0.1"
+		v: "v0.0.2"
 	}
 	"opmodel.dev/schemas@v0": {
 		v: "v0.1.4"
