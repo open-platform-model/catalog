@@ -2,6 +2,8 @@
 
 ## Features
 
+- [ ] Fix and standardize unit conversion to be more compatible with k8s.
+  - Write helpers that convert cpu, memory, and similar fields to k8s native units. Example is "4000m" becomes 4.
 - [ ] Integrate the upstream Kubernetes schemas into the transformers, making sure the output is always correct
   - Make sure to pin against a specific version (e.g. v1.34) and force the transformers to comply with that version.
 - [ ] Add #Policy into the workflow. This means adding it to #Modules, #ModuleReleases, #Transformers.
