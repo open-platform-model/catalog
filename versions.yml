@@ -25,8 +25,8 @@ policies:
   version: v0.1.16
   checksum: "ff50daefcfa4bf6984021902f171741b458d50b60f607157cc99c157736bac77"
 providers:
-  version: v0.1.29
-  checksum: "8691166150028e0c30635c81f49a41a943c22aa241a93783e5df0c7ad7ae1f5f"
+  version: v0.1.31
+  checksum: "7373696988c4b505dfa6efc9723234a47db876b93893dd7f512fd6592ddf9dea"
 examples:
   version: v0.1.23
   checksum: "ac70778fd1638cea2e7c454b88ab4b6c6aded8ec50ab853576ee7a103edd4271"

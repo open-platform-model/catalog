@@ -243,12 +243,23 @@ import (
 							serviceAccountName: #component.spec.workloadIdentity.name
 						}
 
-						// Volumes: map persistent claim volumes to PVC references
+						// Volumes: map all volume types to Kubernetes volume specs
 						if #component.spec.volumes != _|_ {
 							volumes: [
-								for vName, vol in #component.spec.volumes if vol.persistentClaim != _|_ {
+								for vName, vol in #component.spec.volumes {
 									name: vol.name | *vName
-									persistentVolumeClaim: claimName: vol.name | *vName
+									if vol.persistentClaim != _|_ {
+										persistentVolumeClaim: claimName: vol.name | *vName
+									}
+									if vol.emptyDir != _|_ {
+										emptyDir: vol.emptyDir
+									}
+									if vol.configMap != _|_ {
+										configMap: vol.configMap
+									}
+									if vol.secret != _|_ {
+										secret: vol.secret
+									}
 								},
 							]
 						}
