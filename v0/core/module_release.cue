@@ -14,9 +14,8 @@ import (
 	metadata: {
 		name!:      #NameType
 		namespace!: string // Required for releases (target environment)
-		fqn:        #moduleMetadata.fqn
 		version:    #moduleMetadata.version
-		identity:   #UUIDType & uuid.SHA1(OPMNamespace, "\(fqn):\(name):\(namespace)")
+		identity:   #UUIDType & uuid.SHA1(OPMNamespace, "\(#moduleMetadata.fqn):\(name):\(namespace)")
 
 		labels?: #LabelsAnnotationsType
 		labels: {if #moduleMetadata.labels != _|_ {#moduleMetadata.labels}} & {
@@ -27,6 +26,7 @@ import (
 		}
 		annotations?: #LabelsAnnotationsType
 		annotations: {if #moduleMetadata.annotations != _|_ {#moduleMetadata.annotations}}
+
 	}
 
 	// Reference to the Module to deploy

@@ -11,10 +11,10 @@ deps: {
 		default: true
 	}
 	"opmodel.dev/core@v0": {
-		v: "v0.1.19"
+		v: "v0.1.20"
 	}
 	"opmodel.dev/resources@v0": {
-		v: "v0.2.12"
+		v: "v0.2.13"
 	}
 	"opmodel.dev/schemas/kubernetes@v0": {
 		v: "v0.0.2"
@@ -23,6 +23,6 @@ deps: {
 		v: "v0.1.4"
 	}
 	"opmodel.dev/traits@v0": {
-		v: "v0.1.24"
+		v: "v0.1.25"
 	}
 }

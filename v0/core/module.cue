@@ -24,8 +24,9 @@ import (
 
 		labels: {
 			// Standard labels for module identification
-			"module.opmodel.dev/name":    "\(fqn)"
+			"module.opmodel.dev/name":    "\(name)"
 			"module.opmodel.dev/version": "\(version)"
+			"module.opmodel.dev/fqn":     "\(fqn)"
 			"module.opmodel.dev/uuid":    "\(identity)"
 		}
 	}
