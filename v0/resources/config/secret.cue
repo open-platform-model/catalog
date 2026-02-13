@@ -20,7 +20,7 @@ import (
 	#defaults: #SecretsDefaults
 
 	// OpenAPIv3-compatible schema defining the structure of the Secrets spec
-	#spec: secrets: [name=string]: schemas.#SecretSchema & {type: string | *"Opaque"}
+	#spec: secrets: [name=string]: schemas.#SecretSchema
 })
 
 #Secrets: close(core.#Component & {

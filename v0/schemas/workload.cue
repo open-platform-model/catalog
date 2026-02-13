@@ -16,13 +16,10 @@ package schemas
 	imagePullPolicy: "Always" | "IfNotPresent" | "Never" | *"IfNotPresent"
 
 	// Ports exposed by the container
-	ports?: [portName=string]: #PortSchema & {name: portName}
+	ports?: [portName=string]: #PortSchema & {name: portName} // Name is automatically set to the key in the ports map
 
 	// Environment variables for the container
-	env?: [string]: {
-		name:  string
-		value: string
-	}
+	env?: [envName=string]: #EnvVarSchema & {name: envName} // Name is automatically set to the key in the env map
 
 	// Command to run in the container
 	command?: [...string]
@@ -31,19 +28,26 @@ package schemas
 	args?: [...string]
 
 	// Resource requirements for the container
-	resources?: {
-		limits?: {
-			cpu?:    string
-			memory?: string
-		}
-		requests?: {
-			cpu?:    string
-			memory?: string
-		}
-	}
+	resources?: #ResourceRequirementsSchema
 
 	// Volume mounts for the container
-	volumeMounts?: [string]: #VolumeMountSchema
+	volumeMounts?: [string]: #VolumeMountSchema // Name is automatically set to the key in the volumeMounts map
+}
+
+#EnvVarSchema: {
+	name:   string
+	value!: string
+}
+
+#ResourceRequirementsSchema: {
+	limits?: {
+		cpu?:    string
+		memory?: string
+	}
+	requests?: {
+		cpu?:    string
+		memory?: string
+	}
 }
 
 //////////////////////////////////////////////////////////////////
@@ -280,7 +284,10 @@ package schemas
 
 // Availability constraints during voluntary disruptions.
 // Exactly one of minAvailable or maxUnavailable must be set.
-#DisruptionBudgetSchema: {minAvailable!: int | string & =~"^[0-9]+%$"} | {maxUnavailable!: int | string & =~"^[0-9]+%$"}
+#DisruptionBudgetSchema: {
+	minAvailable!: int | string & =~"^[0-9]+%$"
+} | {maxUnavailable!: int | string & =~"^[0-9]+%$"
+}
 
 //////////////////////////////////////////////////////////////////
 //// GracefulShutdown Schema
