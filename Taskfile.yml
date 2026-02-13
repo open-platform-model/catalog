@@ -16,61 +16,20 @@ version: '3'
 # Silent by default - set TASK_VERBOSE=1 or use --verbose to show commands
 silent: true
 
+includes:
+  # Core configuration (provides shared variables)
+  config:
+    taskfile: .tasks/config.yml
+    internal: true
+
+  # Docker OCI registry management
+  registry:
+    taskfile: .tasks/registry/docker.yml
+    dir: .
+
 env:
   CUE_REGISTRY: '{{.LOCAL_REGISTRY}}+insecure'
   CUE_CACHE_DIR: '{{.TASKFILE_DIR}}/../.cue-cache'
-
-vars:
-  V0_DIR: v0
-  LOCAL_REGISTRY: localhost:5000
-  VERSION_FILE: versions.yml
-  
-  # Catalog modules in dependency order
-  CATALOG_MODULES:
-    - name: core
-      path: core
-      enabled: true
-      deps: ""
-
-    - name: schemas
-      path: schemas
-      enabled: true
-      deps: ""
-
-    - name: schemas_kubernetes
-      path: schemas_kubernetes
-      enabled: true
-      deps: ""
-
-    - name: resources
-      path: resources
-      enabled: true
-      deps: "core schemas"
-
-    - name: policies
-      path: policies
-      enabled: true
-      deps: "core schemas"
-
-    - name: traits
-      path: traits
-      enabled: true
-      deps: "core schemas resources"
-
-    - name: blueprints
-      path: blueprints
-      enabled: true
-      deps: "core schemas resources traits"
-
-    - name: providers
-      path: providers
-      enabled: true
-      deps: "core schemas resources traits"
-
-    - name: examples
-      path: examples
-      enabled: true
-      deps: "core schemas resources traits"
 
 tasks:
   default:

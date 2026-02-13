@@ -1,0 +1,73 @@
+version: '3'
+
+# Central Configuration for Catalog Taskfiles
+# Single source of truth for shared configuration within the catalog sub-repo.
+#
+# NOTE: This file only defines variables. Include it in other
+# taskfiles to access shared configuration.
+
+vars:
+  # ============================================================================
+  # Registry Configuration - Docker
+  # ============================================================================
+
+  REGISTRY_CONTAINER: opm-registry
+  REGISTRY_PORT: 5000
+  REGISTRY_IMAGE: registry:2
+  REGISTRY_DATA_DIR: '{{.ROOT_DIR}}/.registry-data'
+
+  # Local registry URL (for CUE_REGISTRY environment variable)
+  LOCAL_REGISTRY: localhost:5000
+
+  # ============================================================================
+  # Catalog Configuration
+  # ============================================================================
+  V0_DIR: v0
+  VERSION_FILE: versions.yml
+  
+  # Catalog modules in dependency order
+  CATALOG_MODULES:
+    - name: core
+      path: core
+      enabled: true
+      deps: ""
+
+    - name: schemas
+      path: schemas
+      enabled: true
+      deps: ""
+
+    - name: schemas_kubernetes
+      path: schemas_kubernetes
+      enabled: true
+      deps: ""
+
+    - name: resources
+      path: resources
+      enabled: true
+      deps: "core schemas"
+
+    - name: policies
+      path: policies
+      enabled: true
+      deps: "core schemas"
+
+    - name: traits
+      path: traits
+      enabled: true
+      deps: "core schemas resources"
+
+    - name: blueprints
+      path: blueprints
+      enabled: true
+      deps: "core schemas resources traits"
+
+    - name: providers
+      path: providers
+      enabled: true
+      deps: "core schemas resources traits"
+
+    - name: examples
+      path: examples
+      enabled: true
+      deps: "core schemas resources traits"
