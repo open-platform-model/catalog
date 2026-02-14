@@ -41,15 +41,14 @@ values: #config & {
 
 ### 2. Negation-Based Discovery
 
-The discriminator `$opm: "secret"` is set on all `#Secret` variants. To test
-if a value is a secret, we use:
+The discriminator `$opm: "secret"` is set on all `#Secret` variants. To test if a value is a secret, we use:
 
 ```cue
 (v & {$opm: !="secret", ...}) == _|_
 ```
 
-This produces bottom ONLY when `$opm` is already `"secret"`. For any other
-value:
+This produces bottom ONLY when `$opm` is already `"secret"`. For any other value:
+
 - **Scalars** (string, int): fail the struct check — correctly skipped
 - **Anonymous open structs**: `$opm: !="secret"` is added without conflict — correctly skipped
 - **Closed definition structs**: `$opm` is rejected as disallowed field — correctly skipped
