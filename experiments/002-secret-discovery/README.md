@@ -81,15 +81,15 @@ This produces the K8s Secret resource layout automatically. Mixed variants
 
 ## Key Design Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| `#Secret` is a disjunction | `#SecretLiteral \| #SecretRef` | Author writes `#Secret` (contract); user picks variant |
-| `$opm: "secret"` discriminator | Concrete value on every variant | Enables CUE-native discovery via negation test |
-| `$secretName` / `$dataKey` | Set by author, propagated by CUE unification | Routing info without a bridging layer |
-| `remoteKey` on `#SecretRef` | Separate from `$dataKey` | External key may differ from logical key |
-| Negation test | `(v & {$opm: !="secret", ...}) == _|_` | No false positives on anonymous open structs |
-| 3-level nesting | Fixed comprehension depth | Covers practical cases; CUE has no recursion |
-| `source` defaults to `"k8s"` | `*"k8s" \| "esc"` | Most refs point to pre-existing K8s Secrets |
+| Decision                       | Choice                                       | Rationale                                              |
+|--------------------------------|----------------------------------------------|--------------------------------------------------------|
+| `#Secret` is a disjunction     | `#SecretLiteral \| #SecretRef`               | Author writes `#Secret` (contract); user picks variant |
+| `$opm: "secret"` discriminator | Concrete value on every variant              | Enables CUE-native discovery via negation test         |
+| `$secretName` / `$dataKey`     | Set by author, propagated by CUE unification | Routing info without a bridging layer                  |
+| `remoteKey` on `#SecretRef`    | Separate from `$dataKey`                     | External key may differ from logical key               |
+| Negation test                  | `(v & {$opm: !="secret", ...}) == _|_`       | No false positives on anonymous open structs           |
+| 3-level nesting                | Fixed comprehension depth                    | Covers practical cases; CUE has no recursion           |
+| `source` defaults to `"k8s"`   | `*"k8s" \| "esc"`                            | Most refs point to pre-existing K8s Secrets            |
 
 ## Running
 
