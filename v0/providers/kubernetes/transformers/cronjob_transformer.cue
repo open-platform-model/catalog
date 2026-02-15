@@ -197,10 +197,11 @@ import (
 						template: {
 							metadata: labels: #context.componentLabels
 							spec: {
-								containers: list.Concat([[_mainContainer], _sidecarContainers])
+								_convertedSidecars: (#ToK8sContainers & {"in": _sidecarContainers}).out
+								containers: list.Concat([[_mainContainer], _convertedSidecars])
 
 								if len(_initContainers) > 0 {
-									initContainers: _initContainers
+									initContainers: (#ToK8sContainers & {"in": _initContainers}).out
 								}
 
 								restartPolicy: _restartPolicy

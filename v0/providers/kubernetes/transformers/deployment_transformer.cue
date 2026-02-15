@@ -183,9 +183,10 @@ import (
 			_sidecarContainers: #component.spec.sidecarContainers
 		}
 
+		_convertedSidecars: (#ToK8sContainers & {"in": _sidecarContainers}).out
 		_containers: list.Concat([
 			[_mainContainer],
-			_sidecarContainers,
+			_convertedSidecars,
 		])
 
 		// Extract init containers with defaults
@@ -215,7 +216,7 @@ import (
 						containers: _containers
 
 						if len(_initContainers) > 0 {
-							initContainers: _initContainers
+							initContainers: (#ToK8sContainers & {"in": _initContainers}).out
 						}
 
 						restartPolicy: _restartPolicy
