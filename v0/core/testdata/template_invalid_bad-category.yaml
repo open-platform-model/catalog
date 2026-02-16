@@ -1,0 +1,5 @@
+# Invalid category
+metadata:
+  apiVersion: "test.dev/templates@v0"
+  name: "bad-template"
+  category: "invalid"

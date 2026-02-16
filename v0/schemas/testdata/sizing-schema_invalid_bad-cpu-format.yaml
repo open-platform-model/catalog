@@ -1,0 +1,3 @@
+cpu:
+  request: "500"
+  limit: "1000m"

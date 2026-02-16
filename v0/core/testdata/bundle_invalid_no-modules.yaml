@@ -1,0 +1,7 @@
+# Empty modules
+metadata:
+  apiVersion: "test.dev/bundles@v0"
+  name: "empty-bundle"
+"#modules": {}
+"#config": {}
+values: {}

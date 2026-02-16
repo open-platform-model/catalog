@@ -1,0 +1,4 @@
+# Extra fields not allowed (closed definition)
+apiVersion: "opmodel.dev/core/v0"
+kind: "Config"
+extraField: "not allowed"

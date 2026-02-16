@@ -1,0 +1,4 @@
+# custom metrics require metricName
+type: "custom"
+target:
+  averageValue: "100"

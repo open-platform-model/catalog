@@ -1,0 +1,7 @@
+# Missing required values
+metadata:
+  name: "bad-release"
+  namespace: "default"
+values:
+  image: "nginx"
+  # missing replicas

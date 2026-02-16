@@ -1,0 +1,6 @@
+cpu:
+  request: "100m"
+  limit: "500m"
+memory:
+  request: "128Mi"
+  limit: "512Mi"

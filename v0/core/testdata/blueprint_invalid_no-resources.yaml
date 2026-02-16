@@ -1,0 +1,6 @@
+# Missing required field: composedResources
+metadata:
+  apiVersion: "test.dev/blueprints@v0"
+  name: "bad-blueprint"
+"#spec":
+  badBlueprint: {}

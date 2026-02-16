@@ -1,0 +1,5 @@
+# port cannot exceed 65535
+livenessProbe:
+  httpGet:
+    path: "/"
+    port: 65536

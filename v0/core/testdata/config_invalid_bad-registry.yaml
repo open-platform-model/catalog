@@ -1,0 +1,4 @@
+# registry must match pattern
+apiVersion: "opmodel.dev/core/v0"
+kind: "Config"
+registry: "INVALID_REGISTRY"

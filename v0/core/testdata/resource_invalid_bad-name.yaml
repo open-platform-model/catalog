@@ -1,0 +1,6 @@
+# Invalid name format (uppercase)
+metadata:
+  apiVersion: "test.dev/resources@v0"
+  name: "BadName"
+"#spec":
+  badName: {}

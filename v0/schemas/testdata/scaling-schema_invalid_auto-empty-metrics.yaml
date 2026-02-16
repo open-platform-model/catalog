@@ -1,0 +1,6 @@
+# auto.metrics cannot be empty
+count: 1
+auto:
+  min: 1
+  max: 10
+  metrics: []

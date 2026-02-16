@@ -1,0 +1,8 @@
+# Invalid spec - field not in resource schema
+metadata:
+  name: "bad-spec"
+spec:
+  container:
+    name: "test"
+    image: "nginx"
+    invalidField: "not allowed"

@@ -1,0 +1,7 @@
+# Empty composedResources
+metadata:
+  apiVersion: "test.dev/blueprints@v0"
+  name: "bad-blueprint"
+composedResources: []
+"#spec":
+  badBlueprint: {}

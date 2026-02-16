@@ -1,0 +1,7 @@
+# Empty rules
+metadata:
+  name: "no-rules"
+"#rules": {}
+appliesTo:
+  matchLabels: {}
+spec: {}

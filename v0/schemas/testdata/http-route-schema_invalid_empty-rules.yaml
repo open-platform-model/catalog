@@ -1,0 +1,4 @@
+# rules cannot be empty
+hostnames:
+  - "example.com"
+rules: []

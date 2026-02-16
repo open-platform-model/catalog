@@ -1,0 +1,8 @@
+# Empty components
+metadata:
+  apiVersion: "test.dev/modules@v0"
+  name: "empty-module"
+  version: "1.0.0"
+"#components": {}
+"#config": {}
+values: {}

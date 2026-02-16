@@ -1,0 +1,6 @@
+# Missing required field: version
+metadata:
+  apiVersion: "test.dev/modules@v0"
+  name: "bad-module"
+"#config": {}
+values: {}

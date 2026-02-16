@@ -1,0 +1,6 @@
+# Invalid level
+metadata:
+  apiVersion: "test.dev/templates@v0"
+  name: "bad-level"
+  category: "module"
+  level: "expert"

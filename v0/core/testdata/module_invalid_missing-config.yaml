@@ -1,0 +1,8 @@
+# Missing required config value
+metadata:
+  apiVersion: "test.dev/modules@v0"
+  name: "missing-config"
+  version: "1.0.0"
+"#config":
+  image: string
+values: {}

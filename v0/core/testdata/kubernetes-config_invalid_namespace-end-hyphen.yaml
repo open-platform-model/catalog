@@ -1,0 +1,2 @@
+# namespace cannot end with hyphen
+namespace: "invalid-"

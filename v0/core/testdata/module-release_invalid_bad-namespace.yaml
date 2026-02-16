@@ -1,0 +1,7 @@
+# Invalid namespace (uppercase)
+metadata:
+  name: "bad-ns"
+  namespace: "BadNamespace"
+values:
+  image: "nginx"
+  replicas: 1

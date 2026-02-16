@@ -1,0 +1,5 @@
+# Tasks cannot use Always restart policy
+container:
+  name: "task"
+  image: "app:latest"
+restartPolicy: "Always"

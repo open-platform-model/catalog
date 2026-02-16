@@ -1,0 +1,5 @@
+# RestartPolicy must be Always, OnFailure, or Never
+metadata:
+  name: "bad-restart"
+spec:
+  restartPolicy: "Unknown"
