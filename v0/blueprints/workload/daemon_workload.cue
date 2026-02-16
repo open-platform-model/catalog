@@ -13,13 +13,9 @@ import (
 
 #DaemonWorkloadBlueprint: close(core.#Blueprint & {
 	metadata: {
-		apiVersion:  "opmodel.dev/blueprints/core@v0"
+		apiVersion:  "opmodel.dev/blueprints/workload@v0"
 		name:        "daemon-workload"
 		description: "A daemon workload that runs on all (or selected) nodes in a cluster"
-		labels: {
-			"core.opmodel.dev/category":      "workload"
-			"core.opmodel.dev/workload-type": "daemon"
-		}
 	}
 
 	composedResources: [
@@ -38,6 +34,10 @@ import (
 })
 
 #DaemonWorkload: close(core.#Component & {
+	metadata: labels: {
+		"core.opmodel.dev/workload-type": "daemon"
+	}
+
 	#blueprints: (#DaemonWorkloadBlueprint.metadata.fqn): #DaemonWorkloadBlueprint
 
 	workload_resources.#Container
@@ -64,6 +64,26 @@ import (
 		}
 		if daemonWorkload.initContainers != _|_ {
 			initContainers: daemonWorkload.initContainers
+		}
+	}
+
+	// Override spec to propagate values from daemonWorkload
+	spec: {
+		container: spec.daemonWorkload.container
+		if spec.daemonWorkload.restartPolicy != _|_ {
+			restartPolicy: spec.daemonWorkload.restartPolicy
+		}
+		if spec.daemonWorkload.updateStrategy != _|_ {
+			updateStrategy: spec.daemonWorkload.updateStrategy
+		}
+		if spec.daemonWorkload.healthCheck != _|_ {
+			healthCheck: spec.daemonWorkload.healthCheck
+		}
+		if spec.daemonWorkload.sidecarContainers != _|_ {
+			sidecarContainers: spec.daemonWorkload.sidecarContainers
+		}
+		if spec.daemonWorkload.initContainers != _|_ {
+			initContainers: spec.daemonWorkload.initContainers
 		}
 	}
 })

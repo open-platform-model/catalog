@@ -68,8 +68,8 @@ Acronym segments that were previously all-caps (e.g., `PVC`) will become first-l
 
 #### Scenario: Multi-word name FQN preserved
 
-- **WHEN** a blueprint has `name: "stateless-workload"` and `apiVersion: "opmodel.dev/blueprints/core@v0"`
-- **THEN** `_definitionName` SHALL be `"StatelessWorkload"` and `fqn` SHALL be `"opmodel.dev/blueprints/core@v0#StatelessWorkload"`
+- **WHEN** a blueprint has `name: "stateless-workload"` and `apiVersion: "opmodel.dev/blueprints@v0"`
+- **THEN** `_definitionName` SHALL be `"StatelessWorkload"` and `fqn` SHALL be `"opmodel.dev/blueprints@v0#StatelessWorkload"`
 
 #### Scenario: Acronym FQN changes
 

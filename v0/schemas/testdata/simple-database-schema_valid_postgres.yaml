@@ -1,0 +1,9 @@
+engine: "postgres"
+version: "16"
+dbName: "mydb"
+username: "admin"
+password: "secret123"
+persistence:
+  enabled: true
+  size: "10Gi"
+  storageClass: "standard"

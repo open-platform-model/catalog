@@ -1,0 +1,6 @@
+# engine must be one of: postgres, mysql, mongodb, redis
+engine: "sqlite"
+version: "3"
+dbName: "mydb"
+username: "admin"
+password: "secret"

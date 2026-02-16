@@ -1,0 +1,4 @@
+# targetPort must be <= 65535
+name: "http"
+targetPort: 70000
+protocol: "TCP"

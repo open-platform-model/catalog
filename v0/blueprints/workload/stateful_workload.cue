@@ -14,13 +14,9 @@ import (
 
 #StatefulWorkloadBlueprint: close(core.#Blueprint & {
 	metadata: {
-		apiVersion:  "opmodel.dev/blueprints/core@v0"
+		apiVersion:  "opmodel.dev/blueprints/workload@v0"
 		name:        "stateful-workload"
 		description: "A stateful workload with stable identity and persistent storage requirements"
-		labels: {
-			"core.opmodel.dev/category":      "workload"
-			"core.opmodel.dev/workload-type": "stateful"
-		}
 	}
 
 	composedResources: [
@@ -41,6 +37,10 @@ import (
 })
 
 #StatefulWorkload: close(core.#Component & {
+	metadata: labels: {
+		"core.opmodel.dev/workload-type": "stateful"
+	}
+
 	#blueprints: (#StatefulWorkloadBlueprint.metadata.fqn): #StatefulWorkloadBlueprint
 
 	workload_resources.#Container
@@ -75,6 +75,32 @@ import (
 		}
 		if statefulWorkload.volumes != _|_ {
 			volumes: statefulWorkload.volumes
+		}
+	}
+
+	// Override spec to propagate values from statefulWorkload
+	spec: {
+		container: spec.statefulWorkload.container
+		if spec.statefulWorkload.scaling != _|_ {
+			scaling: spec.statefulWorkload.scaling
+		}
+		if spec.statefulWorkload.restartPolicy != _|_ {
+			restartPolicy: spec.statefulWorkload.restartPolicy
+		}
+		if spec.statefulWorkload.updateStrategy != _|_ {
+			updateStrategy: spec.statefulWorkload.updateStrategy
+		}
+		if spec.statefulWorkload.healthCheck != _|_ {
+			healthCheck: spec.statefulWorkload.healthCheck
+		}
+		if spec.statefulWorkload.sidecarContainers != _|_ {
+			sidecarContainers: spec.statefulWorkload.sidecarContainers
+		}
+		if spec.statefulWorkload.initContainers != _|_ {
+			initContainers: spec.statefulWorkload.initContainers
+		}
+		if spec.statefulWorkload.volumes != _|_ {
+			volumes: spec.statefulWorkload.volumes
 		}
 	}
 })

@@ -27,8 +27,13 @@ includes:
     taskfile: .tasks/registry/docker.yml
     dir: .
 
+  # Dependency management
+  deps:
+    taskfile: .tasks/deps.yml
+    dir: .
+
 env:
-  CUE_REGISTRY: '{{.LOCAL_REGISTRY}}+insecure'
+  CUE_REGISTRY: '{{.LOCAL_REGISTRY}}'
   CUE_CACHE_DIR: '{{.TASKFILE_DIR}}/../.cue-cache'
 
 tasks:
@@ -144,6 +149,158 @@ tasks:
           fi
           echo "Done"
         fi
+  # ============================================================================
+  # Testing
+  # ============================================================================
+
+  test:
+    desc: Run CUE definition tests (all modules or specific MODULE)
+    summary: |
+      Run unit tests for CUE definitions.
+
+      Tests are organized in two layers:
+        1. Positive CUE tests: *_tests.cue files with @if(test) — validated via unification
+        2. Data validation tests: testdata/*.yaml files — positive (valid) and negative (invalid)
+
+      Naming conventions for testdata files:
+        <definition>_valid_<description>.yaml    → must pass cue vet
+        <definition>_invalid_<description>.yaml  → must fail cue vet
+
+      The definition name is extracted from the filename prefix and converted to PascalCase:
+        resource_valid_minimal.yaml         → validated against #Resource
+        container-schema_invalid_no-image.yaml → validated against #ContainerSchema
+
+      Usage:
+        task test                  # Test all modules
+        task test MODULE=core      # Test specific module
+    vars:
+      MODULE: '{{.MODULE | default ""}}'
+    cmds:
+      - |
+        set -euo pipefail
+
+        # ── Colors ────────────────────────────────────────────────────
+        BOLD='\033[1m'
+        DIM='\033[2m'
+        RED='\033[0;31m'
+        GREEN='\033[0;32m'
+        YELLOW='\033[0;33m'
+        CYAN='\033[0;36m'
+        RESET='\033[0m'
+
+        PASSED=0
+        FAILED=0
+        SKIPPED=0
+        ERRORS=""
+
+        # Convert kebab-case to PascalCase
+        kebab_to_pascal() {
+          echo "$1" | sed -r 's/(^|[-])([a-z])/\U\2/g'
+        }
+
+        run_module_tests() {
+          local mod_name="$1"
+          local mod_path="$2"
+          local mod_dir="{{.V0_DIR}}/$mod_path"
+          local has_tests=false
+
+          # ── Layer 1: Positive CUE tests (@if(test) files) ──────────
+          local test_file_count
+          test_file_count=$(find "$mod_dir" -name '*_tests.cue' 2>/dev/null | wc -l)
+
+          if [ "$test_file_count" -gt 0 ]; then
+            has_tests=true
+            echo -e "${BOLD}[$mod_name]${RESET} CUE unification tests"
+
+            # Run cue vet with test tag from the module directory
+            local output
+            if output=$(cd "$mod_dir" && cue vet -t test ./... 2>&1); then
+              echo -e "  ${GREEN}PASS${RESET}  cue vet -t test ./..."
+              PASSED=$((PASSED + 1))
+            else
+              echo -e "  ${RED}FAIL${RESET}  cue vet -t test ./..."
+              echo "$output" | sed 's/^/         /'
+              FAILED=$((FAILED + 1))
+              ERRORS="${ERRORS}\n  ${mod_name}: CUE unification tests failed"
+            fi
+          fi
+
+          # ── Layer 2+3: Data file tests (testdata/) ─────────────────
+          for testdata_dir in $(find "$mod_dir" -type d -name 'testdata' 2>/dev/null); do
+            for datafile in "$testdata_dir"/*.yaml "$testdata_dir"/*.json; do
+              [ -f "$datafile" ] || continue
+              has_tests=true
+
+              local basename
+              basename=$(basename "$datafile")
+              local noext="${basename%.*}"
+
+              # Extract definition name and expected outcome
+              local def_kebab
+              def_kebab=$(echo "$noext" | sed 's/_\(valid\|invalid\)_.*//')
+              local def_pascal
+              def_pascal=$(kebab_to_pascal "$def_kebab")
+              local def="#${def_pascal}"
+
+              # Compute path relative to mod_dir for cue vet
+              local rel_datafile="${datafile#$mod_dir/}"
+
+              if echo "$noext" | grep -q '_valid_'; then
+                # Should PASS
+                local output
+                if output=$(cd "$mod_dir" && cue vet -d "$def" ./... "$rel_datafile" 2>&1); then
+                  echo -e "  ${GREEN}PASS${RESET}  ${DIM}${basename}${RESET} → ${CYAN}${def}${RESET} (expect: valid)"
+                  PASSED=$((PASSED + 1))
+                else
+                  echo -e "  ${RED}FAIL${RESET}  ${basename} → ${def} (expected valid, got error)"
+                  echo "$output" | sed 's/^/         /'
+                  FAILED=$((FAILED + 1))
+                  ERRORS="${ERRORS}\n  ${mod_name}: ${basename} expected valid but got error"
+                fi
+              elif echo "$noext" | grep -q '_invalid_'; then
+                # Should FAIL
+                if (cd "$mod_dir" && cue vet -d "$def" ./... "$rel_datafile" >/dev/null 2>&1); then
+                  echo -e "  ${RED}FAIL${RESET}  ${basename} → ${def} (expected invalid, but passed)"
+                  FAILED=$((FAILED + 1))
+                  ERRORS="${ERRORS}\n  ${mod_name}: ${basename} expected invalid but passed"
+                else
+                  echo -e "  ${GREEN}PASS${RESET}  ${DIM}${basename}${RESET} → ${CYAN}${def}${RESET} (expect: invalid)"
+                  PASSED=$((PASSED + 1))
+                fi
+              else
+                echo -e "  ${YELLOW}SKIP${RESET}  ${basename} (filename must contain _valid_ or _invalid_)"
+                SKIPPED=$((SKIPPED + 1))
+              fi
+            done
+          done
+
+          if [ "$has_tests" = false ]; then
+            echo -e "${DIM}[$mod_name] no tests found${RESET}"
+          fi
+        }
+
+        echo -e "${BOLD}Running CUE definition tests${RESET}"
+        echo ""
+
+        # Run for specific module or all
+        if [ -n "{{.MODULE}}" ]; then
+          run_module_tests "{{.MODULE}}" "{{.MODULE}}"
+        else
+          {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
+          run_module_tests "{{$mod.name}}" "{{$mod.path}}"
+          {{end}}{{end}}
+        fi
+
+        # ── Summary ─────────────────────────────────────────────────
+        echo ""
+        TOTAL=$((PASSED + FAILED + SKIPPED))
+        echo -e "${BOLD}Results: ${GREEN}${PASSED} passed${RESET}, ${RED}${FAILED} failed${RESET}, ${YELLOW}${SKIPPED} skipped${RESET} (${TOTAL} total)"
+
+        if [ $FAILED -gt 0 ]; then
+          echo -e "\n${RED}Failures:${ERRORS}${RESET}"
+          exit 1
+        fi
+
   # ============================================================================
   # Module Management
   # ============================================================================

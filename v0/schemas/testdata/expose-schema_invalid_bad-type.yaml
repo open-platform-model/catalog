@@ -1,0 +1,6 @@
+ports:
+  http:
+    name: "http"
+    targetPort: 80
+# type must be ClusterIP, NodePort, or LoadBalancer
+type: "ExternalName"

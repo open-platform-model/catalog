@@ -4,21 +4,14 @@ package schemas
 //// Volume Schemas
 /////////////////////////////////////////////////////////////////
 
+// Base schema - only shared field is name
 #VolumeBaseSchema: {
 	name!: string
-	emptyDir?: {
-		medium?:    *"node" | "memory"
-		sizeLimit?: string
-	}
-	persistentClaim?: #PersistentClaimSchema
-	configMap?:       #ConfigMapSchema
-	secret?:          #SecretSchema
 	...
 }
 
-// Volume specification
+// Volume specification - defines storage source
 #VolumeSchema: close(#VolumeBaseSchema & {
-	name!: string
 	emptyDir?: {
 		medium?:    *"node" | "memory"
 		sizeLimit?: string
@@ -28,7 +21,7 @@ package schemas
 	secret?:          #SecretSchema
 })
 
-// Volume mount specification
+// Volume mount specification - defines container mount point
 #VolumeMountSchema: close(#VolumeBaseSchema & {
 	mountPath!: string
 	subPath?:   string

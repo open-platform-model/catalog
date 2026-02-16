@@ -188,7 +188,7 @@ Ask yourself:
     kind:       "Blueprint"
 
     metadata: {
-        apiVersion!:  string  // e.g., "opmodel.dev/blueprints/core@v0"
+        apiVersion!:  string  // e.g., "opmodel.dev/blueprints@v0"
         name!:        string  // e.g., "stateless-workload"
         fqn:          string  // Computed: "{apiVersion}#{Name}"
         description?: string
@@ -208,7 +208,7 @@ Ask yourself:
 ```cue
 #StatelessWorkloadBlueprint: core.#Blueprint & {
     metadata: {
-        apiVersion:  "opmodel.dev/blueprints/core@v0"
+        apiVersion:  "opmodel.dev/blueprints@v0"
         name:        "stateless-workload"
         description: "A stateless workload definition"
     }

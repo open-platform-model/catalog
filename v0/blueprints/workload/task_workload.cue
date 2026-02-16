@@ -13,13 +13,9 @@ import (
 
 #TaskWorkloadBlueprint: close(core.#Blueprint & {
 	metadata: {
-		apiVersion:  "opmodel.dev/blueprints/core@v0"
+		apiVersion:  "opmodel.dev/blueprints/workload@v0"
 		name:        "task-workload"
 		description: "A one-time task workload that runs to completion (Job)"
-		labels: {
-			"core.opmodel.dev/category":      "workload"
-			"core.opmodel.dev/workload-type": "task"
-		}
 	}
 
 	composedResources: [
@@ -37,6 +33,10 @@ import (
 })
 
 #TaskWorkload: close(core.#Component & {
+	metadata: labels: {
+		"core.opmodel.dev/workload-type": "task"
+	}
+
 	#blueprints: (#TaskWorkloadBlueprint.metadata.fqn): #TaskWorkloadBlueprint
 
 	workload_resources.#Container
@@ -59,6 +59,23 @@ import (
 		}
 		if taskWorkload.initContainers != _|_ {
 			initContainers: taskWorkload.initContainers
+		}
+	}
+
+	// Override spec to propagate values from taskWorkload
+	spec: {
+		container: spec.taskWorkload.container
+		if spec.taskWorkload.restartPolicy != _|_ {
+			restartPolicy: spec.taskWorkload.restartPolicy
+		}
+		if spec.taskWorkload.jobConfig != _|_ {
+			jobConfig: spec.taskWorkload.jobConfig
+		}
+		if spec.taskWorkload.sidecarContainers != _|_ {
+			sidecarContainers: spec.taskWorkload.sidecarContainers
+		}
+		if spec.taskWorkload.initContainers != _|_ {
+			initContainers: spec.taskWorkload.initContainers
 		}
 	}
 })

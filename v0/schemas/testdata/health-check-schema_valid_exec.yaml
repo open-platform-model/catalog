@@ -1,0 +1,11 @@
+livenessProbe:
+  exec:
+    command:
+      - "pg_isready"
+      - "-U"
+      - "postgres"
+readinessProbe:
+  exec:
+    command:
+      - "redis-cli"
+      - "ping"

@@ -13,13 +13,9 @@ import (
 
 #ScheduledTaskWorkloadBlueprint: close(core.#Blueprint & {
 	metadata: {
-		apiVersion:  "opmodel.dev/blueprints/core@v0"
+		apiVersion:  "opmodel.dev/blueprints/workload@v0"
 		name:        "scheduled-task-workload"
 		description: "A scheduled task workload that runs on a cron schedule (CronJob)"
-		labels: {
-			"core.opmodel.dev/category":      "workload"
-			"core.opmodel.dev/workload-type": "scheduled-task"
-		}
 	}
 
 	composedResources: [
@@ -37,6 +33,10 @@ import (
 })
 
 #ScheduledTaskWorkload: close(core.#Component & {
+	metadata: labels: {
+		"core.opmodel.dev/workload-type": "scheduled-task"
+	}
+
 	#blueprints: (#ScheduledTaskWorkloadBlueprint.metadata.fqn): #ScheduledTaskWorkloadBlueprint
 
 	workload_resources.#Container
@@ -57,6 +57,21 @@ import (
 		}
 		if scheduledTaskWorkload.initContainers != _|_ {
 			initContainers: scheduledTaskWorkload.initContainers
+		}
+	}
+
+	// Override spec to propagate values from scheduledTaskWorkload
+	spec: {
+		container: spec.scheduledTaskWorkload.container
+		if spec.scheduledTaskWorkload.restartPolicy != _|_ {
+			restartPolicy: spec.scheduledTaskWorkload.restartPolicy
+		}
+		cronJobConfig: spec.scheduledTaskWorkload.cronJobConfig
+		if spec.scheduledTaskWorkload.sidecarContainers != _|_ {
+			sidecarContainers: spec.scheduledTaskWorkload.sidecarContainers
+		}
+		if spec.scheduledTaskWorkload.initContainers != _|_ {
+			initContainers: spec.scheduledTaskWorkload.initContainers
 		}
 	}
 })

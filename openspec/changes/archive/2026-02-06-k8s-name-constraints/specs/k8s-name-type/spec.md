@@ -141,8 +141,8 @@ This ensures `#FQNType` continues to receive a PascalCase name segment without a
 
 #### Scenario: Multi-word name produces correct FQN
 
-- **WHEN** a definition has `apiVersion: "opmodel.dev/blueprints/core@v0"` and `name: "stateless-workload"`
-- **THEN** `_definitionName` SHALL be `"StatelessWorkload"` and `fqn` SHALL be `"opmodel.dev/blueprints/core@v0#StatelessWorkload"`
+- **WHEN** a definition has `apiVersion: "opmodel.dev/blueprints@v0"` and `name: "stateless-workload"`
+- **THEN** `_definitionName` SHALL be `"StatelessWorkload"` and `fqn` SHALL be `"opmodel.dev/blueprints@v0#StatelessWorkload"`
 
 #### Scenario: _definitionName present on all FQN-bearing definitions
 

@@ -1,0 +1,32 @@
+name: "web"
+image: "nginx:1.25-alpine"
+imagePullPolicy: "Always"
+command:
+  - "nginx"
+  - "-g"
+  - "daemon off;"
+args:
+  - "--config"
+  - "/etc/nginx/nginx.conf"
+ports:
+  http:
+    name: "http"
+    targetPort: 80
+    protocol: "TCP"
+  metrics:
+    name: "metrics"
+    targetPort: 9090
+env:
+  ENVIRONMENT:
+    name: "ENVIRONMENT"
+    value: "production"
+  LOG_LEVEL:
+    name: "LOG_LEVEL"
+    value: "info"
+resources:
+  limits:
+    cpu: "500m"
+    memory: "256Mi"
+  requests:
+    cpu: "100m"
+    memory: "128Mi"

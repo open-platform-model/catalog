@@ -1,0 +1,5 @@
+# Missing required 'engine' field
+version: "16"
+dbName: "mydb"
+username: "admin"
+password: "secret"

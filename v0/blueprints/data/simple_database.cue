@@ -17,10 +17,6 @@ import (
 		apiVersion:  "opmodel.dev/blueprints/data@v0"
 		name:        "simple-database"
 		description: "A simple database workload with persistent storage"
-		labels: {
-			"core.opmodel.dev/category":      "data"
-			"core.opmodel.dev/workload-type": "stateful"
-		}
 	}
 
 	composedResources: [
@@ -38,6 +34,10 @@ import (
 })
 
 #SimpleDatabase: close(core.#Component & {
+	metadata: labels: {
+		"core.opmodel.dev/workload-type": "stateful"
+	}
+
 	#blueprints: (#SimpleDatabaseBlueprint.metadata.fqn): #SimpleDatabaseBlueprint
 
 	workload_resources.#Container
@@ -111,25 +111,30 @@ import (
 			}
 			volumeMounts: {
 				if simpleDatabase.persistence != _|_ && simpleDatabase.persistence.enabled {
-					data: _dataVol & {
-						if simpleDatabase.engine == "postgres" {
-							mountPath: "/var/lib/postgresql/data"
-						}
-						if simpleDatabase.engine == "mysql" {
-							mountPath: "/var/lib/mysql"
-						}
-						if simpleDatabase.engine == "mongodb" {
-							mountPath: "/data/db"
-						}
-						if simpleDatabase.engine == "redis" {
-							mountPath: "/data"
-						}
-					}
+					data: _dataMount
 				}
 			}
 		}
 
-		_dataVol: {
+		// Helper for volume mount - defines where to mount in container
+		_dataMount: {
+			name: "data"
+			if simpleDatabase.engine == "postgres" {
+				mountPath: "/var/lib/postgresql/data"
+			}
+			if simpleDatabase.engine == "mysql" {
+				mountPath: "/var/lib/mysql"
+			}
+			if simpleDatabase.engine == "mongodb" {
+				mountPath: "/data/db"
+			}
+			if simpleDatabase.engine == "redis" {
+				mountPath: "/data"
+			}
+		}
+
+		// Helper for volume - defines storage source
+		_dataVolume: {
 			name: "data"
 			persistentClaim: {
 				size:       simpleDatabase.persistence.size
@@ -143,7 +148,7 @@ import (
 		// Configure volumes if persistence is enabled
 		if simpleDatabase.persistence != _|_ && simpleDatabase.persistence.enabled {
 			volumes: {
-				data: _dataVol
+				data: _dataVolume
 			}
 		}
 

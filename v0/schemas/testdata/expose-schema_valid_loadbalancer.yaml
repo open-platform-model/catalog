@@ -1,0 +1,8 @@
+ports:
+  http:
+    name: "http"
+    targetPort: 80
+  https:
+    name: "https"
+    targetPort: 443
+type: "LoadBalancer"
