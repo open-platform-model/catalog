@@ -80,3 +80,6 @@ _testModuleReleaseFull: #ModuleRelease & {
 		replicas: 3
 	}
 }
+
+// =============================================================================
+// Negative tests moved to testdata/*.yaml files

@@ -287,3 +287,41 @@ _testPlacement: #PlacementSchema & {
 		"node.kubernetes.io/instance-type": "m5.xlarge"
 	}
 }
+
+// ── EnvVarSchema (previously untested) ───────────────────────────
+
+_testEnvVarMinimal: #EnvVarSchema & {
+	name:  "ENV_VAR"
+	value: "value"
+}
+
+// ── ResourceRequirementsSchema (previously untested) ─────────────
+
+_testResourceRequirements: #ResourceRequirementsSchema & {
+	limits: {
+		cpu:    "1000m"
+		memory: "1Gi"
+	}
+	requests: {
+		cpu:    "500m"
+		memory: "512Mi"
+	}
+}
+
+_testResourceRequirementsLimitsOnly: #ResourceRequirementsSchema & {
+	limits: {
+		memory: "256Mi"
+	}
+}
+
+// ── RestartPolicySchema (previously untested) ────────────────────
+
+_testRestartPolicyAlways:    #RestartPolicySchema & "Always"
+_testRestartPolicyOnFailure: #RestartPolicySchema & "OnFailure"
+_testRestartPolicyNever:     #RestartPolicySchema & "Never"
+
+// =============================================================================
+// Negative Tests
+// =============================================================================
+
+// Negative tests moved to testdata/*.yaml files

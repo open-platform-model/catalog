@@ -205,3 +205,109 @@ _testBlueprintSchemaRef: {
 	_st: schemas.#ScheduledTaskWorkloadSchema
 	_sf: schemas.#StatefulWorkloadSchema
 }
+
+// ── StatefulWorkload with all optional traits ────────────────────
+
+_testStatefulWorkloadAllTraits: #StatefulWorkload & {
+	metadata: {
+		name: "database-full"
+		labels: "core.opmodel.dev/workload-type": "stateful"
+	}
+	spec: statefulWorkload: {
+		container: {
+			name:  "db"
+			image: "postgres:16"
+			ports: postgres: {
+				name:       "postgres"
+				targetPort: 5432
+			}
+			resources: {
+				limits: {
+					cpu:    "2000m"
+					memory: "4Gi"
+				}
+				requests: {
+					cpu:    "1000m"
+					memory: "2Gi"
+				}
+			}
+		}
+		volumes: {
+			data: {
+				name: "data"
+				persistentClaim: {
+					size:         "100Gi"
+					accessMode:   "ReadWriteOnce"
+					storageClass: "ssd"
+				}
+			}
+		}
+		scaling: count: 3
+		healthCheck: {
+			livenessProbe: {
+				tcpSocket: port: 5432
+				initialDelaySeconds: 30
+			}
+			readinessProbe: {
+				exec: command: ["pg_isready", "-U", "postgres"]
+			}
+		}
+	}
+}
+
+// ── DaemonWorkload with health checks ────────────────────────────
+
+_testDaemonWorkloadWithHealthChecks: #DaemonWorkload & {
+	metadata: {
+		name: "node-exporter"
+		labels: "core.opmodel.dev/workload-type": "daemon"
+	}
+	spec: daemonWorkload: {
+		container: {
+			name:  "exporter"
+			image: "node-exporter:latest"
+			ports: metrics: {
+				name:       "metrics"
+				targetPort: 9100
+			}
+		}
+		healthCheck: {
+			livenessProbe: httpGet: {
+				path: "/metrics"
+				port: 9100
+			}
+		}
+	}
+}
+
+// ── Multiple sidecar/init containers ──────────────────────────────
+
+_testStatelessWithSidecars: #StatelessWorkload & {
+	metadata: {
+		name: "app-with-sidecars"
+		labels: "core.opmodel.dev/workload-type": "stateless"
+	}
+	spec: statelessWorkload: {
+		container: {
+			name:  "app"
+			image: "myapp:latest"
+		}
+		sidecarContainers: [
+			{
+				name:  "logging"
+				image: "fluentd:latest"
+			},
+			{
+				name:  "metrics"
+				image: "prometheus-exporter:latest"
+			},
+		]
+		initContainers: [
+			{
+				name:  "setup"
+				image: "busybox:latest"
+				command: ["sh", "-c", "echo setup"]
+			},
+		]
+	}
+}

@@ -26,3 +26,21 @@ _testScalingHighCount: #Scaling & {
 	metadata: name: "scaling-high"
 	spec: scaling: count: 100
 }
+
+// Test: Scaling with autoscaling
+_testScalingWithAuto: #Scaling & {
+	metadata: name: "scaling-auto"
+	spec: scaling: {
+		count: 2
+		auto: {
+			min: 1
+			max: 20
+			metrics: [{
+				type: "cpu"
+				target: averageUtilization: 80
+			}]
+		}
+	}
+}
+
+// Negative tests moved to testdata/*.yaml files

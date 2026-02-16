@@ -73,3 +73,6 @@ _testTraitMultiAppliesTo: #Trait & {
 	}
 	appliesTo: [_testTraitTargetResource, _testTraitTargetResource]
 }
+
+// =============================================================================
+// Negative tests moved to testdata/*.yaml files

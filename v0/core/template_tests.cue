@@ -60,3 +60,16 @@ _testTemplateIntermediate: #Template & {
 		level:      "intermediate"
 	}
 }
+
+// Test: template FQN computation
+_testTemplateFQN: #Template & {
+	metadata: {
+		apiVersion: "test.dev/templates@v0"
+		name:       "my-template"
+		category:   "module"
+		fqn:        "test.dev/templates@v0#MyTemplate"
+	}
+}
+
+// =============================================================================
+// Negative tests moved to testdata/*.yaml files

@@ -138,3 +138,9 @@ _testContainerResourceEmbed: #Container & {
 		image: "test:latest"
 	}
 }
+
+// =============================================================================
+// Negative Tests
+// =============================================================================
+
+// Negative tests moved to testdata/*.yaml files

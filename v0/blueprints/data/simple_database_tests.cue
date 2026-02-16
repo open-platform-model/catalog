@@ -124,3 +124,63 @@ _testSimpleDBRedis: #SimpleDatabase & {
 _testSimpleDBSchemaRef: {
 	_s: schemas.#SimpleDatabaseSchema
 }
+
+// Test: SimpleDatabase environment variable verification
+_testSimpleDBEnvVars: #SimpleDatabase & {
+	metadata: {
+		name: "env-test-db"
+		labels: "core.opmodel.dev/workload-type": "stateful"
+	}
+	spec: {
+		simpleDatabase: {
+			engine:   "postgres"
+			version:  "16"
+			dbName:   "testdb"
+			username: "testuser"
+			password: "testpass"
+		}
+		// Verify environment variables are set correctly
+		container: {
+			name:  "database"
+			image: "postgres:16"
+			env: {
+				POSTGRES_DB: {
+					name:  "POSTGRES_DB"
+					value: "testdb"
+				}
+				POSTGRES_USER: {
+					name:  "POSTGRES_USER"
+					value: "testuser"
+				}
+				POSTGRES_PASSWORD: {
+					name:  "POSTGRES_PASSWORD"
+					value: "testpass"
+				}
+			}
+		}
+	}
+}
+
+// Test: SimpleDatabase with persistence disabled
+_testSimpleDBNoPersistence: #SimpleDatabase & {
+	metadata: {
+		name: "cache-db"
+		labels: "core.opmodel.dev/workload-type": "stateful"
+	}
+	spec: {
+		simpleDatabase: {
+			engine:   "redis"
+			version:  "7"
+			dbName:   "session"
+			username: "default"
+			password: "pass"
+			persistence: {
+				enabled: false
+			}
+		}
+		container: {
+			name:  "database"
+			image: "redis:7"
+		}
+	}
+}

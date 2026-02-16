@@ -172,3 +172,15 @@ _testPlacementComponent: #Placement & {
 		}
 	}
 }
+
+// =============================================================================
+// Negative Tests
+// Negative tests moved to testdata/*.yaml files
+
+// Test default value for GracefulShutdown terminationGracePeriod
+_testGracefulShutdownDefaults: #GracefulShutdown & {
+	metadata: name: "graceful-default"
+	spec: gracefulShutdown: {
+		preStopCommand: ["sh", "-c", "sleep 5"]
+	}
+}

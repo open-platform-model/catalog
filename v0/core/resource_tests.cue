@@ -81,3 +81,5 @@ _testResourceNestedAPI: #Resource & {
 		image: string
 	}
 }
+
+// Negative tests moved to testdata/*.yaml files

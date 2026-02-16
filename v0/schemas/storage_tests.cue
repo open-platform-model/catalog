@@ -72,3 +72,20 @@ _testPersistentClaimRWX: #PersistentClaimSchema & {
 	accessMode:   "ReadWriteMany"
 	storageClass: "nfs"
 }
+
+_testPersistentClaimReadOnlyMany: #PersistentClaimSchema & {
+	size:       "50Gi"
+	accessMode: "ReadOnlyMany"
+}
+
+// ── VolumeBaseSchema (previously untested) ───────────────────────
+
+_testVolumeBaseDefaults: #VolumeBaseSchema & {
+	name: "base-volume"
+}
+
+// =============================================================================
+// Negative Tests
+// =============================================================================
+
+// Negative tests moved to testdata/*.yaml files

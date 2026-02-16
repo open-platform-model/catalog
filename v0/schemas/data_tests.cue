@@ -58,3 +58,13 @@ _testSimpleDBNoPersistence: #SimpleDatabaseSchema & {
 	password: "pass"
 	persistence: enabled: false
 }
+
+// =============================================================================
+// Negative Tests
+// =============================================================================
+
+// ── SimpleDatabaseSchema Negatives ───────────────────────────────
+
+// Negative tests moved to testdata/*.yaml files
+
+// Negative tests moved to testdata/*.yaml files

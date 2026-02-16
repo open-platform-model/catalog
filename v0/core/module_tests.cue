@@ -145,3 +145,6 @@ _testModuleBuildMeta: #Module & {
 		image: "app:latest"
 	}
 }
+
+// =============================================================================
+// Negative tests moved to testdata/*.yaml files

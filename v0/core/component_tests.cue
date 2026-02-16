@@ -108,3 +108,38 @@ _testComponentCustomLabels: #Component & {
 		}
 	}
 }
+
+// Helper resource #2 for multi-resource tests
+_testCompResource2: close(#Resource & {
+	metadata: {
+		apiVersion: "test.dev/resources@v0"
+		name:       "volume"
+	}
+	#spec: volume: {
+		name!: #NameType
+		size!: string
+	}
+})
+
+// Test: component with multiple resources
+_testComponentMultiResource: #Component & {
+	metadata: {
+		name: "multi-resource"
+	}
+	#resources: {
+		(_testCompResource.metadata.fqn):  _testCompResource
+		(_testCompResource2.metadata.fqn): _testCompResource2
+	}
+	spec: {
+		container: {
+			name:  "app"
+			image: "app:latest"
+		}
+		volume: {
+			name: "data"
+			size: "10Gi"
+		}
+	}
+}
+
+// Negative tests moved to testdata/*.yaml files

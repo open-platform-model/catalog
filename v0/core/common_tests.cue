@@ -45,3 +45,8 @@ _testKebabSimple: (#KebabToPascal & {in: "container"}).out & "Container"
 _testKebabMulti: (#KebabToPascal & {in: "stateless-workload"}).out & "StatelessWorkload"
 _testKebabTriple: (#KebabToPascal & {in: "my-multi-word"}).out & "MyMultiWord"
 _testKebabSingle: (#KebabToPascal & {in: "x"}).out & "X"
+
+// Note: Negative tests for scalar types (NameType, APIVersionType, etc.) are
+// omitted intentionally. The regex patterns and constraints are self-documenting,
+// and positive tests provide sufficient coverage. Struct-based negative tests
+// are handled via testdata/*.yaml files.

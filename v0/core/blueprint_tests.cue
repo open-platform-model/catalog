@@ -78,3 +78,18 @@ _testBlueprintFQN: #Blueprint & {
 		data: string
 	}
 }
+
+// Test: blueprint with multiple composed resources
+_testBlueprintMultiResource: #Blueprint & {
+	metadata: {
+		apiVersion: "test.dev/blueprints@v0"
+		name:       "multi-resource"
+	}
+	composedResources: [_testBlueprintResource, _testBlueprintResource]
+	composedTraits: [_testBlueprintTrait]
+	#spec: multiResource: {
+		data: string
+	}
+}
+
+// Negative tests moved to testdata/*.yaml files

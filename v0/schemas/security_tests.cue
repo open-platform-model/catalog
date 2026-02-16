@@ -43,3 +43,18 @@ _testWorkloadIdentityFull: #WorkloadIdentitySchema & {
 	name:           "my-sa"
 	automountToken: true
 }
+
+// =============================================================================
+// Negative Tests
+// =============================================================================
+
+// Negative tests moved to testdata/*.yaml files
+
+// Test capabilities.drop default
+_testSecurityContextDefaultDrop: #SecurityContextSchema & {
+	capabilities: {
+		drop: ["ALL"]
+	}
+}
+
+// Negative tests moved to testdata/*.yaml files

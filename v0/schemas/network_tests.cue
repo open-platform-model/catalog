@@ -142,3 +142,102 @@ _testIANASimple:   #IANA_SVC_NAME & "http"
 _testIANAHyphen:   #IANA_SVC_NAME & "my-svc"
 _testIANAMax15:    #IANA_SVC_NAME & "abcdefghijklmno"
 _testIANASingleCh: #IANA_SVC_NAME & "x"
+
+// ── RouteAttachmentSchema (previously untested) ──────────────────
+
+_testRouteAttachmentTerminate: #RouteAttachmentSchema & {
+	gatewayRef: {
+		name:      "gateway"
+		namespace: "default"
+	}
+	tls: {
+		mode: "Terminate"
+		certificateRef: {
+			name: "cert"
+		}
+	}
+}
+
+_testRouteAttachmentPassthrough: #RouteAttachmentSchema & {
+	gatewayRef: {
+		name: "gateway"
+	}
+	tls: {
+		mode: "Passthrough"
+	}
+}
+
+// =============================================================================
+// Negative Tests
+// =============================================================================
+
+// ── PortSchema Negatives ─────────────────────────────────────────
+
+// Negative tests moved to testdata/*.yaml files
+
+_testPortBoundaryMin: #PortSchema & {
+	name:       "min"
+	targetPort: 1
+}
+
+_testPortBoundaryMax: #PortSchema & {
+	name:       "max"
+	targetPort: 65535
+}
+
+// Negative tests moved to testdata/*.yaml files (IANA_SVC_NAME tests removed as scalar types)
+
+// Test NodePort type (valid, was missing)
+_testExposeNodePort: #ExposeSchema & {
+	ports: {
+		http: {
+			name:       "http"
+			targetPort: 8080
+		}
+	}
+	type: "NodePort"
+}
+
+// Negative tests moved to testdata/*.yaml files
+
+// Test all HTTP methods (was missing)
+_testHttpRouteAllMethods: #HttpRouteSchema & {
+	hostnames: ["api.example.com"]
+	rules: [
+		{
+			backendPort: 8080
+			matches: [{
+				path: {type: "Prefix", value: "/get"}
+				method: "GET"
+			}]
+		},
+		{
+			backendPort: 8080
+			matches: [{
+				path: {type: "Prefix", value: "/post"}
+				method: "POST"
+			}]
+		},
+		{
+			backendPort: 8080
+			matches: [{
+				path: {type: "Prefix", value: "/put"}
+				method: "PUT"
+			}]
+		},
+		{
+			backendPort: 8080
+			matches: [{
+				path: {type: "Prefix", value: "/delete"}
+				method: "DELETE"
+			}]
+		},
+		{
+			backendPort: 8080
+			matches: [{
+				path: {type: "Prefix", value: "/patch"}
+				method: "PATCH"
+			}]
+		},
+	]
+}

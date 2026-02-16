@@ -31,3 +31,15 @@ _testSecretTLS: #SecretSchema & {
 		"tls.key": "base64key"
 	}
 }
+
+// =============================================================================
+// Negative Tests
+// =============================================================================
+
+// ── ConfigMapSchema Negatives ────────────────────────────────────
+
+_testConfigMapEmpty: #ConfigMapSchema & {
+	data: {}
+}
+
+// Negative tests moved to testdata/*.yaml files
