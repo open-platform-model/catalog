@@ -1,10 +1,11 @@
 package main
 
-import "strings"
+import ( "strings"
 
-//////////////////////////////////////////////////////////
-//// Global Schemas
-//////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////
+	//// Global Schemas
+	//////////////////////////////////////////////////////////
+)
 
 #NameType: string & =~"^[a-z0-9]([a-z0-9-]*[a-z0-9])?$" & strings.MinRunes(1) & strings.MaxRunes(63)
 
@@ -15,33 +16,44 @@ import "strings"
 // The $opm discriminator enables auto-discovery via CUE comprehensions.
 // The $secretName and $dataKey fields carry routing information:
 //   $secretName → K8s Secret resource name (grouping key)
-//   $dataKey    → data key within that K8s Secret
+//   $dataKey	→ data key within that K8s Secret
 //
 // These are set by the author in the schema declaration.
 // Users never need to set them — CUE unification propagates them.
-#Secret: #SecretLiteral | #SecretRef
+#Secret: #SecretLiteral | #SecretK8sRef | #SecretEsoRef
 
 // #SecretLiteral: user provides the actual value.
 // The transformer creates a K8s Secret with this data entry.
 #SecretLiteral: {
-	$opm:         "secret"
-	$secretName!: #NameType
-	$dataKey!:    string
-	description?: string
-	value!:       string
+	$opm:          "secret"
+	$secretName!:  #NameType
+	$dataKey!:     string
+	$description?: string
+
+	value!: string
 }
 
-// #SecretRef: user references an existing secret source.
-// For source "k8s": references a pre-existing K8s Secret (no resource created).
-// For source "esc": the transformer creates an ExternalSecret CR.
-#SecretRef: {
-	$opm:         "secret"
-	$secretName!: #NameType
-	$dataKey!:    string
-	description?: string
-	source!:      *"k8s" | "esc"
-	path!:        string    // K8s Secret name (for k8s) or external path (for esc)
-	remoteKey!:   string    // key within the referenced secret
+#SecretK8sRef: {
+	$opm:          "secret"
+	$secretName!:  #NameType
+	$dataKey!:     string
+	$description?: string
+
+	secretName!: string // K8s Secret name (k8s)
+	remoteKey!:  string // key within the referenced secret
+}
+
+#SecretEsoRef: {
+	$opm:          "secret"
+	$secretName!:  #NameType
+	$dataKey!:     string
+	$description?: string
+
+	// ESO specific fields. I don't want to define these yet since the design is still in flux, but they would include:
+	// - externalPath: string // path in the external secret store
+	// - remoteKey: string // key within the external secret
+	externalPath: string
+	remoteKey:    string
 }
 
 //////////////////////////////////////////////////////////
@@ -123,14 +135,14 @@ _#groupSecrets: {
 #config: {
 	// Flat secrets (level 1)
 	dbUser: #Secret & {
-		$secretName: "db-credentials"
-		$dataKey:    "username"
-		description: "Database username"
+		$secretName:  "db-credentials"
+		$dataKey:     "username"
+		$description: "Database username"
 	}
 	dbPassword: #Secret & {
-		$secretName: "db-credentials"
-		$dataKey:    "password"
-		description: "Database password"
+		$secretName:  "db-credentials"
+		$dataKey:     "password"
+		$description: "Database password"
 	}
 
 	// Another secret group
@@ -152,25 +164,25 @@ _#groupSecrets: {
 	// Nested secrets (level 2)
 	cache: {
 		password: #Secret & {
-			$secretName: "cache-credentials"
-			$dataKey:    "password"
-			description: "Redis cache password"
+			$secretName:  "cache-credentials"
+			$dataKey:     "password"
+			$description: "Redis cache password"
 		}
 		host: string | *"redis://localhost"
 	}
 
-	// Deeply nested secrets (level 3)
+	// Deeply nested secrets (level 3)z
 	integrations: {
 		payments: {
 			stripeKey: #Secret & {
-				$secretName: "stripe-credentials"
-				$dataKey:    "secret-key"
-				description: "Stripe API secret key"
+				$secretName:  "stripe-credentials"
+				$dataKey:     "secret-key"
+				$description: "Stripe API secret key"
 			}
 			webhookSecret: #Secret & {
-				$secretName: "stripe-credentials"
-				$dataKey:    "webhook-secret"
-				description: "Stripe webhook signing secret"
+				$secretName:  "stripe-credentials"
+				$dataKey:     "webhook-secret"
+				$description: "Stripe webhook signing secret"
 			}
 		}
 		email: {
@@ -197,8 +209,7 @@ values: #config & {
 
 	// K8s Ref — references pre-existing Secret "myapp-db-secrets"
 	dbPassword: {
-		source:    "k8s"
-		path:      "myapp-db-secrets"
+		secretName:      "myapp-db-secrets"
 		remoteKey: "db-password"
 	}
 
@@ -213,8 +224,7 @@ values: #config & {
 	// Nested: ESC ref — creates an ExternalSecret CR
 	cache: {
 		password: {
-			source:    "esc"
-			path:      "production/redis"
+			secretName:      "production-redis"
 			remoteKey: "password"
 		}
 		host: "redis://cache.prod.internal"
@@ -223,7 +233,7 @@ values: #config & {
 	// Deeply nested: mix of literals
 	integrations: {
 		payments: {
-			stripeKey:     {value: "sk_live_stripe_key"}
+			stripeKey: {value: "sk_live_stripe_key"}
 			webhookSecret: {value: "whsec_stripe_webhook"}
 		}
 		email: {
@@ -251,19 +261,20 @@ spec: secrets: (_#groupSecrets & {#in: _discovered}).out
 // `value:` carries non-secret string values.
 // The transformer reads `from:` and dispatches:
 //   #SecretLiteral → secretKeyRef: { name: $secretName, key: $dataKey }
-//   #SecretRef(k8s) → secretKeyRef: { name: path, key: remoteKey }
-//   #SecretRef(esc) → secretKeyRef: { name: $secretName, key: $dataKey }
-//                     (ESC creates the target Secret named $secretName)
+//   #SecretK8sRef → secretKeyRef: { name: secretName, key: remoteKey }
+//					 (We must use secretName and not $secretName here since the user cannot override $secretName from the author)
+//   #SecretEsoRef → secretKeyRef: { name: $secretName, key: $dataKey }
+//					 (ESC creates the target Secret named $secretName)
 
 spec: container: env: {
-	DB_USER:        {from: values.dbUser}
-	DB_PASSWORD:    {from: values.dbPassword}
-	API_KEY:        {from: values.apiKey}
-	LOG_LEVEL:      {envValue: values.logLevel}
+	DB_USER: {from: values.dbUser}
+	DB_PASSWORD: {from: values.dbPassword}
+	API_KEY: {from: values.apiKey}
+	LOG_LEVEL: {value: values.logLevel}
 	CACHE_PASSWORD: {from: values.cache.password}
-	STRIPE_KEY:     {from: values.integrations.payments.stripeKey}
+	STRIPE_KEY: {from: values.integrations.payments.stripeKey}
 	STRIPE_WEBHOOK: {from: values.integrations.payments.webhookSecret}
-	EMAIL_API_KEY:  {from: values.integrations.email.apiKey}
+	EMAIL_API_KEY: {from: values.integrations.email.apiKey}
 }
 
 //////////////////////////////////////////////////////////
@@ -296,8 +307,7 @@ _transformerOutput: {
 
 		// Collect ESC refs for this group
 		for _dk, _entry in _entries
-		if (_entry & #SecretRef) != _|_
-		if _entry.source == "esc" {
+		if (_entry & #SecretEsoRef) != _|_ {
 			"ExternalSecret/\(_secretName)": {
 				apiVersion: "external-secrets.io/v1beta1"
 				kind:       "ExternalSecret"
@@ -307,7 +317,7 @@ _transformerOutput: {
 					data: [{
 						secretKey: _dk
 						remoteRef: {
-							key:      _entry.path
+							key:      _entry.externalPath
 							property: _entry.remoteKey
 						}
 					}]
@@ -334,33 +344,31 @@ _envTransformerOutput: {
 					}
 				}
 			}
-			if (_s.source != _|_) {
-				if _s.source == "k8s" {
-					// #SecretRef(k8s) → use path/remoteKey
-					(_envName): {
-						name: _envName
-						valueFrom: secretKeyRef: {
-							name: _s.path
-							key:  _s.remoteKey
-						}
+			if ((_s & #SecretK8sRef) != _|_) {
+				// #SecretK8sRef → use secretName/remoteKey
+				(_envName): {
+					name: _envName
+					valueFrom: secretKeyRef: {
+						name: _s.secretName
+						key:  _s.remoteKey
 					}
 				}
-				if _s.source == "esc" {
-					// #SecretRef(esc) → ESC creates Secret named $secretName
-					(_envName): {
-						name: _envName
-						valueFrom: secretKeyRef: {
-							name: _s.$secretName
-							key:  _s.$dataKey
-						}
+			}
+			if ((_s & #SecretEsoRef) != _|_) {
+				// #SecretEsoRef → ESC creates Secret named $secretName
+				(_envName): {
+					name: _envName
+					valueFrom: secretKeyRef: {
+						name: _s.$secretName
+						key:  _s.$dataKey
 					}
 				}
 			}
 		}
-		if _envVar.envValue != _|_ {
+		if _envVar.value != _|_ {
 			(_envName): {
 				name:  _envName
-				value: _envVar.envValue
+				value: _envVar.value
 			}
 		}
 	}
