@@ -46,6 +46,10 @@ import (
 						name:      secretName
 						namespace: #context.namespace
 						labels:    #context.labels
+						// Include component annotations if present
+						if len(#context.componentAnnotations) > 0 {
+							annotations: #context.componentAnnotations
+						}
 					}
 					type: secret.type
 					data: secret.data

@@ -55,6 +55,10 @@ import (
 						name:      #component.metadata.name
 						namespace: #context.namespace
 						labels:    #context.labels
+						// Include component annotations if present
+						if len(#context.componentAnnotations) > 0 {
+							annotations: #context.componentAnnotations
+						}
 					}
 					spec: {
 						scaleTargetRef: {

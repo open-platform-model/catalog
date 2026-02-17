@@ -201,7 +201,8 @@ import (
 				name:      #component.metadata.name
 				namespace: #context.namespace | *"default"
 				labels:    #context.labels
-				if #context.componentAnnotations != _|_ {
+				// Include component annotations if present
+				if len(#context.componentAnnotations) > 0 {
 					annotations: #context.componentAnnotations
 				}
 			}

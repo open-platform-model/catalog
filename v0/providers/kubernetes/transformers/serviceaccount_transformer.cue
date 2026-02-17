@@ -43,6 +43,10 @@ import (
 				name:      _workloadIdentity.name
 				namespace: #context.namespace
 				labels:    #context.labels
+				// Include component annotations if present
+				if len(#context.componentAnnotations) > 0 {
+					annotations: #context.componentAnnotations
+				}
 			}
 			automountServiceAccountToken: _workloadIdentity.automountToken
 		}
