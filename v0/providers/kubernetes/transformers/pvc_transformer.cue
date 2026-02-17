@@ -52,7 +52,7 @@ import (
 						name:      volume.name | *volumeName
 						namespace: #context.namespace | *"default"
 						labels:    #context.labels
-				// Include component annotations if present
+						// Include component annotations if present
 						if len(#context.componentAnnotations) > 0 {
 							annotations: #context.componentAnnotations
 						}
