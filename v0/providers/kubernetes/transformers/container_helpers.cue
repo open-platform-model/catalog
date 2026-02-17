@@ -36,7 +36,28 @@ import (
 			env: [for _, e in X.env {e}]
 		}
 		if X.resources != _|_ {
-			resources: X.resources
+			resources: {
+				if X.resources.limits != _|_ {
+					limits: {
+						if X.resources.limits.cpu != _|_ {
+							cpu: (schemas.#NormalizeCPU & {_in: X.resources.limits.cpu}).out
+						}
+						if X.resources.limits.memory != _|_ {
+							memory: (schemas.#NormalizeMemory & {_in: X.resources.limits.memory}).out
+						}
+					}
+				}
+				if X.resources.requests != _|_ {
+					requests: {
+						if X.resources.requests.cpu != _|_ {
+							cpu: (schemas.#NormalizeCPU & {_in: X.resources.requests.cpu}).out
+						}
+						if X.resources.requests.memory != _|_ {
+							memory: (schemas.#NormalizeMemory & {_in: X.resources.requests.memory}).out
+						}
+					}
+				}
+			}
 		}
 		if X.volumeMounts != _|_ {
 			volumeMounts: [for _, vm in X.volumeMounts {vm}]

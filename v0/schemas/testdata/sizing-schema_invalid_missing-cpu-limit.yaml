@@ -1,0 +1,3 @@
+# When cpu block is present, both request and limit are required
+cpu:
+  request: "500m"

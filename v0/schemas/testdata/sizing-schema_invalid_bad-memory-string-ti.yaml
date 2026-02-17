@@ -1,0 +1,4 @@
+# Memory must use Mi or Gi suffix, not Ti
+memory:
+  request: "128Mi"
+  limit: "1Ti"

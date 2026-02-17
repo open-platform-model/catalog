@@ -1,0 +1,4 @@
+# Only requests, no limits
+requests:
+  cpu: "500m"
+  memory: "256Mi"

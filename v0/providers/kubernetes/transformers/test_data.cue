@@ -284,6 +284,46 @@ _testDeploymentWithTraits: #DeploymentTransformer.#transform & {
 	#context:   _testContext
 }
 
+// Test component with number-based sizing (verifies normalization)
+_testComponentWithNumberSizing: core.#Component & {
+	metadata: {
+		name: "test-deployment-number-sizing"
+		labels: {
+			"core.opmodel.dev/workload-type": "stateless"
+		}
+	}
+
+	#resources: {
+		"opmodel.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
+	}
+
+	#traits: {
+		"opmodel.dev/traits/workload@v0#Sizing": workload_traits.#SizingTrait
+	}
+
+	spec: {
+		container: {
+			name:  "test-app-number"
+			image: "myapp:latest"
+		}
+		sizing: {
+			cpu: {
+				request: 2
+				limit:   8
+			}
+			memory: {
+				request: 0.5
+				limit:   4
+			}
+		}
+	}
+}
+
+_testDeploymentWithNumberSizing: #DeploymentTransformer.#transform & {
+	#component: _testComponentWithNumberSizing
+	#context:   _testContext
+}
+
 // Test component for ConfigMaps
 _testConfigMapComponent: core.#Component & {
 	metadata: {

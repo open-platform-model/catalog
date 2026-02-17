@@ -135,6 +135,64 @@ _testSizingFull: #SizingSchema & {
 	}
 }
 
+_testSizingNumbers: #SizingSchema & {
+	cpu: {
+		request: 0.5
+		limit:   2
+	}
+	memory: {
+		request: 0.5
+		limit:   4
+	}
+}
+
+_testSizingCPUOnly: #SizingSchema & {
+	cpu: {
+		request: "500m"
+		limit:   "2000m"
+	}
+}
+
+_testSizingMemoryOnly: #SizingSchema & {
+	memory: {
+		request: "256Mi"
+		limit:   "1Gi"
+	}
+}
+
+_testSizingMixed: #SizingSchema & {
+	cpu: {
+		request: 2
+		limit:   "8000m"
+	}
+	memory: {
+		request: "512Mi"
+		limit:   4
+	}
+}
+
+_testSizingLargeValues: #SizingSchema & {
+	cpu: {
+		request: 16
+		limit:   64
+	}
+	memory: {
+		request: 32
+		limit:   128
+	}
+}
+
+_testSizingSmallFractions: #SizingSchema & {
+	cpu: {
+		request: 0.1
+		limit:   0.5
+	}
+	memory: {
+		request: 0.125
+		limit:   0.25
+	}
+}
+
 // ── HealthCheckSchema ────────────────────────────────────────────
 
 _testHealthCheckHTTP: #HealthCheckSchema & {
@@ -313,6 +371,42 @@ _testResourceRequirementsLimitsOnly: #ResourceRequirementsSchema & {
 		memory: "256Mi"
 	}
 }
+
+_testResourceRequirementsNumbers: #ResourceRequirementsSchema & {
+	limits: {
+		cpu:    8
+		memory: 4
+	}
+	requests: {
+		cpu:    2
+		memory: 0.5
+	}
+}
+
+_testResourceRequirementsRequestsOnly: #ResourceRequirementsSchema & {
+	requests: {
+		cpu:    "500m"
+		memory: "256Mi"
+	}
+}
+
+_testResourceRequirementsCPUOnly: #ResourceRequirementsSchema & {
+	limits: cpu:   "2000m"
+	requests: cpu: "500m"
+}
+
+_testResourceRequirementsMixed: #ResourceRequirementsSchema & {
+	limits: {
+		cpu:    8
+		memory: "4Gi"
+	}
+	requests: {
+		cpu:    "500m"
+		memory: 0.5
+	}
+}
+
+_testResourceRequirementsEmpty: #ResourceRequirementsSchema & {}
 
 // ── RestartPolicySchema (previously untested) ────────────────────
 

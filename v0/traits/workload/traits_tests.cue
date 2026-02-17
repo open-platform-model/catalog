@@ -30,6 +30,20 @@ _testSizingComponent: #Sizing & {
 	}
 }
 
+_testSizingComponentNumbers: #Sizing & {
+	metadata: name: "sizing-test-numbers"
+	spec: sizing: {
+		cpu: {
+			request: 2
+			limit:   8
+		}
+		memory: {
+			request: 0.5
+			limit:   4
+		}
+	}
+}
+
 // ── RestartPolicyTrait ───────────────────────────────────────────
 
 _testRestartPolicyTraitDef: #RestartPolicyTrait & {

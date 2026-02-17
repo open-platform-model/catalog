@@ -5,6 +5,7 @@ import (
 	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v0"
 	k8sappsv1 "opmodel.dev/schemas/kubernetes/apps/v1@v0"
 	core "opmodel.dev/core@v0"
+	schemas "opmodel.dev/schemas@v0"
 	workload_resources "opmodel.dev/resources/workload@v0"
 	workload_traits "opmodel.dev/traits/workload@v0"
 	security_traits "opmodel.dev/traits/security@v0"
@@ -140,18 +141,18 @@ import (
 					if #component.spec.sizing.cpu != _|_ || #component.spec.sizing.memory != _|_ {
 						requests: {
 							if #component.spec.sizing.cpu != _|_ {
-								cpu: #component.spec.sizing.cpu.request
+								cpu: (schemas.#NormalizeCPU & {_in: #component.spec.sizing.cpu.request}).out
 							}
 							if #component.spec.sizing.memory != _|_ {
-								memory: #component.spec.sizing.memory.request
+								memory: (schemas.#NormalizeMemory & {_in: #component.spec.sizing.memory.request}).out
 							}
 						}
 						limits: {
 							if #component.spec.sizing.cpu != _|_ {
-								cpu: #component.spec.sizing.cpu.limit
+								cpu: (schemas.#NormalizeCPU & {_in: #component.spec.sizing.cpu.limit}).out
 							}
 							if #component.spec.sizing.memory != _|_ {
-								memory: #component.spec.sizing.memory.limit
+								memory: (schemas.#NormalizeMemory & {_in: #component.spec.sizing.memory.limit}).out
 							}
 						}
 					}

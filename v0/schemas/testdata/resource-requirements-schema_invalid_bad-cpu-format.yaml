@@ -1,0 +1,5 @@
+# CPU must be number or string with 'm' suffix
+limits:
+  cpu: "2cores"
+requests:
+  cpu: "500m"

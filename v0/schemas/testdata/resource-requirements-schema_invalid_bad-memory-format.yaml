@@ -1,0 +1,5 @@
+# Memory must be number or string with Mi/Gi suffix
+limits:
+  memory: "4GB"
+requests:
+  memory: "256Mi"

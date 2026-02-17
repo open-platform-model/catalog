@@ -34,9 +34,9 @@ import (
 
 #SizingDefaults: close(schemas.#SizingSchema & {
 	cpu?: schemas.#SizingSchema.cpu & {
-		request!: string | *"100m"
+		request!: (number | string) | *"100m"
 	}
 	memory?: schemas.#SizingSchema.memory & {
-		request!: string | *"128Mi"
+		request!: (number | string) | *"128Mi"
 	}
 })

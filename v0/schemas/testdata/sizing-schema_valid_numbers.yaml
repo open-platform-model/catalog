@@ -1,0 +1,6 @@
+cpu:
+  request: 2
+  limit: 8
+memory:
+  request: 0.5
+  limit: 4

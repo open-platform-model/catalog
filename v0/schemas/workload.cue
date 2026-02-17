@@ -41,12 +41,12 @@ package schemas
 
 #ResourceRequirementsSchema: {
 	limits?: {
-		cpu?:    string
-		memory?: string
+		cpu?:    number | string & =~"^[0-9]+m$"
+		memory?: number | string & =~"^[0-9]+[MG]i$"
 	}
 	requests?: {
-		cpu?:    string
-		memory?: string
+		cpu?:    number | string & =~"^[0-9]+m$"
+		memory?: number | string & =~"^[0-9]+[MG]i$"
 	}
 }
 
@@ -88,12 +88,12 @@ package schemas
 
 #SizingSchema: {
 	cpu?: {
-		request!: string & =~"^[0-9]+m$"
-		limit!:   string & =~"^[0-9]+m$"
+		request!: number | string & =~"^[0-9]+m$"
+		limit!:   number | string & =~"^[0-9]+m$"
 	}
 	memory?: {
-		request!: string & =~"^[0-9]+[MG]i$"
-		limit!:   string & =~"^[0-9]+[MG]i$"
+		request!: number | string & =~"^[0-9]+[MG]i$"
+		limit!:   number | string & =~"^[0-9]+[MG]i$"
 	}
 	auto?: #VerticalAutoscalingSpec
 }

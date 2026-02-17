@@ -7,26 +7,26 @@ core:
   version: v0.1.26
   checksum: "9fe047c1aec00b7d1710d75bede49af24b247c7224d2b2668c641f26970b441c"
 schemas:
-  version: v0.1.13
-  checksum: "bfe6682f6ff666bd6e7af6d33f8e4f55cd1df12ae610d9bc85f9bcd756f9a21c"
+  version: v0.1.15
+  checksum: "dbdc01ab55623c3a6aa564db760ba2b97104438e62a0620cc31be2b516a9723f"
 schemas_kubernetes:
   version: v0.0.2
   checksum: "a201168a991b500928822b0edcd287f292341c1cb40d48846b18e78c6ead1a20"
 resources:
-  version: v0.2.25
+  version: v0.2.27
   checksum: "ade54363a26a0a48b5cb2edf2f8c5aafa3907fea89ff5fbf41260bae72153311"
 traits:
-  version: v0.1.37
-  checksum: "2b88960a6bd921567b3f6998e93953d87afd0bea79f12c295703c924cb0e5958"
+  version: v0.1.39
+  checksum: "6d2a7753bf3551a6bfc6a85df5f447cb9b0170f38fb5d236f9273897c3805df2"
 blueprints:
-  version: v0.1.41
+  version: v0.1.43
   checksum: "b3a0a23238b5be7497d11b4aeecd365cd09106c31736c938b2fcba43fd10be98"
 policies:
-  version: v0.1.29
+  version: v0.1.31
   checksum: "ff50daefcfa4bf6984021902f171741b458d50b60f607157cc99c157736bac77"
 providers:
-  version: v0.1.46
-  checksum: "abc0f613115e922d2153cf0af5e73db0aa087cb4b0c5a14e4d889d9d63ab180c"
+  version: v0.1.48
+  checksum: "867ad057543dc465e6c9eb874462cfd1d023c4048e64faaaebda49524f3cbacc"
 examples:
-  version: v0.1.36
+  version: v0.1.38
   checksum: "ac70778fd1638cea2e7c454b88ab4b6c6aded8ec50ab853576ee7a103edd4271"
