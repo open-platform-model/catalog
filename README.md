@@ -43,20 +43,14 @@ subgraph "1. Module"
   MD[Developer intent: Components + config schema + defaults]
 end
 
-subgraph "2. Platform Extension"
-  MOD[Platform adds policies + refines constraints via CUE unification]
-end
-
 subgraph "3. ModuleRelease"
   MR[Concrete deployment: Module + environment-specific values]
 end
 
-MD --> MOD --> MR
+MD --> MR
 ```
 
 **Module** — Defines the application: Components (Resources + Traits or Blueprints), configuration schema (`#config`), and sane defaults (`values`). Module Authors publish these to a registry.
-
-**Platform Extension** — Platform teams extend Modules via CUE unification to add governance (Policies), tighten constraints, or add cross-cutting concerns without forking.
 
 **ModuleRelease** — End-users or deployment systems bind a Module to concrete values for a target environment. CUE validates the values against the Module's `#config` at definition time.
 
