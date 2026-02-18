@@ -1,5 +1,4 @@
-# Memory must be number or string with Mi/Gi suffix
-limits:
-  memory: "4GB"
-requests:
-  memory: "256Mi"
+# Memory must be a number or string with Mi/Gi suffix
+memory:
+  request: "256Mi"
+  limit: "4GB"

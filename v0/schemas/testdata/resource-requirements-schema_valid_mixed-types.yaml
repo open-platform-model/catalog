@@ -1,6 +1,6 @@
 cpu:
   request: 2
-  limit: 8
+  limit: "8000m"
 memory:
-  request: 0.5
+  request: "512Mi"
   limit: 4

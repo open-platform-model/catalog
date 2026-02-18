@@ -101,13 +101,13 @@ _testContainerFullSpec: #Container & {
 		command: ["nginx"]
 		args: ["-g", "daemon off;"]
 		resources: {
-			limits: {
-				cpu:    "500m"
-				memory: "256Mi"
+			cpu: {
+				request: "100m"
+				limit:   "500m"
 			}
-			requests: {
-				cpu:    "100m"
-				memory: "128Mi"
+			memory: {
+				request: "128Mi"
+				limit:   "256Mi"
 			}
 		}
 	}

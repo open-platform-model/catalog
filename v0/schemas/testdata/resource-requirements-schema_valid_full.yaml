@@ -1,6 +1,6 @@
-limits:
-  cpu: "1000m"
-  memory: "1Gi"
-requests:
-  cpu: "500m"
-  memory: "512Mi"
+cpu:
+  request: "100m"
+  limit: "500m"
+memory:
+  request: "128Mi"
+  limit: "512Mi"

@@ -6,44 +6,6 @@ package workload
 // Workload Traits Tests (remaining traits not covered by individual files)
 // =============================================================================
 
-// ── SizingTrait ──────────────────────────────────────────────────
-
-_testSizingTraitDef: #SizingTrait & {
-	metadata: {
-		apiVersion: "opmodel.dev/traits/workload@v0"
-		name:       "sizing"
-		fqn:        "opmodel.dev/traits/workload@v0#Sizing"
-	}
-}
-
-_testSizingComponent: #Sizing & {
-	metadata: name: "sizing-test"
-	spec: sizing: {
-		cpu: {
-			request: "100m"
-			limit:   "500m"
-		}
-		memory: {
-			request: "128Mi"
-			limit:   "512Mi"
-		}
-	}
-}
-
-_testSizingComponentNumbers: #Sizing & {
-	metadata: name: "sizing-test-numbers"
-	spec: sizing: {
-		cpu: {
-			request: 2
-			limit:   8
-		}
-		memory: {
-			request: 0.5
-			limit:   4
-		}
-	}
-}
-
 // ── RestartPolicyTrait ───────────────────────────────────────────
 
 _testRestartPolicyTraitDef: #RestartPolicyTrait & {

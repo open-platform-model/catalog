@@ -60,7 +60,6 @@ What OPM models today, mapped to Kubernetes API groups:
 | Trait | Transformer Integration |
 |---|---|
 | Scaling (count + HPA) | Replicas on workload + HPA transformer |
-| Sizing (requests/limits) | Resources on container spec |
 | HealthCheck (liveness/readiness) | Probes on container spec |
 | UpdateStrategy | Strategy/updateStrategy on workload |
 | RestartPolicy | restartPolicy on pod spec |
@@ -135,13 +134,12 @@ These are capabilities already modeled at the schema/trait level that have no pa
 | `#DisruptionBudgetTrait` | PDB transformer | `policy/v1 PodDisruptionBudget` |
 | `#PlacementTrait` | Weave into workload transformers | `topologySpreadConstraints`, affinity |
 | `#GracefulShutdownTrait` | Weave into workload transformers | `terminationGracePeriodSeconds`, `lifecycle.preStop` |
-| `#SizingSchema.auto` (VPA) | VPA transformer | `autoscaling.k8s.io/v1 VerticalPodAutoscaler` |
 | `#NetworkRulesPolicy` | NetworkPolicy transformer | `networking.k8s.io/v1 NetworkPolicy` |
 | `#GrpcRouteTrait` | Gateway API GRPCRoute transformer | `gateway.networking.k8s.io/v1 GRPCRoute` |
 | `#TcpRouteTrait` | Gateway API TCPRoute transformer | `gateway.networking.k8s.io/v1alpha2 TCPRoute` |
 | `#EncryptionTrait` | Intent-only — needs design decision | (no direct K8s mapping?) |
 
-**Note**: Placement and GracefulShutdown should be woven into the existing workload transformers (Deployment, StatefulSet, DaemonSet, Job, CronJob) — same pattern as SecurityContext. DisruptionBudget and VPA need their own transformers since they produce separate K8s resources.
+**Note**: Placement and GracefulShutdown should be woven into the existing workload transformers (Deployment, StatefulSet, DaemonSet, Job, CronJob) — same pattern as SecurityContext. DisruptionBudget needs its own transformer since it produces a separate K8s resource.
 
 ---
 
@@ -210,13 +208,7 @@ Option 2 feels most aligned with OPM's intent-based philosophy.
 
 **Effort**: Small — straightforward transformer.
 
-#### 5.2 VPA transformer (MEDIUM)
-
-`#SizingSchema.auto` has `#VerticalAutoscalingSpec` with `updateMode` and `controlledResources` but no transformer emits a VPA object.
-
-**Effort**: Small — straightforward transformer.
-
-#### 5.3 Annotations-driven observability (MEDIUM)
+#### 5.2 Annotations-driven observability (MEDIUM)
 
 No first-class support for common annotation patterns:
 

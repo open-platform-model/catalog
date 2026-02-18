@@ -1,0 +1,4 @@
+# Memory must use Mi or Gi suffix, not kb
+memory:
+  request: "256kb"
+  limit: "512Mi"

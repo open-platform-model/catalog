@@ -40,13 +40,13 @@ package schemas
 }
 
 #ResourceRequirementsSchema: {
-	limits?: {
-		cpu?:    number | string & =~"^[0-9]+m$"
-		memory?: number | string & =~"^[0-9]+[MG]i$"
+	cpu?: {
+		request?: number | string & =~"^[0-9]+m$"
+		limit?:   number | string & =~"^[0-9]+m$"
 	}
-	requests?: {
-		cpu?:    number | string & =~"^[0-9]+m$"
-		memory?: number | string & =~"^[0-9]+[MG]i$"
+	memory?: {
+		request?: number | string & =~"^[0-9]+[MG]i$"
+		limit?:   number | string & =~"^[0-9]+[MG]i$"
 	}
 }
 
@@ -80,27 +80,6 @@ package schemas
 #MetricTargetSpec: {
 	averageUtilization?: int & >=1 & <=100
 	averageValue?:       string
-}
-
-//////////////////////////////////////////////////////////////////
-//// Sizing Schema
-//////////////////////////////////////////////////////////////////
-
-#SizingSchema: {
-	cpu?: {
-		request!: number | string & =~"^[0-9]+m$"
-		limit!:   number | string & =~"^[0-9]+m$"
-	}
-	memory?: {
-		request!: number | string & =~"^[0-9]+[MG]i$"
-		limit!:   number | string & =~"^[0-9]+[MG]i$"
-	}
-	auto?: #VerticalAutoscalingSpec
-}
-
-#VerticalAutoscalingSpec: {
-	updateMode?: "Auto" | "Initial" | "Off" | *"Auto"
-	controlledResources?: [...("cpu" | "memory")]
 }
 
 //////////////////////////////////////////////////////////////////
@@ -213,7 +192,6 @@ package schemas
 	healthCheck?:       #HealthCheckSchema
 	sidecarContainers?: #SidecarContainersSchema
 	initContainers?:    #InitContainersSchema
-	sizing?:            #SizingSchema
 	securityContext?:   #SecurityContextSchema
 })
 
@@ -231,7 +209,6 @@ package schemas
 	initContainers?:    #InitContainersSchema
 	serviceName?:       string
 	volumes: [string]: #VolumeSchema
-	sizing?:          #SizingSchema
 	securityContext?: #SecurityContextSchema
 })
 
@@ -246,7 +223,6 @@ package schemas
 	healthCheck?:       #HealthCheckSchema
 	sidecarContainers?: #SidecarContainersSchema
 	initContainers?:    #InitContainersSchema
-	sizing?:            #SizingSchema
 	securityContext?:   #SecurityContextSchema
 })
 
@@ -260,7 +236,6 @@ package schemas
 	jobConfig?:         #JobConfigSchema
 	sidecarContainers?: #SidecarContainersSchema
 	initContainers?:    #InitContainersSchema
-	sizing?:            #SizingSchema
 	securityContext?:   #SecurityContextSchema
 })
 
@@ -274,7 +249,6 @@ package schemas
 	cronJobConfig!:     #CronJobConfigSchema
 	sidecarContainers?: #SidecarContainersSchema
 	initContainers?:    #InitContainersSchema
-	sizing?:            #SizingSchema
 	securityContext?:   #SecurityContextSchema
 })
 

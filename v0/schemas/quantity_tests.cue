@@ -140,3 +140,53 @@ _testNormalizeMemory_String32768Mi: "32768Mi"
 
 _testNormalizeMemory_String128Gi: (#NormalizeMemory & {_in: "128Gi"}).out
 _testNormalizeMemory_String128Gi: "128Gi"
+
+// =============================================================================
+// #ResourceRequirementsSchema Validation Tests
+//
+// Verifies that #ResourceRequirementsSchema accepts valid inputs.
+// Normalization is tested via #NormalizeCPU / #NormalizeMemory above.
+// =============================================================================
+
+_testRRStr: #ResourceRequirementsSchema & {
+	cpu: {
+		request: "100m"
+		limit:   "500m"
+	}
+	memory: {
+		request: "128Mi"
+		limit:   "256Mi"
+	}
+}
+
+_testRRNum: #ResourceRequirementsSchema & {
+	cpu: {
+		request: 2
+		limit:   8
+	}
+	memory: {
+		request: 0.5
+		limit:   4
+	}
+}
+
+_testRRMixed: #ResourceRequirementsSchema & {
+	cpu: {
+		request: "100m"
+		limit:   2
+	}
+	memory: {
+		request: 0.5
+		limit:   "1Gi"
+	}
+}
+
+_testRRRequestOnly: #ResourceRequirementsSchema & {
+	cpu: request:    "500m"
+	memory: request: "256Mi"
+}
+
+_testRRLimitOnly: #ResourceRequirementsSchema & {
+	cpu: limit:    "1000m"
+	memory: limit: "512Mi"
+}

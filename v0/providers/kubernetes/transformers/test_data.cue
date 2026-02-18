@@ -218,7 +218,7 @@ _testPVCComponent: core.#Component & {
 	}
 }
 
-// Test component with HealthCheck, Sizing, and SecurityContext traits
+// Test component with HealthCheck, container resources, and SecurityContext traits
 _testComponentWithTraits: core.#Component & {
 	metadata: {
 		name: "test-deployment-with-traits"
@@ -233,7 +233,6 @@ _testComponentWithTraits: core.#Component & {
 
 	#traits: {
 		"opmodel.dev/traits/workload@v0#HealthCheck":     workload_traits.#HealthCheckTrait
-		"opmodel.dev/traits/workload@v0#Sizing":          workload_traits.#SizingTrait
 		"opmodel.dev/traits/security@v0#SecurityContext": security_traits.#SecurityContextTrait
 	}
 
@@ -241,6 +240,16 @@ _testComponentWithTraits: core.#Component & {
 		container: {
 			name:  "test-app"
 			image: "myapp:latest"
+			resources: {
+				cpu: {
+					request: "100m"
+					limit:   "500m"
+				}
+				memory: {
+					request: "128Mi"
+					limit:   "256Mi"
+				}
+			}
 		}
 		healthCheck: {
 			livenessProbe: {
@@ -256,16 +265,6 @@ _testComponentWithTraits: core.#Component & {
 					path: "/ready"
 					port: 8080
 				}
-			}
-		}
-		sizing: {
-			cpu: {
-				request: "100m"
-				limit:   "500m"
-			}
-			memory: {
-				request: "128Mi"
-				limit:   "256Mi"
 			}
 		}
 		securityContext: {
@@ -284,10 +283,10 @@ _testDeploymentWithTraits: #DeploymentTransformer.#transform & {
 	#context:   _testContext
 }
 
-// Test component with number-based sizing (verifies normalization)
-_testComponentWithNumberSizing: core.#Component & {
+// Test component with number-based container resources (verifies normalization)
+_testComponentWithNumberResources: core.#Component & {
 	metadata: {
-		name: "test-deployment-number-sizing"
+		name: "test-deployment-number-resources"
 		labels: {
 			"core.opmodel.dev/workload-type": "stateless"
 		}
@@ -297,30 +296,183 @@ _testComponentWithNumberSizing: core.#Component & {
 		"opmodel.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
 	}
 
-	#traits: {
-		"opmodel.dev/traits/workload@v0#Sizing": workload_traits.#SizingTrait
-	}
-
 	spec: {
 		container: {
 			name:  "test-app-number"
 			image: "myapp:latest"
-		}
-		sizing: {
-			cpu: {
-				request: 2
-				limit:   8
-			}
-			memory: {
-				request: 0.5
-				limit:   4
+			resources: {
+				cpu: {
+					request: 2
+					limit:   8
+				}
+				memory: {
+					request: 0.5
+					limit:   4
+				}
 			}
 		}
 	}
 }
 
-_testDeploymentWithNumberSizing: #DeploymentTransformer.#transform & {
-	#component: _testComponentWithNumberSizing
+_testDeploymentWithNumberResources: #DeploymentTransformer.#transform & {
+	#component: _testComponentWithNumberResources
+	#context:   _testContext
+}
+
+// Test component for StatefulSet with container resources (string values)
+_testStatefulSetComponentWithResources: core.#Component & {
+	metadata: {
+		name: "test-statefulset-resources"
+		labels: {
+			"core.opmodel.dev/workload-type": "stateful"
+		}
+	}
+
+	#resources: {
+		"opmodel.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
+	}
+
+	spec: {
+		container: {
+			name:  "test-stateful-container"
+			image: "postgres:15"
+			resources: {
+				cpu: {
+					request: "100m"
+					limit:   "500m"
+				}
+				memory: {
+					request: "128Mi"
+					limit:   "256Mi"
+				}
+			}
+		}
+	}
+}
+
+_testStatefulSetWithResources: #StatefulsetTransformer.#transform & {
+	#component: _testStatefulSetComponentWithResources
+	#context:   _testContext
+}
+
+// Test component for DaemonSet with container resources (string values)
+_testDaemonSetComponentWithResources: core.#Component & {
+	metadata: {
+		name: "test-daemonset-resources"
+		labels: {
+			"core.opmodel.dev/workload-type": "daemon"
+		}
+	}
+
+	#resources: {
+		"opmodel.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
+	}
+
+	spec: {
+		container: {
+			name:  "test-daemon-container"
+			image: "fluentd:latest"
+			resources: {
+				cpu: {
+					request: "100m"
+					limit:   "500m"
+				}
+				memory: {
+					request: "128Mi"
+					limit:   "256Mi"
+				}
+			}
+		}
+	}
+}
+
+_testDaemonSetWithResources: #DaemonSetTransformer.#transform & {
+	#component: _testDaemonSetComponentWithResources
+	#context:   _testContext
+}
+
+// Test component for CronJob with container resources (string values)
+_testCronJobComponentWithResources: core.#Component & {
+	metadata: {
+		name: "test-cronjob-resources"
+		labels: {
+			"core.opmodel.dev/workload-type": "scheduled-task"
+		}
+	}
+
+	#resources: {
+		"opmodel.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
+	}
+
+	#traits: {
+		"opmodel.dev/traits/workload@v0#CronJobConfig": workload_traits.#CronJobConfigTrait
+	}
+
+	spec: {
+		container: {
+			name:  "test-cron-container"
+			image: "busybox:latest"
+			resources: {
+				cpu: {
+					request: "100m"
+					limit:   "500m"
+				}
+				memory: {
+					request: "128Mi"
+					limit:   "256Mi"
+				}
+			}
+		}
+		cronJobConfig: scheduleCron: "0 * * * *"
+	}
+}
+
+_testCronJobWithResources: #CronJobTransformer.#transform & {
+	#component: _testCronJobComponentWithResources
+	#context:   _testContext
+}
+
+// Test component for Job with container resources (string values)
+_testJobComponentWithResources: core.#Component & {
+	metadata: {
+		name: "test-job-resources"
+		labels: {
+			"core.opmodel.dev/workload-type": "task"
+		}
+	}
+
+	#resources: {
+		"opmodel.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
+	}
+
+	#traits: {
+		"opmodel.dev/traits/workload@v0#JobConfig": workload_traits.#JobConfigTrait
+	}
+
+	spec: {
+		container: {
+			name:  "test-job-container"
+			image: "busybox:latest"
+			resources: {
+				cpu: {
+					request: "100m"
+					limit:   "500m"
+				}
+				memory: {
+					request: "128Mi"
+					limit:   "256Mi"
+				}
+			}
+		}
+		jobConfig: {
+			completions: 1
+			parallelism: 1
+		}
+	}
+}
+
+_testJobWithResources: #JobTransformer.#transform & {
+	#component: _testJobComponentWithResources
 	#context:   _testContext
 }
 

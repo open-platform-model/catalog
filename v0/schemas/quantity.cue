@@ -7,7 +7,7 @@ import "math"
 //   string: passthrough, must match millicore format ("500m")
 #NormalizeCPU: {
 	_in: number | string
-	out: string
+	out: string & =~"^[0-9]+m$"
 	if (_in & number) != _|_ {
 		out: "\(math.Round(_in*1000))m"
 	}
@@ -21,7 +21,7 @@ import "math"
 //   string: passthrough, must match Mi/Gi format ("256Mi", "4Gi")
 #NormalizeMemory: {
 	_in: number | string
-	out: string
+	out: string & =~"^[0-9]+[MG]i$"
 	if (_in & number) != _|_ {
 		if math.Remainder(_in, 1) == 0 {
 			out: "\(math.Round(_in))Gi"

@@ -10,9 +10,9 @@ deps: {
 		v: "v0.1.26"
 	}
 	"opmodel.dev/resources@v0": {
-		v: "v0.2.27"
+		v: "v0.2.33"
 	}
 	"opmodel.dev/schemas@v0": {
-		v: "v0.1.15"
+		v: "v0.1.22"
 	}
 }

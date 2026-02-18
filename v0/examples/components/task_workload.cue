@@ -58,13 +58,13 @@ taskWorkload: core.#Component & {
 				}
 			}
 			resources: {
-				requests: {
-					cpu:    "500m"
-					memory: "512Mi"
+				cpu: {
+					request: "500m"
+					limit:   "1000m"
 				}
-				limits: {
-					cpu:    "1000m"
-					memory: "1Gi"
+				memory: {
+					request: "512Mi"
+					limit:   "1Gi"
 				}
 			}
 		}

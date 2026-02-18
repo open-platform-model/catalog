@@ -61,13 +61,13 @@ daemonWorkload: core.#Component & {
 				}
 			}
 			resources: {
-				requests: {
-					cpu:    "100m"
-					memory: "128Mi"
+				cpu: {
+					request: "100m"
+					limit:   "200m"
 				}
-				limits: {
-					cpu:    "200m"
-					memory: "256Mi"
+				memory: {
+					request: "128Mi"
+					limit:   "256Mi"
 				}
 			}
 			volumeMounts: {

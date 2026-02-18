@@ -159,7 +159,9 @@ tasks:
       Run unit tests for CUE definitions.
 
       Tests are organized in two layers:
-        1. Positive CUE tests: *_tests.cue files with @if(test) — validated via unification
+        1. Positive CUE tests: *_tests.cue files with @if(test) — validated via unification with concreteness check (-c).
+           Value assertions (field: expr, field: "expected") verify correct values. Exported fields (no _ prefix)
+           also verify that values are concrete (not just schema-level types).
         2. Data validation tests: testdata/*.yaml files — positive (valid) and negative (invalid)
 
       Naming conventions for testdata files:
@@ -212,17 +214,19 @@ tasks:
             has_tests=true
             echo -e "${BOLD}[$mod_name]${RESET} CUE unification tests"
 
-            # Run cue vet with test tag from the module directory
+            # Run cue vet with test tag and concreteness check from the module directory
             local output
-            if output=$(cd "$mod_dir" && cue vet -t test ./... 2>&1); then
-              echo -e "  ${GREEN}PASS${RESET}  cue vet -t test ./..."
+            if output=$(cd "$mod_dir" && cue vet -c -t test ./... 2>&1); then
+              echo -e "  ${GREEN}PASS${RESET}  cue vet -c -t test ./..."
               PASSED=$((PASSED + 1))
             else
-              echo -e "  ${RED}FAIL${RESET}  cue vet -t test ./..."
+              echo -e "  ${RED}FAIL${RESET}  cue vet -c -t test ./..."
               echo "$output" | sed 's/^/         /'
               FAILED=$((FAILED + 1))
               ERRORS="${ERRORS}\n  ${mod_name}: CUE unification tests failed"
             fi
+
+
           fi
 
           # ── Layer 2+3: Data file tests (testdata/) ─────────────────

@@ -1,7 +1,0 @@
-# Mixed: number CPU + string memory
-cpu:
-  request: 2
-  limit: 8
-memory:
-  request: "512Mi"
-  limit: "4Gi"

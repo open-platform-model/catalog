@@ -50,8 +50,10 @@ _testStatelessWorkloadFull: #StatelessWorkload & {
 				targetPort: 8080
 			}
 			resources: {
-				limits: cpu:   "500m"
-				requests: cpu: "100m"
+				cpu: {
+					request: "100m"
+					limit:   "500m"
+				}
 			}
 		}
 		scaling: count: 3
@@ -222,13 +224,13 @@ _testStatefulWorkloadAllTraits: #StatefulWorkload & {
 				targetPort: 5432
 			}
 			resources: {
-				limits: {
-					cpu:    "2000m"
-					memory: "4Gi"
+				cpu: {
+					request: "1000m"
+					limit:   "2000m"
 				}
-				requests: {
-					cpu:    "1000m"
-					memory: "2Gi"
+				memory: {
+					request: "2Gi"
+					limit:   "4Gi"
 				}
 			}
 		}

@@ -66,13 +66,13 @@ scheduledTaskWorkload: core.#Component & {
 				}
 			}
 			resources: {
-				requests: {
-					cpu:    "250m"
-					memory: "256Mi"
+				cpu: {
+					request: "250m"
+					limit:   "500m"
 				}
-				limits: {
-					cpu:    "500m"
-					memory: "512Mi"
+				memory: {
+					request: "256Mi"
+					limit:   "512Mi"
 				}
 			}
 			volumeMounts: {

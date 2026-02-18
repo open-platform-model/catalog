@@ -44,13 +44,13 @@ basicComponent: core.#Component & {
 				}
 			}
 			resources: {
-				limits: {
-					cpu:    "500m"
-					memory: "256Mi"
+				cpu: {
+					request: "250m"
+					limit:   "500m"
 				}
-				requests: {
-					cpu:    "250m"
-					memory: "128Mi"
+				memory: {
+					request: "128Mi"
+					limit:   "256Mi"
 				}
 			}
 		}

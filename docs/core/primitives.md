@@ -85,7 +85,7 @@ Ask yourself:
 
 ## Trait
 
-A **Trait** represents a behavioral characteristic or configuration modifier that attaches to a Resource. Traits are the "adjectives" of OPM — they answer the question "how does this thing behave?" or "how is this thing configured?" A Trait cannot exist in isolation; it requires a Resource to make sense. Examples include Scaling (how many instances run and autoscaling behavior), HealthCheck (how liveness is monitored), Expose (how the workload is accessible), RestartPolicy (what happens on failure), and Sizing (how much CPU/memory to allocate).
+A **Trait** represents a behavioral characteristic or configuration modifier that attaches to a Resource. Traits are the "adjectives" of OPM — they answer the question "how does this thing behave?" or "how is this thing configured?" A Trait cannot exist in isolation; it requires a Resource to make sense. Examples include Scaling (how many instances run and autoscaling behavior), HealthCheck (how liveness is monitored), Expose (how the workload is accessible), and RestartPolicy (what happens on failure).
 
 Traits are separate from Resources because they describe **modification** rather than existence. They are separate from PolicyRules because they express **preference** rather than enforcement — a Trait says "I want this behavior" while a PolicyRule says "this behavior is required."
 
@@ -103,7 +103,7 @@ Ask yourself:
 - Is this a preference/configuration rather than a mandate?
 - Can this only make sense when attached to a Resource?
 
-**Examples**: Scaling, HealthCheck, Expose, RestartPolicy, Sizing, UpdateStrategy
+**Examples**: Scaling, HealthCheck, Expose, RestartPolicy, UpdateStrategy
 
 ### Trait Structure
 

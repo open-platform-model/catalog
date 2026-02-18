@@ -1,8 +1,0 @@
-# CPU request must include 'm' suffix
-metadata:
-  name: "bad-sizing"
-spec:
-  sizing:
-    cpu:
-      request: "500"
-      limit: "1000m"

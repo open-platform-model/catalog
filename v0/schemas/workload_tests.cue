@@ -34,13 +34,13 @@ _testContainerFull: #ContainerSchema & {
 	command: ["nginx", "-g", "daemon off;"]
 	args: ["--config", "/etc/nginx/nginx.conf"]
 	resources: {
-		limits: {
-			cpu:    "500m"
-			memory: "256Mi"
+		cpu: {
+			request: "100m"
+			limit:   "500m"
 		}
-		requests: {
-			cpu:    "100m"
-			memory: "128Mi"
+		memory: {
+			request: "128Mi"
+			limit:   "256Mi"
 		}
 	}
 }
@@ -119,77 +119,6 @@ _testScalingCustomMetric: #ScalingSchema & {
 			scaleUp: stabilizationWindowSeconds:   60
 			scaleDown: stabilizationWindowSeconds: 300
 		}
-	}
-}
-
-// ── SizingSchema ─────────────────────────────────────────────────
-
-_testSizingFull: #SizingSchema & {
-	cpu: {
-		request: "100m"
-		limit:   "500m"
-	}
-	memory: {
-		request: "128Mi"
-		limit:   "512Mi"
-	}
-}
-
-_testSizingNumbers: #SizingSchema & {
-	cpu: {
-		request: 0.5
-		limit:   2
-	}
-	memory: {
-		request: 0.5
-		limit:   4
-	}
-}
-
-_testSizingCPUOnly: #SizingSchema & {
-	cpu: {
-		request: "500m"
-		limit:   "2000m"
-	}
-}
-
-_testSizingMemoryOnly: #SizingSchema & {
-	memory: {
-		request: "256Mi"
-		limit:   "1Gi"
-	}
-}
-
-_testSizingMixed: #SizingSchema & {
-	cpu: {
-		request: 2
-		limit:   "8000m"
-	}
-	memory: {
-		request: "512Mi"
-		limit:   4
-	}
-}
-
-_testSizingLargeValues: #SizingSchema & {
-	cpu: {
-		request: 16
-		limit:   64
-	}
-	memory: {
-		request: 32
-		limit:   128
-	}
-}
-
-_testSizingSmallFractions: #SizingSchema & {
-	cpu: {
-		request: 0.1
-		limit:   0.5
-	}
-	memory: {
-		request: 0.125
-		limit:   0.25
 	}
 }
 
@@ -353,59 +282,97 @@ _testEnvVarMinimal: #EnvVarSchema & {
 	value: "value"
 }
 
-// ── ResourceRequirementsSchema (previously untested) ─────────────
+// ── ResourceRequirementsSchema ───────────────────────────────────
 
+// Full: cpu + memory, both request and limit, string values
 _testResourceRequirements: #ResourceRequirementsSchema & {
-	limits: {
-		cpu:    "1000m"
-		memory: "1Gi"
+	cpu: {
+		request: "100m"
+		limit:   "500m"
 	}
-	requests: {
-		cpu:    "500m"
-		memory: "512Mi"
-	}
-}
-
-_testResourceRequirementsLimitsOnly: #ResourceRequirementsSchema & {
-	limits: {
-		memory: "256Mi"
+	memory: {
+		request: "128Mi"
+		limit:   "512Mi"
 	}
 }
 
+// Numeric values for cpu and memory
 _testResourceRequirementsNumbers: #ResourceRequirementsSchema & {
-	limits: {
-		cpu:    8
-		memory: 4
+	cpu: {
+		request: 0.5
+		limit:   2
 	}
-	requests: {
-		cpu:    2
-		memory: 0.5
-	}
-}
-
-_testResourceRequirementsRequestsOnly: #ResourceRequirementsSchema & {
-	requests: {
-		cpu:    "500m"
-		memory: "256Mi"
+	memory: {
+		request: 0.5
+		limit:   4
 	}
 }
 
+// CPU only
 _testResourceRequirementsCPUOnly: #ResourceRequirementsSchema & {
-	limits: cpu:   "2000m"
-	requests: cpu: "500m"
+	cpu: {
+		request: "500m"
+		limit:   "2000m"
+	}
 }
 
+// Memory only
+_testResourceRequirementsMemoryOnly: #ResourceRequirementsSchema & {
+	memory: {
+		request: "256Mi"
+		limit:   "1Gi"
+	}
+}
+
+// Mixed types: number cpu, string memory
 _testResourceRequirementsMixed: #ResourceRequirementsSchema & {
-	limits: {
-		cpu:    8
-		memory: "4Gi"
+	cpu: {
+		request: 2
+		limit:   "8000m"
 	}
-	requests: {
-		cpu:    "500m"
-		memory: 0.5
+	memory: {
+		request: "512Mi"
+		limit:   4
 	}
 }
 
+// Large numeric values
+_testResourceRequirementsLargeValues: #ResourceRequirementsSchema & {
+	cpu: {
+		request: 16
+		limit:   64
+	}
+	memory: {
+		request: 32
+		limit:   128
+	}
+}
+
+// Small fractional values
+_testResourceRequirementsSmallFractions: #ResourceRequirementsSchema & {
+	cpu: {
+		request: 0.1
+		limit:   0.5
+	}
+	memory: {
+		request: 0.125
+		limit:   0.25
+	}
+}
+
+// Request only (no limit) — valid in K8s
+_testResourceRequirementsRequestOnly: #ResourceRequirementsSchema & {
+	cpu: request:    "500m"
+	memory: request: "256Mi"
+}
+
+// Limit only (no request) — valid in K8s
+_testResourceRequirementsLimitOnly: #ResourceRequirementsSchema & {
+	cpu: limit:    "1000m"
+	memory: limit: "512Mi"
+}
+
+// Empty — also valid
 _testResourceRequirementsEmpty: #ResourceRequirementsSchema & {}
 
 // ── RestartPolicySchema (previously untested) ────────────────────

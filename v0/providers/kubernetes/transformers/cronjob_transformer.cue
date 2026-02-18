@@ -5,7 +5,6 @@ import (
 	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v0"
 	k8sbatchv1 "opmodel.dev/schemas/kubernetes/batch/v1@v0"
 	core "opmodel.dev/core@v0"
-	schemas "opmodel.dev/schemas@v0"
 	workload_resources "opmodel.dev/resources/workload@v0"
 	workload_traits "opmodel.dev/traits/workload@v0"
 	security_traits "opmodel.dev/traits/security@v0"
@@ -48,7 +47,6 @@ import (
 	// Optional traits
 	optionalTraits: {
 		"opmodel.dev/traits/workload@v0#RestartPolicy":     workload_traits.#RestartPolicyTrait
-		"opmodel.dev/traits/workload@v0#Sizing":            workload_traits.#SizingTrait
 		"opmodel.dev/traits/workload@v0#SidecarContainers": workload_traits.#SidecarContainersTrait
 		"opmodel.dev/traits/workload@v0#InitContainers":    workload_traits.#InitContainersTrait
 		"opmodel.dev/traits/security@v0#SecurityContext":   security_traits.#SecurityContextTrait
@@ -102,33 +100,27 @@ import (
 				env: [for _, e in _container.env {e}]
 			}
 			if _container.resources != _|_ {
-				resources: _container.resources
-			}
-			if _container.volumeMounts != _|_ {
-				volumeMounts: [for _, vm in _container.volumeMounts {vm}]
-			}
-
-			if #component.spec.sizing != _|_ {
 				resources: {
-					if #component.spec.sizing.cpu != _|_ || #component.spec.sizing.memory != _|_ {
-						requests: {
-							if #component.spec.sizing.cpu != _|_ {
-								cpu: (schemas.#NormalizeCPU & {_in: #component.spec.sizing.cpu.request}).out
-							}
-							if #component.spec.sizing.memory != _|_ {
-								memory: (schemas.#NormalizeMemory & {_in: #component.spec.sizing.memory.request}).out
-							}
+					if _container.resources.cpu != _|_ {
+						if _container.resources.cpu.request != _|_ {
+							requests: cpu: _container.resources.cpu.request
 						}
-						limits: {
-							if #component.spec.sizing.cpu != _|_ {
-								cpu: (schemas.#NormalizeCPU & {_in: #component.spec.sizing.cpu.limit}).out
-							}
-							if #component.spec.sizing.memory != _|_ {
-								memory: (schemas.#NormalizeMemory & {_in: #component.spec.sizing.memory.limit}).out
-							}
+						if _container.resources.cpu.limit != _|_ {
+							limits: cpu: _container.resources.cpu.limit
+						}
+					}
+					if _container.resources.memory != _|_ {
+						if _container.resources.memory.request != _|_ {
+							requests: memory: _container.resources.memory.request
+						}
+						if _container.resources.memory.limit != _|_ {
+							limits: memory: _container.resources.memory.limit
 						}
 					}
 				}
+			}
+			if _container.volumeMounts != _|_ {
+				volumeMounts: [for _, vm in _container.volumeMounts {vm}]
 			}
 
 			if #component.spec.securityContext != _|_ {

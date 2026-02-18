@@ -37,24 +37,20 @@ import (
 		}
 		if X.resources != _|_ {
 			resources: {
-				if X.resources.limits != _|_ {
-					limits: {
-						if X.resources.limits.cpu != _|_ {
-							cpu: (schemas.#NormalizeCPU & {_in: X.resources.limits.cpu}).out
-						}
-						if X.resources.limits.memory != _|_ {
-							memory: (schemas.#NormalizeMemory & {_in: X.resources.limits.memory}).out
-						}
+				if X.resources.cpu != _|_ {
+					if X.resources.cpu.request != _|_ {
+						requests: cpu: X.resources.cpu.request
+					}
+					if X.resources.cpu.limit != _|_ {
+						limits: cpu: X.resources.cpu.limit
 					}
 				}
-				if X.resources.requests != _|_ {
-					requests: {
-						if X.resources.requests.cpu != _|_ {
-							cpu: (schemas.#NormalizeCPU & {_in: X.resources.requests.cpu}).out
-						}
-						if X.resources.requests.memory != _|_ {
-							memory: (schemas.#NormalizeMemory & {_in: X.resources.requests.memory}).out
-						}
+				if X.resources.memory != _|_ {
+					if X.resources.memory.request != _|_ {
+						requests: memory: X.resources.memory.request
+					}
+					if X.resources.memory.limit != _|_ {
+						limits: memory: X.resources.memory.limit
 					}
 				}
 			}
@@ -99,13 +95,13 @@ _testToK8sContainer: {
 			}
 		}
 		resources: {
-			requests: {
-				cpu:    "100m"
-				memory: "128Mi"
+			cpu: {
+				request: "100m"
+				limit:   "200m"
 			}
-			limits: {
-				cpu:    "200m"
-				memory: "256Mi"
+			memory: {
+				request: "128Mi"
+				limit:   "256Mi"
 			}
 		}
 		volumeMounts: {

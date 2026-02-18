@@ -93,13 +93,13 @@ statefulWorkload: core.#Component & {
 				}
 			}
 			resources: {
-				requests: {
-					cpu:    "500m"
-					memory: "1Gi"
+				cpu: {
+					request: "500m"
+					limit:   "2000m"
 				}
-				limits: {
-					cpu:    "2000m"
-					memory: "4Gi"
+				memory: {
+					request: "1Gi"
+					limit:   "4Gi"
 				}
 			}
 			volumeMounts: {
