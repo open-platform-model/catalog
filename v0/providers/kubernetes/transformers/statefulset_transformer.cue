@@ -2,7 +2,6 @@ package transformers
 
 import (
 	"list"
-	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v0"
 	k8sappsv1 "opmodel.dev/schemas/kubernetes/apps/v1@v0"
 	core "opmodel.dev/core@v0"
 	workload_resources "opmodel.dev/resources/workload@v0"
@@ -85,62 +84,8 @@ import (
 			}
 		}
 
-		// Build main container with optional trait fields
-		_mainContainer: k8scorev1.#Container & {
-			// Copy all container fields except env (which needs conversion)
-			name:            _container.name
-			image:           _container.image
-			imagePullPolicy: _container.imagePullPolicy
-			if _container.command != _|_ {
-				command: _container.command
-			}
-			if _container.args != _|_ {
-				args: _container.args
-			}
-
-			// Copy ports with targetPort mapping
-			if _container.ports != _|_ {
-				ports: [for _, p in _container.ports {
-					name:          p.name
-					containerPort: p.targetPort
-					protocol:      p.protocol
-					if p.hostIP != _|_ {
-						hostIP: p.hostIP
-					}
-					if p.hostPort != _|_ {
-						hostPort: p.hostPort
-					}
-				}]
-			}
-
-			// Convert env from struct to list
-			if _container.env != _|_ {
-				env: [for _, e in _container.env {e}]
-			}
-			if _container.resources != _|_ {
-				resources: {
-					if _container.resources.cpu != _|_ {
-						if _container.resources.cpu.request != _|_ {
-							requests: cpu: _container.resources.cpu.request
-						}
-						if _container.resources.cpu.limit != _|_ {
-							limits: cpu: _container.resources.cpu.limit
-						}
-					}
-					if _container.resources.memory != _|_ {
-						if _container.resources.memory.request != _|_ {
-							requests: memory: _container.resources.memory.request
-						}
-						if _container.resources.memory.limit != _|_ {
-							limits: memory: _container.resources.memory.limit
-						}
-					}
-				}
-			}
-			if _container.volumeMounts != _|_ {
-				volumeMounts: [for _, vm in _container.volumeMounts {vm}]
-			}
-
+		// Build main container: base conversion via helper, unified with trait fields
+		_mainContainer: (#ToK8sContainer & {"in": _container}).out & {
 			if #component.spec.healthCheck != _|_ {
 				if #component.spec.healthCheck.livenessProbe != _|_ {
 					livenessProbe: #component.spec.healthCheck.livenessProbe

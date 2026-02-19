@@ -39,18 +39,18 @@ import (
 			resources: {
 				if X.resources.cpu != _|_ {
 					if X.resources.cpu.request != _|_ {
-						requests: cpu: X.resources.cpu.request
+						requests: cpu: (schemas.#NormalizeCPU & {in: X.resources.cpu.request}).out
 					}
 					if X.resources.cpu.limit != _|_ {
-						limits: cpu: X.resources.cpu.limit
+						limits: cpu: (schemas.#NormalizeCPU & {in: X.resources.cpu.limit}).out
 					}
 				}
 				if X.resources.memory != _|_ {
 					if X.resources.memory.request != _|_ {
-						requests: memory: X.resources.memory.request
+						requests: memory: (schemas.#NormalizeMemory & {in: X.resources.memory.request}).out
 					}
 					if X.resources.memory.limit != _|_ {
-						limits: memory: X.resources.memory.limit
+						limits: memory: (schemas.#NormalizeMemory & {in: X.resources.memory.limit}).out
 					}
 				}
 			}
