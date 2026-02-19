@@ -143,7 +143,6 @@ import "strings"
 		"app.kubernetes.io/managed-by": "open-platform-model"
 		"app.kubernetes.io/name":       #componentMetadata.name
 		"app.kubernetes.io/instance":   #componentMetadata.name
-		"app.kubernetes.io/version":    #moduleReleaseMetadata.version
 	}
 
 	// Final labels and annotations applied to the output resource
