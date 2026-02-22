@@ -42,7 +42,7 @@ This works for single-cluster, single-environment deployments. But it has concre
 
 3. **No reusable environment definitions.** If 10 modules all deploy to the same staging cluster with the same namespace, each release independently hardcodes the namespace. There is no shared definition for "staging" that can be referenced across modules.
 
-4. **No environment identity.** The release identity hash (`fqn:name:namespace`) does not include any environment concept. Labels on rendered Kubernetes resources carry no environment information, making it difficult to filter or identify resources by environment.
+4. **No environment uuid.** The release identity hash (`fqn:name:namespace`) does not include any environment concept. Labels on rendered Kubernetes resources carry no environment information, making it difficult to filter or identify resources by environment.
 
 ```text
 ┌───────────────────────────────────────────────────────────────────┐
@@ -483,13 +483,13 @@ import "uuid"
         if _selectedEnvironment != _|_ {
             _identityInput: "\(#moduleMetadata.fqn):\(name):\(namespace):\(_selectedEnvironment)"
         }
-        identity: #UUIDType & uuid.SHA1(OPMNamespace, _identityInput)
+        uuid: #UUIDType & uuid.SHA1(OPMNamespace, _identityInput)
 
         labels?: #LabelsAnnotationsType
         labels: {if #moduleMetadata.labels != _|_ {#moduleMetadata.labels}} & {
             "module-release.opmodel.dev/name":    "\(name)"
             "module-release.opmodel.dev/version": "\(version)"
-            "module-release.opmodel.dev/uuid":    "\(identity)"
+            "module-release.opmodel.dev/uuid":    "\(uuid)"
             // NEW: environment label when selected via CLI
             if _selectedEnvironment != _|_ {
                 "module-release.opmodel.dev/environment": "\(_selectedEnvironment)"
@@ -662,7 +662,7 @@ Changes from current `#TransformerContext` (additions marked with `// NEW`):
         namespace!:   #NameType
         fqn:          string
         version:      string
-        identity:     #UUIDType
+        uuid:     #UUIDType
         labels?:      #LabelsAnnotationsType
         annotations?: #LabelsAnnotationsType
     }
@@ -1022,7 +1022,7 @@ CLI:
 
 Result:
     metadata.namespace: "staging"   (from environment)
-    metadata.identity:  UUIDv5(ns, "fqn:myapp:staging:staging")
+    metadata.uuid:  UUIDv5(ns, "fqn:myapp:staging:staging")
     labels include: environment.opmodel.dev/name: "staging"
     Cluster context: eks-us-west-2-staging (from platform)
     Platform context available to transformers: defaultDomain, defaultStorageClass
@@ -1094,7 +1094,7 @@ Release (no #environment):
 
 Result:
     metadata.namespace: "default"
-    metadata.identity:  UUIDv5(ns, "fqn:myapp:default")   // same as today
+    metadata.uuid:  UUIDv5(ns, "fqn:myapp:default")   // same as today
 
     No environment labels on rendered resources.
     No Go merge needed — values used as-is.

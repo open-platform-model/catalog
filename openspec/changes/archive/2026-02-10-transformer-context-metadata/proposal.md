@@ -6,7 +6,7 @@
 
 - **BREAKING**: `#TransformerContext.#moduleReleaseMetadata` typed as `#ModuleRelease.metadata` instead of `_` (previously `#moduleMetadata: _`)
 - **BREAKING**: `#TransformerContext.#componentMetadata` typed as `#Component.metadata` instead of `_`
-- Add `module-release.opmodel.dev/uuid` label to `#ModuleRelease.metadata.labels`, computed from `identity`
+- Add `module-release.opmodel.dev/uuid` label to `#ModuleRelease.metadata.labels`, computed from `uuid`
 - Ensure `module.opmodel.dev/uuid` label on `#Module.metadata.labels` is published (exists locally, missing from published `core@v0.1.12`)
 - Filter `transformer.opmodel.dev/*` labels and annotations from `componentLabels` and `componentAnnotations` in `#TransformerContext`, so they never reach K8s resource output
 - Update provider test fixtures (`test_data.cue`) to satisfy the new typed metadata constraints

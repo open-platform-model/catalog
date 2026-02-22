@@ -122,7 +122,7 @@ _testTransformerContextMinimal: #TransformerContext & {
 		namespace: "production"
 		fqn:       "test.dev/modules@v0#MyApp"
 		version:   "1.0.0"
-		identity:  "550e8400-e29b-41d4-a716-446655440000"
+		uuid:      "550e8400-e29b-41d4-a716-446655440000"
 	}
 	#componentMetadata: {
 		name: "web"
@@ -137,7 +137,7 @@ _testTransformerContextLabelInheritance: #TransformerContext & {
 		namespace: "production"
 		fqn:       "test.dev/modules@v0#MyApp"
 		version:   "1.0.0"
-		identity:  "550e8400-e29b-41d4-a716-446655440000"
+		uuid:      "550e8400-e29b-41d4-a716-446655440000"
 		labels: {
 			"env": "production"
 		}

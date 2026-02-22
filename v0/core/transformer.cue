@@ -82,7 +82,7 @@ import "strings"
 		namespace!:   #NameType // Required for releases (target environment)
 		fqn:          string
 		version:      string
-		identity:     #UUIDType
+		uuid:         #UUIDType
 		labels?:      #LabelsAnnotationsType
 		annotations?: #LabelsAnnotationsType
 	}

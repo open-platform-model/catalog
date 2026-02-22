@@ -1,7 +1,7 @@
 package core
 
 import (
-	"uuid"
+	uid "uuid"
 )
 
 // #ModuleRelease: The concrete deployment instance
@@ -15,14 +15,14 @@ import (
 		name!:      #NameType
 		namespace!: string // Required for releases (target environment)
 		version:    #moduleMetadata.version
-		identity:   #UUIDType & uuid.SHA1(OPMNamespace, "\(#moduleMetadata.fqn):\(name):\(namespace)")
+		uuid:       #UUIDType & uid.SHA1(OPMNamespace, "\(#moduleMetadata.fqn):\(name):\(namespace)")
 
 		labels?: #LabelsAnnotationsType
 		labels: {if #moduleMetadata.labels != _|_ {#moduleMetadata.labels}} & {
 			// Standard labels for module release identification
 			"module-release.opmodel.dev/name":    "\(name)"
 			"module-release.opmodel.dev/version": "\(version)"
-			"module-release.opmodel.dev/uuid":    "\(identity)"
+			"module-release.opmodel.dev/uuid":    "\(uuid)"
 		}
 		annotations?: #LabelsAnnotationsType
 		annotations: {if #moduleMetadata.annotations != _|_ {#moduleMetadata.annotations}}

@@ -78,12 +78,12 @@ The UUID will be generated once, documented as immutable, and shared with the CL
 
 ### Decision 4: Identity field placement inside `metadata`
 
-**Choice:** Place `identity` as a direct field within `metadata`, alongside `fqn`, `version`, etc.
+**Choice:** Place `uuid` as a direct field within `metadata`, alongside `fqn`, `version`, etc.
 
 ```cue
 metadata: {
     // ... existing fields ...
-    identity: #UUIDType & uuid.SHA1(OPMNamespace, "\(fqn):\(version)")
+    uuid: #UUIDType & uuid.SHA1(OPMNamespace, "\(fqn):\(version)")
 }
 ```
 
@@ -93,10 +93,10 @@ metadata: {
 
 **Choice:** The identity field is a concrete computed value. CUE's unification prevents override automatically — no extra validation code needed.
 
-**Verified:** Setting `identity: "custom-value"` on a module produces a CUE conflict error:
+**Verified:** Setting `uuid: "custom-value"` on a module produces a CUE conflict error:
 
 ```cue
-test.identity: conflicting values "27f96e3f-..." and "some-custom-value"
+test.uuid: conflicting values "27f96e3f-..." and "some-custom-value"
 ```
 
 **Rationale:** This is the CUE-native way to enforce read-only computed fields. No `error()` builtin or custom validation needed. The field computes to a concrete string, and CUE rejects any conflicting value.
@@ -109,9 +109,9 @@ test.identity: conflicting values "27f96e3f-..." and "some-custom-value"
 
 ### Decision 7: Update `_testModule` and `_testModuleRelease` inline tests
 
-**Choice:** The existing inline test values (`_testModule`, `_testModuleRelease`) require no changes — `identity` is auto-computed. However, we should verify they still evaluate cleanly after the change.
+**Choice:** The existing inline test values (`_testModule`, `_testModuleRelease`) require no changes — `uuid` is auto-computed. However, we should verify they still evaluate cleanly after the change.
 
-**Rationale:** Since `identity` is computed from existing required fields that are already set in the test values, CUE will automatically populate it. No explicit `identity` field needs to be added to test fixtures.
+**Rationale:** Since `uuid` is computed from existing required fields that are already set in the test values, CUE will automatically populate it. No explicit `uuid` field needs to be added to test fixtures.
 
 ## Risks / Trade-offs
 
@@ -124,18 +124,18 @@ test.identity: conflicting values "27f96e3f-..." and "some-custom-value"
 **[Risk] Adding `import "uuid"` to `module.cue` and `module_release.cue` changes their import footprint.**
 → Mitigation: `uuid` is a CUE builtin — it adds no external dependency, no network fetch, no `cue.mod` change. It's equivalent to `import "strings"` which `common.cue` already uses.
 
-**[Trade-off] The `identity` field adds 36 bytes (UUID string) to every module and release evaluation.**
+**[Trade-off] The `uuid` field adds 36 bytes (UUID string) to every module and release evaluation.**
 → Accepted. Negligible overhead. The computation is a single SHA1 hash — microseconds.
 
 ## Migration Plan
 
 1. Add `OPMNamespace`, `#UUIDType` to `common.cue`
-2. Add `identity` to `#Module.metadata` and `#ModuleRelease.metadata`
+2. Add `uuid` to `#Module.metadata` and `#ModuleRelease.metadata`
 3. Run `cue vet ./...` to validate all existing test fixtures and examples still pass
 4. Publish updated `opmodel.dev/core` module to registry
 5. CLI change can then consume the new field
 
-**Rollback:** Remove the `identity` field and `uuid` import. No downstream breakage — CLI falls back to empty identity (existing behavior).
+**Rollback:** Remove the `uuid` field and `uuid` import. No downstream breakage — CLI falls back to empty identity (existing behavior).
 
 ## Open Questions
 

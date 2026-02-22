@@ -30,7 +30,7 @@ The `core` module SHALL define a `#UUIDType` constraint in `common.cue` that val
 
 ### Requirement: Module identity computation
 
-`#Module.metadata` SHALL include a computed `identity` field of type `#UUIDType`. The value SHALL be `uuid.SHA1(OPMNamespace, "{fqn}:{version}")` where `fqn` and `version` are the module's existing metadata fields.
+`#Module.metadata` SHALL include a computed `uuid` field of type `#UUIDType`. The value SHALL be `uuid.SHA1(OPMNamespace, "{fqn}:{version}")` where `fqn` and `version` are the module's existing metadata fields.
 
 #### Scenario: Same module produces same identity
 
@@ -59,12 +59,12 @@ Module authors MUST NOT be able to override `metadata.identity`. The field SHALL
 
 #### Scenario: Author attempts to set identity
 
-- **WHEN** a module definition includes an explicit `metadata.identity: "custom-value"` that differs from the computed value
+- **WHEN** a module definition includes an explicit `metadata.uuid: "custom-value"` that differs from the computed value
 - **THEN** CUE evaluation SHALL fail with a conflict error
 
 ### Requirement: Release identity computation
 
-`#ModuleRelease.metadata` SHALL include a computed `identity` field of type `#UUIDType`. The value SHALL be `uuid.SHA1(OPMNamespace, "{fqn}:{name}:{namespace}")` where `fqn` comes from the referenced module and `name`/`namespace` are the release's own metadata fields. Version SHALL NOT be an input to the release identity.
+`#ModuleRelease.metadata` SHALL include a computed `uuid` field of type `#UUIDType`. The value SHALL be `uuid.SHA1(OPMNamespace, "{fqn}:{name}:{namespace}")` where `fqn` comes from the referenced module and `name`/`namespace` are the release's own metadata fields. Version SHALL NOT be an input to the release uuid.
 
 #### Scenario: Same release slot produces same identity across versions
 
@@ -95,7 +95,7 @@ Release consumers MUST NOT be able to override `metadata.identity`. The field SH
 
 #### Scenario: Consumer attempts to set identity
 
-- **WHEN** a release definition includes an explicit `metadata.identity: "custom-value"` that differs from the computed value
+- **WHEN** a release definition includes an explicit `metadata.uuid: "custom-value"` that differs from the computed value
 - **THEN** CUE evaluation SHALL fail with a conflict error
 
 ### Requirement: Backwards compatibility with existing modules

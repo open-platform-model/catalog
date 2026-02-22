@@ -7,18 +7,18 @@
 ## 2. Module Identity
 
 - [x] 2.1 Add `import "uuid"` to `v0/core/module.cue`.
-- [x] 2.2 Add `identity: #UUIDType & uuid.SHA1(OPMNamespace, "\(fqn):\(version)")` to `#Module.metadata`, after the `version` field.
+- [x] 2.2 Add `uuid: #UUIDType & uuid.SHA1(OPMNamespace, "\(fqn):\(version)")` to `#Module.metadata`, after the `version` field.
 
 ## 3. Release Identity
 
 - [x] 3.1 Add `import "uuid"` to `v0/core/module_release.cue`.
-- [x] 3.2 Add `identity: #UUIDType & uuid.SHA1(OPMNamespace, "\(#module.metadata.fqn):\(name):\(namespace)")` to `#ModuleRelease.metadata`, after the `version` field.
+- [x] 3.2 Add `uuid: #UUIDType & uuid.SHA1(OPMNamespace, "\(#module.metadata.fqn):\(name):\(namespace)")` to `#ModuleRelease.metadata`, after the `version` field.
 
 ## 4. Verification
 
 - [x] 4.1 Run `task eval` on the core module and verify `_testModule.metadata.identity` and `_testModuleRelease.metadata.identity` are populated with valid UUIDs.
 - [x] 4.2 Verify determinism: evaluate twice and confirm identical identity values.
-- [x] 4.3 Verify non-settable: temporarily add an explicit `identity: "override"` to `_testModule`, confirm CUE produces a conflict error, then remove the override.
+- [x] 4.3 Verify non-settable: temporarily add an explicit `uuid: "override"` to `_testModule`, confirm CUE produces a conflict error, then remove the override.
 - [x] 4.4 Verify release identity is version-stable: create a temporary test with two releases referencing different module versions but same name/namespace, confirm identical release identities.
 
 ## 5. Downstream Validation

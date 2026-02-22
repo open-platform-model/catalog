@@ -24,7 +24,7 @@ _(none — no existing catalog specs are affected at the requirement level)_
 
 ## Impact
 
-- **SemVer**: MINOR — new computed field added to existing definitions. No breaking changes. All existing modules continue to validate unchanged. The `identity` field is auto-computed from existing required fields.
+- **SemVer**: MINOR — new computed field added to existing definitions. No breaking changes. All existing modules continue to validate unchanged. The `uuid` field is auto-computed from existing required fields.
 - **CUE module affected**: `core` (`opmodel.dev/core@v0`)
 - **Files changed**:
   - `v0/core/common.cue` — `OPMNamespace` constant, `#UUIDType`
