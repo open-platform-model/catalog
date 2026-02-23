@@ -70,6 +70,17 @@ import (
 
 		// Build main container: base conversion via helper, unified with trait fields
 		_mainContainer: (#ToK8sContainer & {"in": _container}).out & {
+			if #component.spec.healthCheck != _|_ {
+				if #component.spec.healthCheck.startupProbe != _|_ {
+					startupProbe: #component.spec.healthCheck.startupProbe
+				}
+				if #component.spec.healthCheck.livenessProbe != _|_ {
+					livenessProbe: #component.spec.healthCheck.livenessProbe
+				}
+				if #component.spec.healthCheck.readinessProbe != _|_ {
+					readinessProbe: #component.spec.healthCheck.readinessProbe
+				}
+			}
 			if #component.spec.securityContext != _|_ {
 				let _sc = #component.spec.securityContext
 				if _sc.readOnlyRootFilesystem != _|_ || _sc.allowPrivilegeEscalation != _|_ || _sc.capabilities != _|_ {

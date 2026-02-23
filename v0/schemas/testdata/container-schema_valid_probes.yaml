@@ -1,0 +1,22 @@
+name: "sidecar"
+image: "busybox:latest"
+startupProbe:
+  exec:
+    command:
+      - "/bin/sh"
+      - "-c"
+      - "test -f /tmp/ready"
+  periodSeconds: 5
+  failureThreshold: 12
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+readinessProbe:
+  tcpSocket:
+    port: 8080
+  periodSeconds: 5
+  failureThreshold: 3

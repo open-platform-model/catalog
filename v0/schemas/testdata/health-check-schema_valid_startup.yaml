@@ -1,0 +1,7 @@
+startupProbe:
+  exec:
+    command:
+      - "mc-health"
+  periodSeconds: 10
+  failureThreshold: 30
+  timeoutSeconds: 5

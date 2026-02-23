@@ -89,6 +89,9 @@ import (
 		_mainContainer: (#ToK8sContainer & {"in": _container}).out & {
 			// HealthCheck: emit probes on main container
 			if #component.spec.healthCheck != _|_ {
+				if #component.spec.healthCheck.startupProbe != _|_ {
+					startupProbe: #component.spec.healthCheck.startupProbe
+				}
 				if #component.spec.healthCheck.livenessProbe != _|_ {
 					livenessProbe: #component.spec.healthCheck.livenessProbe
 				}

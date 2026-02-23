@@ -58,6 +58,15 @@ import (
 		if X.volumeMounts != _|_ {
 			volumeMounts: [for _, vm in X.volumeMounts {vm}]
 		}
+		if X.startupProbe != _|_ {
+			startupProbe: X.startupProbe
+		}
+		if X.livenessProbe != _|_ {
+			livenessProbe: X.livenessProbe
+		}
+		if X.readinessProbe != _|_ {
+			readinessProbe: X.readinessProbe
+		}
 	}
 }
 

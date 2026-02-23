@@ -4,6 +4,29 @@ package schemas
 //// Container Schemas
 /////////////////////////////////////////////////////////////////
 
+// Probe specification used by liveness, readiness, and startup probes.
+// Valid for sidecar containers: all three probe types are supported.
+// Valid for init containers: only startupProbe is honoured by Kubernetes
+// (traditional init containers run to completion; native sidecar init containers
+// with restartPolicy: Always support all three probes, requires K8s >= 1.28).
+#ProbeSchema: {
+	httpGet?: {
+		path!: string
+		port!: uint & >0 & <65536
+	}
+	exec?: {
+		command!: [...string]
+	}
+	tcpSocket?: {
+		port!: uint & >0 & <65536
+	}
+	initialDelaySeconds?: uint | *0
+	periodSeconds?:       uint | *10
+	timeoutSeconds?:      uint | *1
+	successThreshold?:    uint | *1
+	failureThreshold?:    uint | *3
+}
+
 // Container specification
 #ContainerSchema: {
 	// Name of the container
@@ -32,6 +55,12 @@ package schemas
 
 	// Volume mounts for the container
 	volumeMounts?: [string]: #VolumeMountSchema // Name is automatically set to the key in the volumeMounts map
+
+	// Probes for health checking (primarily for sidecar containers).
+	// See #ProbeSchema for K8s init container constraints.
+	livenessProbe?:  #ProbeSchema
+	readinessProbe?: #ProbeSchema
+	startupProbe?:   #ProbeSchema
 }
 
 #EnvVarSchema: {
@@ -108,40 +137,9 @@ package schemas
 //////////////////////////////////////////////////////////////////
 
 #HealthCheckSchema: {
-	livenessProbe?: {
-		httpGet?: {
-			path!: string
-			port!: uint & >0 & <65536
-		}
-		exec?: {
-			command!: [...string]
-		}
-		tcpSocket?: {
-			port!: uint & >0 & <65536
-		}
-		initialDelaySeconds?: uint | *0
-		periodSeconds?:       uint | *10
-		timeoutSeconds?:      uint | *1
-		successThreshold?:    uint | *1
-		failureThreshold?:    uint | *3
-	}
-	readinessProbe?: {
-		httpGet?: {
-			path!: string
-			port!: uint & >0 & <65536
-		}
-		exec?: {
-			command!: [...string]
-		}
-		tcpSocket?: {
-			port!: uint & >0 & <65536
-		}
-		initialDelaySeconds?: uint | *0
-		periodSeconds?:       uint | *10
-		timeoutSeconds?:      uint | *1
-		successThreshold?:    uint | *1
-		failureThreshold?:    uint | *3
-	}
+	livenessProbe?:  #ProbeSchema
+	readinessProbe?: #ProbeSchema
+	startupProbe?:   #ProbeSchema
 }
 
 //////////////////////////////////////////////////////////////////
