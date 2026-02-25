@@ -1,0 +1,39 @@
+package config
+
+import (
+	core "opmodel.dev/core@v1"
+	schemas "opmodel.dev/schemas@v1"
+)
+
+/////////////////////////////////////////////////////////////////
+//// Secrets Resource Definition
+/////////////////////////////////////////////////////////////////
+
+#SecretsResource: core.#Resource & {
+	metadata: {
+		cueModulePath: "opmodel.dev/resources/config@v1"
+		name:          "secrets"
+		description:   "A Secret definition for sensitive configuration"
+		labels: {
+			"resource.opmodel.dev/category": "config"
+		}
+	}
+
+	// Default values for Secrets resource
+	#defaults: #SecretsDefaults
+
+	// OpenAPIv3-compatible schema defining the structure of the Secrets spec
+	spec: close({secrets: [name=string]: schemas.#SecretSchema})
+}
+
+#Secrets: core.#Component & {
+	metadata: annotations: {
+		"transformer.opmodel.dev/list-output": true
+	}
+
+	#resources: {(#SecretsResource.metadata.fqn): #SecretsResource}
+}
+
+#SecretsDefaults: schemas.#SecretSchema & {
+	type: string | *"Opaque"
+}
