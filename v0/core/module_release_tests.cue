@@ -19,7 +19,7 @@ _testReleaseModule: #Module & {
 				name: "web"
 			}
 			#resources: {
-				"test.dev/resources@v0#Container": close(#Resource & {
+				"test.dev/resources@v0#Container": #Resource & {
 					metadata: {
 						apiVersion: "test.dev/resources@v0"
 						name:       "container"
@@ -31,7 +31,7 @@ _testReleaseModule: #Module & {
 						name!:  #NameType
 						image!: string
 					}
-				})
+				}
 			}
 			spec: container: {
 				name:  "web"

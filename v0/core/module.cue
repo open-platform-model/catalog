@@ -5,7 +5,7 @@ import (
 )
 
 // #Module: The portable application blueprint created by developers and/or platform teams
-#Module: close({
+#Module: {
 	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Module"
 
@@ -53,7 +53,7 @@ import (
 	// Concrete values - should contain sane default values from the author
 	// These values are used when testing the module during development, and can be used as defaults when creating a ModuleRelease
 	values: _
-})
+}
 
 #ModuleMap: [string]: #Module
 

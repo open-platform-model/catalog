@@ -12,7 +12,7 @@ import (
 //// SimpleDatabase Blueprint Definition
 /////////////////////////////////////////////////////////////////
 
-#SimpleDatabaseBlueprint: close(core.#Blueprint & {
+#SimpleDatabaseBlueprint: core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opmodel.dev/blueprints/data@v0"
 		name:        "simple-database"
@@ -31,9 +31,9 @@ import (
 	]
 
 	#spec: simpleDatabase: schemas.#SimpleDatabaseSchema
-})
+}
 
-#SimpleDatabase: close(core.#Component & {
+#SimpleDatabase: core.#Component & {
 	metadata: labels: {
 		"core.opmodel.dev/workload-type": "stateful"
 	}
@@ -198,4 +198,4 @@ import (
 			}
 		}
 	}
-})
+}

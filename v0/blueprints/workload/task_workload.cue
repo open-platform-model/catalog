@@ -11,7 +11,7 @@ import (
 //// TaskWorkload Blueprint Definition
 /////////////////////////////////////////////////////////////////
 
-#TaskWorkloadBlueprint: close(core.#Blueprint & {
+#TaskWorkloadBlueprint: core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opmodel.dev/blueprints/workload@v0"
 		name:        "task-workload"
@@ -30,9 +30,9 @@ import (
 	]
 
 	#spec: taskWorkload: schemas.#TaskWorkloadSchema
-})
+}
 
-#TaskWorkload: close(core.#Component & {
+#TaskWorkload: core.#Component & {
 	metadata: labels: {
 		"core.opmodel.dev/workload-type": "task"
 	}
@@ -78,4 +78,4 @@ import (
 			initContainers: spec.taskWorkload.initContainers
 		}
 	}
-})
+}

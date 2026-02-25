@@ -10,7 +10,7 @@ import (
 //// JobConfig Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#JobConfigTrait: close(core.#Trait & {
+#JobConfigTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
 		name:        "job-config"
@@ -26,16 +26,16 @@ import (
 	#defaults: #JobConfigDefaults
 
 	#spec: jobConfig: schemas.#JobConfigSchema
-})
+}
 
-#JobConfig: close(core.#Component & {
+#JobConfig: core.#Component & {
 	#traits: {(#JobConfigTrait.metadata.fqn): #JobConfigTrait}
-})
+}
 
-#JobConfigDefaults: close(schemas.#JobConfigSchema & {
+#JobConfigDefaults: schemas.#JobConfigSchema & {
 	completions:             1
 	parallelism:             1
 	backoffLimit:            6
 	activeDeadlineSeconds:   300
 	ttlSecondsAfterFinished: 100
-})
+}

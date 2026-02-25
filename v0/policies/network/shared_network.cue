@@ -9,7 +9,7 @@ import (
 //// SharedNetwork Policy Definition
 /////////////////////////////////////////////////////////////////
 
-#SharedNetworkPolicy: close(core.#PolicyRule & {
+#SharedNetworkPolicy: core.#PolicyRule & {
 	metadata: {
 		apiVersion:  "opmodel.dev/policies/connectivity@v0"
 		name:        "shared-network"
@@ -22,8 +22,8 @@ import (
 	}
 
 	#spec: sharedNetwork: schemas.#SharedNetworkSchema
-})
+}
 
-#SharedNetwork: close(core.#Policy & {
+#SharedNetwork: core.#Policy & {
 	#rules: {(#SharedNetworkPolicy.metadata.fqn): #SharedNetworkPolicy}
-})
+}

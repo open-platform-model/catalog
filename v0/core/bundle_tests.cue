@@ -19,19 +19,19 @@ _testBundleModule: #Module & {
 				name: "web"
 			}
 			#resources: {
-				"test.dev/resources@v0#Container": close(#Resource & {
-					metadata: {
-						apiVersion: "test.dev/resources@v0"
-						name:       "container"
-						labels: {
-							"core.opmodel.dev/workload-type": "stateless"
-						}
+			"test.dev/resources@v0#Container": #Resource & {
+				metadata: {
+					apiVersion: "test.dev/resources@v0"
+					name:       "container"
+					labels: {
+						"core.opmodel.dev/workload-type": "stateless"
 					}
-					#spec: container: {
-						name!:  #NameType
-						image!: string
-					}
-				})
+				}
+				#spec: container: {
+					name!:  #NameType
+					image!: string
+				}
+			}
 			}
 			spec: container: {
 				name:  "web"
@@ -112,16 +112,16 @@ _testBundleModule2: #Module & {
 				name: "db"
 			}
 			#resources: {
-				"test.dev/resources@v0#Container": close(#Resource & {
-					metadata: {
-						apiVersion: "test.dev/resources@v0"
-						name:       "container"
-					}
-					#spec: container: {
-						name!:  #NameType
-						image!: string
-					}
-				})
+			"test.dev/resources@v0#Container": #Resource & {
+				metadata: {
+					apiVersion: "test.dev/resources@v0"
+					name:       "container"
+				}
+				#spec: container: {
+					name!:  #NameType
+					image!: string
+				}
+			}
 			}
 			spec: container: {
 				name:  "db"

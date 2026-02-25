@@ -182,7 +182,7 @@ package schemas
 //// Stateless Workload Schema
 //////////////////////////////////////////////////////////////////
 
-#StatelessWorkloadSchema: close({
+#StatelessWorkloadSchema: {
 	container:          #ContainerSchema
 	scaling?:           #ScalingSchema
 	restartPolicy?:     #RestartPolicySchema
@@ -191,13 +191,13 @@ package schemas
 	sidecarContainers?: #SidecarContainersSchema
 	initContainers?:    #InitContainersSchema
 	securityContext?:   #SecurityContextSchema
-})
+}
 
 //////////////////////////////////////////////////////////////////
 //// Stateful Workload Schema
 //////////////////////////////////////////////////////////////////
 
-#StatefulWorkloadSchema: close({
+#StatefulWorkloadSchema: {
 	container:          #ContainerSchema
 	scaling?:           #ScalingSchema
 	restartPolicy?:     #RestartPolicySchema
@@ -208,13 +208,13 @@ package schemas
 	serviceName?:       string
 	volumes: [string]: #VolumeSchema
 	securityContext?: #SecurityContextSchema
-})
+}
 
 //////////////////////////////////////////////////////////////////
 //// Daemon Workload Schema
 //////////////////////////////////////////////////////////////////
 
-#DaemonWorkloadSchema: close({
+#DaemonWorkloadSchema: {
 	container:          #ContainerSchema
 	restartPolicy?:     #RestartPolicySchema
 	updateStrategy?:    #UpdateStrategySchema
@@ -222,33 +222,33 @@ package schemas
 	sidecarContainers?: #SidecarContainersSchema
 	initContainers?:    #InitContainersSchema
 	securityContext?:   #SecurityContextSchema
-})
+}
 
 //////////////////////////////////////////////////////////////////
 //// Task Workload Schema
 //////////////////////////////////////////////////////////////////
 
-#TaskWorkloadSchema: close({
+#TaskWorkloadSchema: {
 	container:          #ContainerSchema
 	restartPolicy?:     "OnFailure" | "Never" | *"Never"
 	jobConfig?:         #JobConfigSchema
 	sidecarContainers?: #SidecarContainersSchema
 	initContainers?:    #InitContainersSchema
 	securityContext?:   #SecurityContextSchema
-})
+}
 
 //////////////////////////////////////////////////////////////////
 //// Scheduled Task Workload Schema
 //////////////////////////////////////////////////////////////////
 
-#ScheduledTaskWorkloadSchema: close({
+#ScheduledTaskWorkloadSchema: {
 	container:          #ContainerSchema
 	restartPolicy?:     "OnFailure" | "Never" | *"Never"
 	cronJobConfig!:     #CronJobConfigSchema
 	sidecarContainers?: #SidecarContainersSchema
 	initContainers?:    #InitContainersSchema
 	securityContext?:   #SecurityContextSchema
-})
+}
 
 //////////////////////////////////////////////////////////////////
 //// DisruptionBudget Schema

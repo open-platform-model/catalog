@@ -10,7 +10,7 @@ import (
 //// TcpRoute Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#TcpRouteTrait: close(core.#Trait & {
+#TcpRouteTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/network@v0"
 		name:        "tcp-route"
@@ -22,12 +22,12 @@ import (
 	#defaults: #TcpRouteDefaults
 
 	#spec: tcpRoute: schemas.#TcpRouteSchema
-})
+}
 
-#TcpRoute: close(core.#Component & {
+#TcpRoute: core.#Component & {
 	#traits: {(#TcpRouteTrait.metadata.fqn): #TcpRouteTrait}
-})
+}
 
-#TcpRouteDefaults: close(schemas.#TcpRouteSchema & {
+#TcpRouteDefaults: schemas.#TcpRouteSchema & {
 	rules: [{backendPort: 8080}]
-})
+}

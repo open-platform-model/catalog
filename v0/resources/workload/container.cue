@@ -9,7 +9,7 @@ import (
 //// Container Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#ContainerResource: close(core.#Resource & {
+#ContainerResource: core.#Resource & {
 	metadata: {
 		apiVersion:  "opmodel.dev/resources/workload@v0"
 		name:        "container"
@@ -24,18 +24,18 @@ import (
 
 	// OpenAPIv3-compatible schema defining the structure of the container spec
 	#spec: container: schemas.#ContainerSchema
-})
+}
 
-#Container: close(core.#Component & {
+#Container: core.#Component & {
 	metadata: labels: {
 		"core.opmodel.dev/workload-type"!: "stateless" | "stateful" | "daemon" | "task" | "scheduled-task"
 		...
 	}
 
 	#resources: {(#ContainerResource.metadata.fqn): #ContainerResource}
-})
+}
 
-#ContainerDefaults: close(schemas.#ContainerSchema & {
+#ContainerDefaults: schemas.#ContainerSchema & {
 	// Image pull policy
 	imagePullPolicy: schemas.#ContainerSchema.imagePullPolicy | *"IfNotPresent"
-})
+}

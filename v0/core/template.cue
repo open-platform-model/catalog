@@ -7,7 +7,7 @@ package core
 // #Template: Defines a module template that can be used to
 // initialize new OPM modules. Templates provide starting points for
 // different use cases and complexity levels.
-#Template: close({
+#Template: {
 	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Template"
 
@@ -35,6 +35,6 @@ package core
 		// Optional metadata annotations for additional information
 		annotations?: #LabelsAnnotationsType
 	}
-})
+}
 
 #TemplateMap: [string]: #Template

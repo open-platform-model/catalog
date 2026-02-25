@@ -10,7 +10,7 @@ import (
 //// Expose Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#ExposeTrait: close(core.#Trait & {
+#ExposeTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/network@v0"
 		name:        "expose"
@@ -26,12 +26,12 @@ import (
 	#defaults: #ExposeDefaults
 
 	#spec: expose: schemas.#ExposeSchema
-})
+}
 
-#Expose: close(core.#Component & {
+#Expose: core.#Component & {
 	#traits: {(#ExposeTrait.metadata.fqn): #ExposeTrait}
-})
+}
 
-#ExposeDefaults: close(schemas.#ExposeSchema & {
+#ExposeDefaults: schemas.#ExposeSchema & {
 	type: "ClusterIP"
-})
+}

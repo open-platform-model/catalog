@@ -10,7 +10,7 @@ import (
 //// Placement Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#PlacementTrait: close(core.#Trait & {
+#PlacementTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
 		name:        "placement"
@@ -22,12 +22,12 @@ import (
 	#defaults: #PlacementDefaults
 
 	#spec: placement: schemas.#PlacementSchema
-})
+}
 
-#Placement: close(core.#Component & {
+#Placement: core.#Component & {
 	#traits: {(#PlacementTrait.metadata.fqn): #PlacementTrait}
-})
+}
 
-#PlacementDefaults: close(schemas.#PlacementSchema & {
+#PlacementDefaults: schemas.#PlacementSchema & {
 	spreadAcross: "zones"
-})
+}

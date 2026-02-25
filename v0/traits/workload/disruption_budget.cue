@@ -10,7 +10,7 @@ import (
 //// DisruptionBudget Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#DisruptionBudgetTrait: close(core.#Trait & {
+#DisruptionBudgetTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
 		name:        "disruption-budget"
@@ -22,11 +22,11 @@ import (
 	#defaults: #DisruptionBudgetDefaults
 
 	#spec: disruptionBudget: schemas.#DisruptionBudgetSchema
-})
+}
 
-#DisruptionBudget: close(core.#Component & {
+#DisruptionBudget: core.#Component & {
 	#traits: {(#DisruptionBudgetTrait.metadata.fqn): #DisruptionBudgetTrait}
-})
+}
 
 #DisruptionBudgetDefaults: schemas.#DisruptionBudgetSchema & {
 	maxUnavailable: 1

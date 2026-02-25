@@ -11,7 +11,7 @@ import (
 //// StatelessWorkload Blueprint Definition
 /////////////////////////////////////////////////////////////////
 
-#StatelessWorkloadBlueprint: close(core.#Blueprint & {
+#StatelessWorkloadBlueprint: core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opmodel.dev/blueprints/workload@v0"
 		name:        "stateless-workload"
@@ -27,9 +27,9 @@ import (
 	]
 
 	#spec: statelessWorkload: schemas.#StatelessWorkloadSchema
-})
+}
 
-#StatelessWorkload: close(core.#Component & {
+#StatelessWorkload: core.#Component & {
 	metadata: labels: {
 		"core.opmodel.dev/workload-type": "stateless"
 	}
@@ -89,4 +89,4 @@ import (
 			initContainers: spec.statelessWorkload.initContainers
 		}
 	}
-})
+}

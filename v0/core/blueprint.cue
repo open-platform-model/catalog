@@ -7,7 +7,7 @@ import (
 // #Blueprint: Defines a reusable blueprint
 // that composes resources and traits into a higher-level abstraction.
 // Blueprints enable standardized configurations for common use cases.
-#Blueprint: close({
+#Blueprint: {
 	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Blueprint"
 
@@ -41,7 +41,7 @@ import (
 	// Use # to allow inconcrete fields
 	// TODO: Add OpenAPIv3 schema validation
 	#spec!: (strings.ToCamel(metadata._definitionName)): _
-})
+}
 
 #BlueprintMap: [string]: #Blueprint
 

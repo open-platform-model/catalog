@@ -9,7 +9,7 @@ import (
 //// Secrets Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#SecretsResource: close(core.#Resource & {
+#SecretsResource: core.#Resource & {
 	metadata: {
 		apiVersion:  "opmodel.dev/resources/config@v0"
 		name:        "secrets"
@@ -21,16 +21,16 @@ import (
 
 	// OpenAPIv3-compatible schema defining the structure of the Secrets spec
 	#spec: secrets: [name=string]: schemas.#SecretSchema
-})
+}
 
-#Secrets: close(core.#Component & {
+#Secrets: core.#Component & {
 	metadata: annotations: {
 		"transformer.opmodel.dev/list-output": true
 	}
 
 	#resources: {(#SecretsResource.metadata.fqn): #SecretsResource}
-})
+}
 
-#SecretsDefaults: close(schemas.#SecretSchema & {
+#SecretsDefaults: schemas.#SecretSchema & {
 	type: "Opaque"
-})
+}

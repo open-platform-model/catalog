@@ -3,7 +3,7 @@ package core
 // Workload type label key
 #LabelWorkloadType: "core.opmodel.dev/workload-type"
 
-#Component: close({
+#Component: {
 	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Component"
 
@@ -102,7 +102,7 @@ package core
 	spec: close({
 		_allFields
 	})
-})
+}
 
 #ComponentMap: [string]: #Component
 
@@ -116,7 +116,7 @@ _testComponent: #Component & {
 	}
 
 	#resources: {
-		"opmodel.dev/resources/workload@v0#Container": close(#Resource & {
+		"opmodel.dev/resources/workload@v0#Container": #Resource & {
 			metadata: {
 				apiVersion:  "opmodel.dev/resources/workload@v0"
 				name:        "container"
@@ -160,11 +160,11 @@ _testComponent: #Component & {
 					}
 				}
 			}
-		})
+		}
 	}
 
 	#traits: {
-		"opmodel.dev/traits/workload@v0#Scaling": close(#Trait & {
+		"opmodel.dev/traits/workload@v0#Scaling": #Trait & {
 			metadata: {
 				apiVersion:  "opmodel.dev/traits/workload@v0"
 				name:        "scaling"
@@ -174,7 +174,7 @@ _testComponent: #Component & {
 			#spec: scaling: {
 				count: int & >=1 & <=1000 | *1
 			}
-		})
+		}
 	}
 
 	// Compose resources and traits, providing concrete values for the spec.

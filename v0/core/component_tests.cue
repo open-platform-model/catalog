@@ -7,7 +7,7 @@ package core
 // =============================================================================
 
 // Helper resource for component tests
-_testCompResource: close(#Resource & {
+_testCompResource: #Resource & {
 	metadata: {
 		apiVersion:  "test.dev/resources@v0"
 		name:        "container"
@@ -20,10 +20,10 @@ _testCompResource: close(#Resource & {
 		name!:  #NameType
 		image!: string
 	}
-})
+}
 
 // Helper trait for component tests
-_testCompTrait: close(#Trait & {
+_testCompTrait: #Trait & {
 	metadata: {
 		apiVersion:  "test.dev/traits@v0"
 		name:        "scaling"
@@ -33,7 +33,7 @@ _testCompTrait: close(#Trait & {
 		count: int & >=1 & <=1000 | *1
 	}
 	appliesTo: [_testCompResource]
-})
+}
 
 // Test: minimal component with one resource
 _testComponentMinimalResource: #Component & {
@@ -110,7 +110,7 @@ _testComponentCustomLabels: #Component & {
 }
 
 // Helper resource #2 for multi-resource tests
-_testCompResource2: close(#Resource & {
+_testCompResource2: #Resource & {
 	metadata: {
 		apiVersion: "test.dev/resources@v0"
 		name:       "volume"
@@ -119,7 +119,7 @@ _testCompResource2: close(#Resource & {
 		name!: #NameType
 		size!: string
 	}
-})
+}
 
 // Test: component with multiple resources
 _testComponentMultiResource: #Component & {

@@ -10,7 +10,7 @@ import (
 //// InitContainers Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#InitContainersTrait: close(core.#Trait & {
+#InitContainersTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
 		name:        "init-containers"
@@ -26,10 +26,10 @@ import (
 	#defaults: #InitContainersDefaults
 
 	#spec: initContainers: schemas.#InitContainersSchema
-})
+}
 
-#InitContainers: close(core.#Component & {
+#InitContainers: core.#Component & {
 	#traits: {(#InitContainersTrait.metadata.fqn): #InitContainersTrait}
-})
+}
 
 #InitContainersDefaults: schemas.#InitContainersSchema & []

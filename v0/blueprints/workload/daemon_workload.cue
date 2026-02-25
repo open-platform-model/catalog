@@ -11,7 +11,7 @@ import (
 //// DaemonWorkload Blueprint Definition
 /////////////////////////////////////////////////////////////////
 
-#DaemonWorkloadBlueprint: close(core.#Blueprint & {
+#DaemonWorkloadBlueprint: core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opmodel.dev/blueprints/workload@v0"
 		name:        "daemon-workload"
@@ -31,9 +31,9 @@ import (
 	]
 
 	#spec: daemonWorkload: schemas.#DaemonWorkloadSchema
-})
+}
 
-#DaemonWorkload: close(core.#Component & {
+#DaemonWorkload: core.#Component & {
 	metadata: labels: {
 		"core.opmodel.dev/workload-type": "daemon"
 	}
@@ -86,4 +86,4 @@ import (
 			initContainers: spec.daemonWorkload.initContainers
 		}
 	}
-})
+}

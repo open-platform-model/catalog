@@ -9,7 +9,7 @@ import (
 //// Volume Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#VolumesResource: close(core.#Resource & {
+#VolumesResource: core.#Resource & {
 	metadata: {
 		apiVersion:  "opmodel.dev/resources/storage@v0"
 		name:        "volumes"
@@ -21,19 +21,19 @@ import (
 
 	// OpenAPIv3-compatible schema defining the structure of the volume spec
 	#spec: volumes: [volumeName=string]: schemas.#VolumeSchema & {name: string | *volumeName}
-})
+}
 
-#Volumes: close(core.#Component & {
+#Volumes: core.#Component & {
 	metadata: annotations: {
 		"transformer.opmodel.dev/list-output": true
 	}
 
 	#resources: {(#VolumesResource.metadata.fqn): #VolumesResource}
-})
+}
 
-#VolumesDefaults: close(schemas.#VolumeSchema & {
+#VolumesDefaults: schemas.#VolumeSchema & {
 	// Default empty dir medium
 	emptyDir?: {
 		medium: *"node" | "memory"
 	}
-})
+}

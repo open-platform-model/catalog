@@ -10,7 +10,7 @@ import (
 //// SecurityContext Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#SecurityContextTrait: close(core.#Trait & {
+#SecurityContextTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/security@v0"
 		name:        "security-context"
@@ -22,13 +22,13 @@ import (
 	#defaults: #SecurityContextDefaults
 
 	#spec: securityContext: schemas.#SecurityContextSchema
-})
+}
 
-#SecurityContext: close(core.#Component & {
+#SecurityContext: core.#Component & {
 	#traits: {(#SecurityContextTrait.metadata.fqn): #SecurityContextTrait}
-})
+}
 
-#SecurityContextDefaults: close(schemas.#SecurityContextSchema & {
+#SecurityContextDefaults: schemas.#SecurityContextSchema & {
 	runAsNonRoot:             true
 	allowPrivilegeEscalation: false
-})
+}

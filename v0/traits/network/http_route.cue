@@ -10,7 +10,7 @@ import (
 //// HttpRoute Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#HttpRouteTrait: close(core.#Trait & {
+#HttpRouteTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/network@v0"
 		name:        "http-route"
@@ -22,12 +22,12 @@ import (
 	#defaults: #HttpRouteDefaults
 
 	#spec: httpRoute: schemas.#HttpRouteSchema
-})
+}
 
-#HttpRoute: close(core.#Component & {
+#HttpRoute: core.#Component & {
 	#traits: {(#HttpRouteTrait.metadata.fqn): #HttpRouteTrait}
-})
+}
 
-#HttpRouteDefaults: close(schemas.#HttpRouteSchema & {
+#HttpRouteDefaults: schemas.#HttpRouteSchema & {
 	rules: [{backendPort: 8080}]
-})
+}

@@ -10,7 +10,7 @@ import (
 //// SidecarContainers Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#SidecarContainersTrait: close(core.#Trait & {
+#SidecarContainersTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
 		name:        "sidecar-containers"
@@ -26,10 +26,10 @@ import (
 	#defaults: #SidecarContainersDefaults
 
 	#spec: sidecarContainers: schemas.#SidecarContainersSchema
-})
+}
 
-#SidecarContainers: close(core.#Component & {
+#SidecarContainers: core.#Component & {
 	#traits: {(#SidecarContainersTrait.metadata.fqn): #SidecarContainersTrait}
-})
+}
 
 #SidecarContainersDefaults: schemas.#SidecarContainersSchema & []

@@ -12,7 +12,7 @@ import (
 //// StatefulWorkload Blueprint Definition
 /////////////////////////////////////////////////////////////////
 
-#StatefulWorkloadBlueprint: close(core.#Blueprint & {
+#StatefulWorkloadBlueprint: core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opmodel.dev/blueprints/workload@v0"
 		name:        "stateful-workload"
@@ -34,9 +34,9 @@ import (
 	]
 
 	#spec: statefulWorkload: schemas.#StatefulWorkloadSchema
-})
+}
 
-#StatefulWorkload: close(core.#Component & {
+#StatefulWorkload: core.#Component & {
 	metadata: labels: {
 		"core.opmodel.dev/workload-type": "stateful"
 	}
@@ -103,4 +103,4 @@ import (
 			volumes: spec.statefulWorkload.volumes
 		}
 	}
-})
+}

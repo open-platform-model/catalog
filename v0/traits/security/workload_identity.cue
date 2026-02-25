@@ -10,7 +10,7 @@ import (
 //// WorkloadIdentity Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#WorkloadIdentityTrait: close(core.#Trait & {
+#WorkloadIdentityTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/security@v0"
 		name:        "workload-identity"
@@ -24,12 +24,12 @@ import (
 
 	// OpenAPIv3-compatible schema defining the structure of the WorkloadIdentity spec
 	#spec: workloadIdentity: schemas.#WorkloadIdentitySchema
-})
+}
 
-#WorkloadIdentity: close(core.#Component & {
+#WorkloadIdentity: core.#Component & {
 	#traits: {(#WorkloadIdentityTrait.metadata.fqn): #WorkloadIdentityTrait}
-})
+}
 
-#WorkloadIdentityDefaults: close(schemas.#WorkloadIdentitySchema & {
+#WorkloadIdentityDefaults: schemas.#WorkloadIdentitySchema & {
 	automountToken: false
-})
+}

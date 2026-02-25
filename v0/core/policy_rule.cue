@@ -7,7 +7,7 @@ import (
 // #PolicyRule: Encodes governance rules, security requirements,
 // compliance controls, and operational guardrails.
 // PolicyRules define what MUST be true, not suggestions.
-#PolicyRule: close({
+#PolicyRule: {
 	apiVersion: "opmodel.dev/core/v0"
 	kind:       "PolicyRule"
 
@@ -50,6 +50,6 @@ import (
 	// Use # to allow inconcrete fields
 	// TODO: Add OpenAPIv3 schema validation
 	#spec!: (strings.ToCamel(metadata._definitionName)): _
-})
+}
 
 #PolicyRuleMap: [string]: _

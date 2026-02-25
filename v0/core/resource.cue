@@ -6,7 +6,7 @@ import (
 
 // #Resource: Defines a resource of deployment within the system.
 // Resources represent deployable components, services or resources that can be instantiated and managed independently.
-#Resource: close({
+#Resource: {
 	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Resource"
 
@@ -34,6 +34,6 @@ import (
 	// Use # to allow inconcrete fields
 	// TODO: Add OpenAPIv3 schema validation
 	#spec!: (strings.ToCamel(metadata._definitionName)): _
-})
+}
 
 #ResourceMap: [string]: _

@@ -10,7 +10,7 @@ import (
 //// GracefulShutdown Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#GracefulShutdownTrait: close(core.#Trait & {
+#GracefulShutdownTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
 		name:        "graceful-shutdown"
@@ -22,12 +22,12 @@ import (
 	#defaults: #GracefulShutdownDefaults
 
 	#spec: gracefulShutdown: schemas.#GracefulShutdownSchema
-})
+}
 
-#GracefulShutdown: close(core.#Component & {
+#GracefulShutdown: core.#Component & {
 	#traits: {(#GracefulShutdownTrait.metadata.fqn): #GracefulShutdownTrait}
-})
+}
 
-#GracefulShutdownDefaults: close(schemas.#GracefulShutdownSchema & {
+#GracefulShutdownDefaults: schemas.#GracefulShutdownSchema & {
 	terminationGracePeriodSeconds: 30
-})
+}

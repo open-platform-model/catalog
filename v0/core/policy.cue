@@ -4,8 +4,8 @@ package core
 // components via label matching or explicit references.
 // Policies enable cross-cutting governance without coupling
 // rules to individual components.
-#Policy: close({
-	apiVersion: "opmodel.dev/core/v0"
+#Policy: {
+	apiVersion: "opmodel.dev/core/v1alpha1"
 	kind:       "Policy"
 
 	metadata: {
@@ -48,6 +48,6 @@ package core
 	// Automatically turned into a spec
 	// Must be made concrete by the user
 	spec: close(_allFields)
-})
+}
 
 #PolicyMap: [string]: #Policy

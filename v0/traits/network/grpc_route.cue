@@ -10,7 +10,7 @@ import (
 //// GrpcRoute Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#GrpcRouteTrait: close(core.#Trait & {
+#GrpcRouteTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/network@v0"
 		name:        "grpc-route"
@@ -22,12 +22,12 @@ import (
 	#defaults: #GrpcRouteDefaults
 
 	#spec: grpcRoute: schemas.#GrpcRouteSchema
-})
+}
 
-#GrpcRoute: close(core.#Component & {
+#GrpcRoute: core.#Component & {
 	#traits: {(#GrpcRouteTrait.metadata.fqn): #GrpcRouteTrait}
-})
+}
 
-#GrpcRouteDefaults: close(schemas.#GrpcRouteSchema & {
+#GrpcRouteDefaults: schemas.#GrpcRouteSchema & {
 	rules: [{backendPort: 9090}]
-})
+}

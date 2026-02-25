@@ -10,7 +10,7 @@ import (
 //// RestartPolicy Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#RestartPolicyTrait: close(core.#Trait & {
+#RestartPolicyTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
 		name:        "restart-policy"
@@ -26,10 +26,10 @@ import (
 	#defaults: #RestartPolicyDefaults
 
 	#spec: restartPolicy: schemas.#RestartPolicySchema
-})
+}
 
-#RestartPolicy: close(core.#Component & {
+#RestartPolicy: core.#Component & {
 	#traits: {(#RestartPolicyTrait.metadata.fqn): #RestartPolicyTrait}
-})
+}
 
 #RestartPolicyDefaults: schemas.#RestartPolicySchema & "Always"

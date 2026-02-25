@@ -11,7 +11,7 @@ import (
 //// ScheduledTaskWorkload Blueprint Definition
 /////////////////////////////////////////////////////////////////
 
-#ScheduledTaskWorkloadBlueprint: close(core.#Blueprint & {
+#ScheduledTaskWorkloadBlueprint: core.#Blueprint & {
 	metadata: {
 		apiVersion:  "opmodel.dev/blueprints/workload@v0"
 		name:        "scheduled-task-workload"
@@ -30,9 +30,9 @@ import (
 	]
 
 	#spec: scheduledTaskWorkload: schemas.#ScheduledTaskWorkloadSchema
-})
+}
 
-#ScheduledTaskWorkload: close(core.#Component & {
+#ScheduledTaskWorkload: core.#Component & {
 	metadata: labels: {
 		"core.opmodel.dev/workload-type": "scheduled-task"
 	}
@@ -74,4 +74,4 @@ import (
 			initContainers: spec.scheduledTaskWorkload.initContainers
 		}
 	}
-})
+}

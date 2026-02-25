@@ -49,7 +49,7 @@ _testPolicyTargetComponent: #Component & {
 		}
 	}
 	#resources: {
-		"test.dev/resources@v0#Container": close(#Resource & {
+		"test.dev/resources@v0#Container": #Resource & {
 			metadata: {
 				apiVersion: "test.dev/resources@v0"
 				name:       "container"
@@ -61,7 +61,7 @@ _testPolicyTargetComponent: #Component & {
 				name!:  #NameType
 				image!: string
 			}
-		})
+		}
 	}
 	spec: container: {
 		name:  "test"

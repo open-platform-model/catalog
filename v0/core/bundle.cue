@@ -4,7 +4,7 @@ package core
 // related modules for easier distribution and management.
 // Bundles can contain multiple modules, each representing a set of
 // definitions (resources, traits, blueprints, policies, scopes).
-#Bundle: close({
+#Bundle: {
 	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Bundle"
 
@@ -35,6 +35,6 @@ package core
 	// Developers define these values but it can be overriden by the platform operator.
 	// The end-user's concrete values override this except if a platform operator has already defined them.
 	values: _
-})
+}
 
 #BundleDefinitionMap: [string]: #Bundle

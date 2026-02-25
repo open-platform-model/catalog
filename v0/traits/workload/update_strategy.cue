@@ -10,7 +10,7 @@ import (
 //// UpdateStrategy Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#UpdateStrategyTrait: close(core.#Trait & {
+#UpdateStrategyTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
 		name:        "update-strategy"
@@ -26,16 +26,16 @@ import (
 	#defaults: #UpdateStrategyDefaults
 
 	#spec: updateStrategy: schemas.#UpdateStrategySchema
-})
+}
 
-#UpdateStrategy: close(core.#Component & {
+#UpdateStrategy: core.#Component & {
 	#traits: {(#UpdateStrategyTrait.metadata.fqn): #UpdateStrategyTrait}
-})
+}
 
-#UpdateStrategyDefaults: close(schemas.#UpdateStrategySchema & {
+#UpdateStrategyDefaults: schemas.#UpdateStrategySchema & {
 	type: "RollingUpdate"
 	rollingUpdate: {
 		maxUnavailable: 1
 		maxSurge:       1
 	}
-})
+}

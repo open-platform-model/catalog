@@ -10,7 +10,7 @@ import (
 //// Scaling Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#ScalingTrait: close(core.#Trait & {
+#ScalingTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
 		name:        "scaling"
@@ -26,10 +26,10 @@ import (
 	#defaults: #ScalingDefaults
 
 	#spec: scaling: schemas.#ScalingSchema
-})
+}
 
-#Scaling: close(core.#Component & {
+#Scaling: core.#Component & {
 	#traits: {(#ScalingTrait.metadata.fqn): #ScalingTrait}
-})
+}
 
 #ScalingDefaults: schemas.#ScalingSchema

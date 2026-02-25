@@ -10,7 +10,7 @@ import (
 //// CronJobConfig Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#CronJobConfigTrait: close(core.#Trait & {
+#CronJobConfigTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/workload@v0"
 		name:        "cron-job-config"
@@ -26,14 +26,14 @@ import (
 	#defaults: #CronJobConfigDefaults
 
 	#spec: cronJobConfig: schemas.#CronJobConfigSchema
-})
+}
 
-#CronJobConfig: close(core.#Component & {
+#CronJobConfig: core.#Component & {
 	#traits: {(#CronJobConfigTrait.metadata.fqn): #CronJobConfigTrait}
-})
+}
 
-#CronJobConfigDefaults: close(schemas.#CronJobConfigSchema & {
+#CronJobConfigDefaults: schemas.#CronJobConfigSchema & {
 	concurrencyPolicy:          "Allow"
 	successfulJobsHistoryLimit: 3
 	failedJobsHistoryLimit:     1
-})
+}

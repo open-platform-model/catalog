@@ -9,7 +9,7 @@ import (
 //// Encryption Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#EncryptionTrait: close(core.#Trait & {
+#EncryptionTrait: core.#Trait & {
 	metadata: {
 		apiVersion:  "opmodel.dev/traits/security@v0"
 		name:        "encryption"
@@ -25,13 +25,13 @@ import (
 		atRest!:    bool | *true
 		inTransit!: bool | *true
 	}
-})
+}
 
-#Encryption: close(core.#Component & {
+#Encryption: core.#Component & {
 	#traits: {(#EncryptionTrait.metadata.fqn): #EncryptionTrait}
-})
+}
 
-#EncryptionDefaults: close({
+#EncryptionDefaults: {
 	atRest:    true
 	inTransit: true
-})
+}

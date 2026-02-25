@@ -7,7 +7,7 @@ package core
 // =============================================================================
 
 // Helper resource for module tests
-_testModResource: close(#Resource & {
+_testModResource: #Resource & {
 	metadata: {
 		apiVersion: "test.dev/resources@v0"
 		name:       "container"
@@ -19,7 +19,7 @@ _testModResource: close(#Resource & {
 		name!:  #NameType
 		image!: string
 	}
-})
+}
 
 // Helper component for module tests
 _testModComponent: #Component & {

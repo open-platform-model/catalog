@@ -9,7 +9,7 @@ import (
 //// ConfigMaps Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#ConfigMapsResource: close(core.#Resource & {
+#ConfigMapsResource: core.#Resource & {
 	metadata: {
 		apiVersion:  "opmodel.dev/resources/config@v0"
 		name:        "config-maps"
@@ -21,14 +21,14 @@ import (
 
 	// OpenAPIv3-compatible schema defining the structure of the ConfigMaps spec
 	#spec: configMaps: [name=string]: schemas.#ConfigMapSchema
-})
+}
 
-#ConfigMaps: close(core.#Component & {
+#ConfigMaps: core.#Component & {
 	metadata: annotations: {
 		"transformer.opmodel.dev/list-output": true
 	}
 
 	#resources: {(#ConfigMapsResource.metadata.fqn): #ConfigMapsResource}
-})
+}
 
-#ConfigMapsDefaults: close(schemas.#ConfigMapSchema & {})
+#ConfigMapsDefaults: schemas.#ConfigMapSchema & {}

@@ -11,7 +11,7 @@ package schemas
 }
 
 // Volume specification - defines storage source
-#VolumeSchema: close(#VolumeBaseSchema & {
+#VolumeSchema: #VolumeBaseSchema & {
 	emptyDir?: {
 		medium?:    *"node" | "memory"
 		sizeLimit?: string
@@ -19,14 +19,14 @@ package schemas
 	persistentClaim?: #PersistentClaimSchema
 	configMap?:       #ConfigMapSchema
 	secret?:          #SecretSchema
-})
+}
 
 // Volume mount specification - defines container mount point
-#VolumeMountSchema: close(#VolumeBaseSchema & {
+#VolumeMountSchema: #VolumeBaseSchema & {
 	mountPath!: string
 	subPath?:   string
 	readOnly?:  bool | *false
-})
+}
 
 // Persistent claim specification
 #PersistentClaimSchema: {

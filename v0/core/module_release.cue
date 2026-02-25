@@ -7,7 +7,7 @@ import (
 // #ModuleRelease: The concrete deployment instance
 // Contains: Reference to Module, concrete values (closed), target namespace
 // Users/deployment systems create this to deploy a specific version
-#ModuleRelease: close({
+#ModuleRelease: {
 	apiVersion: "opmodel.dev/core/v0"
 	kind:       "ModuleRelease"
 
@@ -49,7 +49,7 @@ import (
 	// Concrete values (everything closed/concrete)
 	// Must satisfy the value schema from #module
 	values: close(#module.#config)
-})
+}
 
 #ModuleReleaseMap: [string]: #ModuleRelease
 

@@ -5,7 +5,7 @@ import (
 )
 
 // #Trait: Defines additional behavior or characteristics that can be attached to components.
-#Trait: close({
+#Trait: {
 	apiVersion: "opmodel.dev/core/v0"
 	kind:       "Trait"
 
@@ -36,6 +36,6 @@ import (
 
 	// Resources that this trait can be applied to (full references)
 	appliesTo!: [...#Resource]
-})
+}
 
 #TraitMap: [string]: _
