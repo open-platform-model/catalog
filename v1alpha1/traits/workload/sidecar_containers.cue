@@ -32,6 +32,4 @@ import (
 }
 
 #SidecarContainersDefaults: schemas.#ContainerSchema & {
-	// Image pull policy
-	imagePullPolicy: "IfNotPresent"
 }

@@ -2,6 +2,7 @@ package modules
 
 import (
 	core "opmodel.dev/core@v1"
+	schemas "opmodel.dev/schemas@v1"
 	components "opmodel.dev/examples/components@v1"
 )
 
@@ -44,11 +45,11 @@ basicModule: core.#Module & {
 	#config: {
 		web: {
 			scaling: int
-			image:   string
+			image:   schemas.#Image
 		}
 		db: {
 			scaling:    int
-			image:      string
+			image:      schemas.#Image
 			volumeSize: string
 		}
 	}
@@ -56,10 +57,18 @@ basicModule: core.#Module & {
 	debugValues: {
 		web: {
 			scaling: 1
-			image:   "nginx:1.20.0"
+			image: {
+				repository: "nginx"
+				tag:        "1.20.0"
+				digest:     ""
+			}
 		}
 		db: {
-			image:      "postgres:14.0"
+			image: {
+				repository: "postgres"
+				tag:        "14.0"
+				digest:     ""
+			}
 			volumeSize: "5Gi"
 		}
 	}
@@ -78,11 +87,19 @@ basicModuleRelease: core.#ModuleRelease & {
 	values: {
 		web: {
 			scaling: 3
-			image:   "nginx:1.21.6"
+			image: {
+				repository: "nginx"
+				tag:        "1.21.6"
+				digest:     ""
+			}
 		}
 		db: {
-			scaling:    2
-			image:      "postgres:14.5"
+			scaling: 2
+			image: {
+				repository: "postgres"
+				tag:        "14.5"
+				digest:     ""
+			}
 			volumeSize: "10Gi"
 		}
 	}

@@ -34,8 +34,12 @@ taskWorkload: core.#Component & {
 			ttlSecondsAfterFinished: 86400
 		}
 		initContainers: [{
-			name:  "pre-migration-check"
-			image: string | *"myregistry.io/migrations:v2.0.0"
+			name: "pre-migration-check"
+			image: {
+				repository: string | *"myregistry.io/migrations"
+				tag:        string | *"v2.0.0"
+				digest:     string | *""
+			}
 			env: {
 				CHECK_MODE: {
 					name:  "CHECK_MODE"
@@ -44,9 +48,12 @@ taskWorkload: core.#Component & {
 			}
 		}]
 		container: {
-			name:            "migration"
-			image:           string | *"myregistry.io/migrations:v2.0.0"
-			imagePullPolicy: "IfNotPresent"
+			name: "migration"
+			image: {
+				repository: string | *"myregistry.io/migrations"
+				tag:        string | *"v2.0.0"
+				digest:     string | *""
+			}
 			env: {
 				DATABASE_URL: {
 					name:  "DATABASE_URL"
@@ -58,13 +65,13 @@ taskWorkload: core.#Component & {
 				}
 			}
 			resources: {
-				cpu: {
-					request: "500m"
-					limit:   "1000m"
+				requests: {
+					cpu:    "500m"
+					memory: "512Mi"
 				}
-				memory: {
-					request: "512Mi"
-					limit:   "1Gi"
+				limits: {
+					cpu:    "1000m"
+					memory: "1Gi"
 				}
 			}
 		}

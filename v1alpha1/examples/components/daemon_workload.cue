@@ -32,9 +32,12 @@ daemonWorkload: core.#Component & {
 			}
 		}
 		container: {
-			name:            "node-exporter"
-			image:           string | *"prom/node-exporter:v1.6.1"
-			imagePullPolicy: "IfNotPresent"
+			name: "node-exporter"
+			image: {
+				repository: string | *"prom/node-exporter"
+				tag:        string | *"v1.6.1"
+				digest:     string | *""
+			}
 			ports: {
 				metrics: {
 					name:       "metrics"
@@ -42,13 +45,13 @@ daemonWorkload: core.#Component & {
 				}
 			}
 			resources: {
-				cpu: {
-					request: "100m"
-					limit:   "200m"
+				requests: {
+					cpu:    "100m"
+					memory: "128Mi"
 				}
-				memory: {
-					request: "128Mi"
-					limit:   "256Mi"
+				limits: {
+					cpu:    "200m"
+					memory: "256Mi"
 				}
 			}
 			volumeMounts: {

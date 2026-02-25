@@ -32,6 +32,4 @@ import (
 }
 
 #InitContainersDefaults: schemas.#ContainerSchema & {
-	// Image pull policy
-	imagePullPolicy: "IfNotPresent"
 }

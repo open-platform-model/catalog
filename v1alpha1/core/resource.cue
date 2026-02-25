@@ -61,19 +61,14 @@ _testContainer: #Component & {
 }
 
 _testContainerDefaults: _#testContainerSchema & {
-	// Image pull policy
-	imagePullPolicy: _#testContainerSchema.imagePullPolicy | *"IfNotPresent"
 }
 
 _#testContainerSchema: {
 	// Name of the container
 	name!: string
 
-	// Container image (e.g., "nginx:latest")
-	image!: string
-
-	// Image pull policy
-	imagePullPolicy: "Always" | "IfNotPresent" | "Never" | *"IfNotPresent"
+	// Container image
+	image!: _#testImageSchema
 
 	// Command to run in the container
 	command?: [...string]
@@ -91,4 +86,11 @@ _#testContainerSchema: {
 			memory?: number | string & =~"^[0-9]+[MG]i$"
 		}
 	}
+}
+
+_#testImageSchema: {
+	repository!: string
+	tag!:        string
+	digest!:     string
+	pullPolicy:  *"IfNotPresent" | "Always" | "Never"
 }

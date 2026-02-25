@@ -38,8 +38,12 @@ statefulWorkload: core.#Component & {
 			}
 		}
 		initContainers: [{
-			name:  "init-db"
-			image: string | *"postgres:14"
+			name: "init-db"
+			image: {
+				repository: string | *"postgres"
+				tag:        string | *"14"
+				digest:     string | *""
+			}
 			env: {
 				PGHOST: {
 					name:  "PGHOST"
@@ -48,9 +52,12 @@ statefulWorkload: core.#Component & {
 			}
 		}]
 		container: {
-			name:            "postgres"
-			image:           string | *"postgres:14"
-			imagePullPolicy: "IfNotPresent"
+			name: "postgres"
+			image: {
+				repository: string | *"postgres"
+				tag:        string | *"14"
+				digest:     string | *""
+			}
 			ports: {
 				postgres: {
 					name:       "postgres"
@@ -90,13 +97,13 @@ statefulWorkload: core.#Component & {
 				failureThreshold:    3
 			}
 			resources: {
-				cpu: {
-					request: "500m"
-					limit:   "2000m"
+				requests: {
+					cpu:    "500m"
+					memory: "1Gi"
 				}
-				memory: {
-					request: "1Gi"
-					limit:   "4Gi"
+				limits: {
+					cpu:    "2000m"
+					memory: "4Gi"
 				}
 			}
 			volumeMounts: {

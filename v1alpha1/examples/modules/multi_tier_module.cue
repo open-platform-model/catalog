@@ -2,6 +2,7 @@ package modules
 
 import (
 	core "opmodel.dev/core@v1"
+	schemas "opmodel.dev/schemas@v1"
 	components "opmodel.dev/examples/components@v1"
 )
 
@@ -44,16 +45,16 @@ multiTierModule: core.#Module & {
 	#config: {
 		database: {
 			scaling: int
-			image:   string
+			image:   schemas.#Image
 		}
 		logAgent: {
-			image: string
+			image: schemas.#Image
 		}
 		setupJob: {
-			image: string
+			image: schemas.#Image
 		}
 		backupJob: {
-			image:    string
+			image:    schemas.#Image
 			schedule: string
 		}
 	}
@@ -61,16 +62,32 @@ multiTierModule: core.#Module & {
 	debugValues: {
 		database: {
 			scaling: 1
-			image:   "postgres:14"
+			image: {
+				repository: "postgres"
+				tag:        "14"
+				digest:     ""
+			}
 		}
 		logAgent: {
-			image: "prom/node-exporter:v1.6.1"
+			image: {
+				repository: "prom/node-exporter"
+				tag:        "v1.6.1"
+				digest:     ""
+			}
 		}
 		setupJob: {
-			image: "myregistry.io/migrations:v2.0.0"
+			image: {
+				repository: "myregistry.io/migrations"
+				tag:        "v2.0.0"
+				digest:     ""
+			}
 		}
 		backupJob: {
-			image:    "postgres:14"
+			image: {
+				repository: "postgres"
+				tag:        "14"
+				digest:     ""
+			}
 			schedule: "0 2 * * *"
 		}
 	}
@@ -85,16 +102,32 @@ multiTierModuleRelease: core.#ModuleRelease & {
 	values: {
 		database: {
 			scaling: 2
-			image:   "postgres:14.5"
+			image: {
+				repository: "postgres"
+				tag:        "14.5"
+				digest:     ""
+			}
 		}
 		logAgent: {
-			image: "prom/node-exporter:v1.7.0"
+			image: {
+				repository: "prom/node-exporter"
+				tag:        "v1.7.0"
+				digest:     ""
+			}
 		}
 		setupJob: {
-			image: "myregistry.io/migrations:v2.1.0"
+			image: {
+				repository: "myregistry.io/migrations"
+				tag:        "v2.1.0"
+				digest:     ""
+			}
 		}
 		backupJob: {
-			image:    "postgres:14.5"
+			image: {
+				repository: "postgres"
+				tag:        "14.5"
+				digest:     ""
+			}
 			schedule: "0 3 * * *"
 		}
 	}

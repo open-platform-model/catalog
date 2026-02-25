@@ -73,8 +73,12 @@ _testStatelessWorkload: #Component & {
 	spec: {
 		statelessWorkload: _#testStatelessWorkloadSchema
 		statelessWorkload: container: {
-			name:  string | *"test-container"
-			image: string | *"nginx:latest"
+			name: string | *"test-container"
+			image: {
+				repository: string | *"nginx"
+				tag:        string | *"latest"
+				digest:     string | *""
+			}
 		}
 		container: statelessWorkload.container
 		if statelessWorkload.scaling != _|_ {

@@ -15,8 +15,8 @@ import (
 
 	out: k8scorev1.#Container & {
 		name:            X.name
-		image:           X.image
-		imagePullPolicy: X.imagePullPolicy
+		image:           X.image.reference
+		imagePullPolicy: X.image.pullPolicy
 		if X.command != _|_ {
 			command: X.command
 		}
@@ -90,9 +90,12 @@ import (
 _testToK8sContainer: {
 	// Example input container
 	in: {
-		name:            "example-container"
-		image:           "example-image:latest"
-		imagePullPolicy: "IfNotPresent"
+		name: "example-container"
+		image: {
+			repository: "example-image"
+			tag:        "latest"
+			digest:     ""
+		}
 		command: ["/bin/example"]
 		args: ["--example-arg"]
 		ports: {
@@ -109,13 +112,13 @@ _testToK8sContainer: {
 			}
 		}
 		resources: {
-			cpu: {
-				request: "100m"
-				limit:   "200m"
+			requests: {
+				cpu:    "100m"
+				memory: "128Mi"
 			}
-			memory: {
-				request: "128Mi"
-				limit:   "256Mi"
+			limits: {
+				cpu:    "200m"
+				memory: "256Mi"
 			}
 		}
 		volumeMounts: {
@@ -133,14 +136,20 @@ _testToK8sContainers: {
 	// Example list of input containers
 	in: [
 		{
-			name:            "example-container-1"
-			image:           "example-image-1:latest"
-			imagePullPolicy: "IfNotPresent"
+			name: "example-container-1"
+			image: {
+				repository: "example-image-1"
+				tag:        "latest"
+				digest:     ""
+			}
 		},
 		{
-			name:            "example-container-2"
-			image:           "example-image-2:latest"
-			imagePullPolicy: "IfNotPresent"
+			name: "example-container-2"
+			image: {
+				repository: "example-image-2"
+				tag:        "latest"
+				digest:     ""
+			}
 		},
 	]
 

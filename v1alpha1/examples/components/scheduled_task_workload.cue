@@ -34,8 +34,12 @@ scheduledTaskWorkload: core.#Component & {
 			failedJobsHistoryLimit:     1
 		}
 		initContainers: [{
-			name:  "pre-backup-check"
-			image: string | *"alpine:latest"
+			name: "pre-backup-check"
+			image: {
+				repository: string | *"alpine"
+				tag:        string | *"latest"
+				digest:     string | *""
+			}
 			env: {
 				PGHOST: {
 					name:  "PGHOST"
@@ -44,9 +48,12 @@ scheduledTaskWorkload: core.#Component & {
 			}
 		}]
 		container: {
-			name:            "backup"
-			image:           string | *"postgres-backup:latest"
-			imagePullPolicy: "IfNotPresent"
+			name: "backup"
+			image: {
+				repository: string | *"postgres-backup"
+				tag:        string | *"latest"
+				digest:     string | *""
+			}
 			env: {
 				PGHOST: {
 					name:  "PGHOST"
@@ -66,13 +73,13 @@ scheduledTaskWorkload: core.#Component & {
 				}
 			}
 			resources: {
-				cpu: {
-					request: "250m"
-					limit:   "500m"
+				requests: {
+					cpu:    "250m"
+					memory: "256Mi"
 				}
-				memory: {
-					request: "256Mi"
-					limit:   "512Mi"
+				limits: {
+					cpu:    "500m"
+					memory: "512Mi"
 				}
 			}
 			volumeMounts: {

@@ -30,9 +30,12 @@ basicComponent: core.#Component & {
 	spec: {
 		scaling: count: int | *1
 		container: schemas.#ContainerSchema & {
-			name:            "nginx-container"
-			image:           string | *"nginx:latest"
-			imagePullPolicy: "IfNotPresent"
+			name: "nginx-container"
+			image: {
+				repository: string | *"nginx"
+				tag:        string | *"latest"
+				digest:     string | *""
+			}
 			ports: http: {
 				name:       "http"
 				targetPort: 80

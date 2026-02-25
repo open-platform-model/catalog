@@ -78,8 +78,12 @@ _testComponent: #Component & {
 
 	spec: {
 		container: {
-			name:  "test-container"
-			image: "nginx:latest"
+			name: "test-container"
+			image: {
+				repository: "nginx"
+				tag:        "latest"
+				digest:     ""
+			}
 			// This is intentionally incorrect
 			resources: {
 				requests: {
@@ -101,7 +105,11 @@ _testComponent2: #Component & _testStatelessWorkload & {
 	spec: {
 		statelessWorkload: {
 			container: {
-				image: "nginx:1.28"
+				image: {
+					repository: "nginx"
+					tag:        "1.28"
+					digest:     ""
+				}
 			}
 			scaling: count: 6
 		}

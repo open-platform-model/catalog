@@ -27,8 +27,12 @@ mongodbComponent: core.#Component & {
 	spec: {
 		scaling: count: 1
 		container: {
-			name:  "mongodb"
-			image: "mongo:6.0"
+			name: "mongodb"
+			image: {
+				repository: "mongo"
+				tag:        "6.0"
+				digest:     ""
+			}
 			ports: mongodb: {
 				name:       "mongodb"
 				targetPort: 27017
@@ -80,8 +84,12 @@ postgresComponent: core.#Component & {
 	spec: {
 		scaling: count: 1
 		container: {
-			name:  "postgres"
-			image: string | *"postgres:14"
+			name: "postgres"
+			image: {
+				repository: string | *"postgres"
+				tag:        string | *"14"
+				digest:     string | *""
+			}
 			ports: postgres: {
 				name:       "postgres"
 				targetPort: 5432
@@ -131,8 +139,12 @@ redisComponent: core.#Component & {
 	spec: {
 		scaling: count: 1
 		container: {
-			name:  "redis"
-			image: "redis:7.0"
+			name: "redis"
+			image: {
+				repository: "redis"
+				tag:        "7.0"
+				digest:     ""
+			}
 			ports: redis: {
 				name:       "redis"
 				targetPort: 6379
