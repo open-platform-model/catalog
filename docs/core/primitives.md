@@ -315,12 +315,22 @@ A **StatusProbe** represents a reusable, composable check that evaluates runtime
 
 ---
 
-## LifecycleAction
+## Op
 
 > **Draft** — This definition type is not yet finalized.
 
-A **LifecycleAction** represents a reusable, well-known action that can run during state transitions (install, upgrade, delete). LifecycleActions are the schema contracts for transition steps — they define *what* action to perform via `#spec`, while the [Lifecycle](constructs.md#lifecycle) construct orchestrates *when* and *in what order* they execute.
+An **Op** is an atomic, reusable unit of work. Ops are the smallest executable building blocks in OPM — they define *what* to execute via `#spec` with no knowledge of sequencing or orchestration. Ops are composed into [Actions](#action), which are in turn consumed by [Lifecycle](constructs.md#lifecycle) and [Workflow](constructs.md#workflow).
 
-LifecycleActions are pre-built building blocks provided by the platform. Developers select from well-known actions rather than implementing custom ones.
+**Examples**: RunCommand, HTTPCall, WaitFor, CUEEval
 
-**Examples**: RunMigration, ApplySchema, BackupData, CleanupResources, ValidateState
+---
+
+## Action
+
+> **Draft** — This definition type is not yet finalized.
+
+An **Action** is a composed operation built from [Ops](#op) and other Actions. Actions represent meaningful, developer-facing operations — they define *what* to accomplish, while [Lifecycle](constructs.md#lifecycle) and [Workflow](constructs.md#workflow) orchestrate *when* they execute.
+
+Actions are to Ops what [Blueprints](primitives.md#blueprint) are to [Resources](primitives.md#resource) — a higher-level composition that most developers reach for directly.
+
+**Examples**: DBMigration, RotateCredentials, SeedDatabase, BackupData

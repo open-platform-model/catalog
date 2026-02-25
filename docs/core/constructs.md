@@ -496,7 +496,13 @@ One component can match multiple transformers — each produces a different plat
 
 > **Draft** — This construct is not yet finalized.
 
-**Lifecycle** orchestrates [LifecycleActions](primitives.md#lifecycleaction) during state transitions (install, upgrade, delete). It handles ordering, conditions, rollback behavior, and phase grouping for the actions it contains.
+**Lifecycle** orchestrates [Actions](primitives.md#action) during state transitions (install, upgrade, delete). It handles ordering, conditions, rollback behavior, and phase grouping for the Actions it contains. Actions are composed of [Ops](primitives.md#op) and other Actions.
+
+### Workflow
+
+> **Draft** — This construct is not yet finalized.
+
+**Workflow** sequences [Actions](primitives.md#action) for on-demand, ad-hoc execution. Unlike [Lifecycle](#lifecycle), Workflows are explicitly invoked by a user or operator — they are not triggered by state transitions. Workflows are scoped to a single [Module](#module), execute Actions sequentially, and have no rollback semantics.
 
 ### Test
 

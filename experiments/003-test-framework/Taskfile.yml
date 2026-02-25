@@ -1,0 +1,97 @@
+version: '3'
+
+silent: true
+
+vars:
+  EXPERIMENT_DIR: '{{.TASKFILE_DIR}}'
+  GO_TEST_DIR: '{{.EXPERIMENT_DIR}}/tests'
+
+env:
+  CUE_REGISTRY: 'opmodel.dev=localhost:5000+insecure,registry.cue.works'
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  # ============================================================================
+  # Testing (Go runner)
+  # ============================================================================
+
+  test:
+    desc: Run all tests (verbose)
+    cmds:
+      - |
+        cd "{{.GO_TEST_DIR}}" && go test -v -count=1 ./...
+
+  test:short:
+    desc: Run all tests (failures only)
+    cmds:
+      - |
+        cd "{{.GO_TEST_DIR}}" && go test -count=1 ./...
+
+  test:schemas:
+    desc: Run schema tests
+    vars:
+      VERBOSE: '{{.VERBOSE | default "false"}}'
+      V_FLAG: '{{if eq .VERBOSE "true"}}-v{{end}}'
+    cmds:
+      - |
+        cd "{{.GO_TEST_DIR}}" && go test {{.V_FLAG}} -run TestSchemas -count=1 ./...
+
+  test:core:
+    desc: Run core definition tests
+    vars:
+      VERBOSE: '{{.VERBOSE | default "false"}}'
+      V_FLAG: '{{if eq .VERBOSE "true"}}-v{{end}}'
+    cmds:
+      - |
+        cd "{{.GO_TEST_DIR}}" && go test {{.V_FLAG}} -run TestCore -count=1 ./...
+
+  test:resources:
+    desc: Run resource tests (container, configmaps)
+    vars:
+      VERBOSE: '{{.VERBOSE | default "false"}}'
+      V_FLAG: '{{if eq .VERBOSE "true"}}-v{{end}}'
+    cmds:
+      - |
+        cd "{{.GO_TEST_DIR}}" && go test {{.V_FLAG}} -run 'TestResource' -count=1 ./...
+
+  test:traits:
+    desc: Run trait tests (scaling, expose)
+    vars:
+      VERBOSE: '{{.VERBOSE | default "false"}}'
+      V_FLAG: '{{if eq .VERBOSE "true"}}-v{{end}}'
+    cmds:
+      - |
+        cd "{{.GO_TEST_DIR}}" && go test {{.V_FLAG}} -run 'TestTrait' -count=1 ./...
+
+  # ============================================================================
+  # CUE Validation
+  # ============================================================================
+
+  vet:
+    desc: Validate all CUE packages
+    cmds:
+      - |
+        set -e
+        echo "Validating CUE packages..."
+        for pkg in \
+          v0/schemas \
+          v0/core \
+          v0/resources/workload \
+          v0/resources/config \
+          v0/traits/workload \
+          v0/traits/network; do
+          echo "  $pkg"
+          cue vet "./$pkg/"
+        done
+        echo "All valid"
+
+  fmt:
+    desc: Format all CUE files
+    cmds:
+      - |
+        cue fmt ./...
+        echo "Formatted"

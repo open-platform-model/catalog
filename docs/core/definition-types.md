@@ -12,7 +12,8 @@ graph BT
         direction LR
         PolicyRule:::primitive
         StatusProbe:::primitive
-        LifecycleAction:::primitive
+        Op:::primitive
+        Action:::primitive
         Resource:::primitive
         Trait:::primitive
         Blueprint:::primitive
@@ -23,12 +24,15 @@ graph BT
         Policy:::construct
         Status:::construct
         Lifecycle:::construct
+        Workflow:::construct
     end
 
     %% Primitives define their direct constructs
     PolicyRule -->|defines| Policy
     StatusProbe -->|defines| Status
-    LifecycleAction -->|defines| Lifecycle
+    Op -->|defines| Action
+    Action -->|defines| Lifecycle
+    Action -->|defines| Workflow
 
     %% Primitives define Component
     Resource -->|defines| Component:::construct
@@ -39,6 +43,7 @@ graph BT
     Status -->|extends| Component
     Lifecycle -->|extends| Component
     Lifecycle -->|extends| Module
+    Workflow -->|extends| Module
 
     %% Structural containment
     Policy -->|contains| Module:::construct
@@ -68,7 +73,8 @@ graph BT
 | [**Blueprint**](primitives.md#blueprint) | Primitive | "What is the reusable pattern?" | Component |
 | [**PolicyRule**](primitives.md#policyrule) | Primitive | "What must be true?" | Policy |
 | [**StatusProbe**](primitives.md#statusprobe) | Primitive | "What should be checked?" | Module |
-| [**LifecycleAction**](primitives.md#lifecycleaction) | Primitive | "What action runs on transitions?" | Component/Module |
+| [**Op**](primitives.md#op) | Primitive | "What is the unit of work?" | Action |
+| [**Action**](primitives.md#action) | Primitive | "What is the composed operation?" | Lifecycle/Workflow |
 | [**Component**](constructs.md#component) | Construct | "What composes primitives?" | Module |
 | [**Module**](constructs.md#module) | Construct | "What is the application?" | Top-level |
 | [**ModuleRelease**](constructs.md#modulerelease) | Construct | "What is being deployed?" | Deployment |
@@ -79,6 +85,7 @@ graph BT
 | [**Transformer**](constructs.md#transformer) | Construct | "How are components rendered?" | Rendering |
 | [**Status**](constructs.md#status) | Construct | "What is the computed state?" | Module |
 | [**Lifecycle**](constructs.md#lifecycle) | Construct | "What happens on transitions?" | Component/Module |
+| [**Workflow**](constructs.md#workflow) | Construct | "What runs on-demand?" | Module |
 | [**Test**](constructs.md#test) | Construct | "Does the lifecycle work?" | Separate artifact |
 | [**Config**](constructs.md#config) | Construct | "How is OPM configured?" | Tooling |
 | [**Template**](constructs.md#template) | Construct | "How are modules scaffolded?" | Tooling |
@@ -86,11 +93,12 @@ graph BT
 ## Decision Flowchart
 
 1. **Does it define a reusable `#spec` that gets composed?**
-   - Yes → It's a **Primitive**. Continue:
-     1. Is this a standalone deployable thing? → **Resource**
-     2. Does this modify how a Resource operates? → **Trait**
-     3. Is this a reusable composition of Resources/Traits? → **Blueprint**
-     4. Is this a constraint with enforcement consequences? → **PolicyRule**
-     5. Is this a runtime health/readiness check? → **StatusProbe**
-     6. Is this an action that runs during install/upgrade/delete? → **LifecycleAction**
-   - No → It's a **Construct**. See [Constructs](constructs.md).
+    - Yes → It's a **Primitive**. Continue:
+        1. Is this a standalone deployable thing? → **Resource**
+        2. Does this modify how a Resource operates? → **Trait**
+        3. Is this a reusable composition of Resources/Traits? → **Blueprint**
+        4. Is this a constraint with enforcement consequences? → **PolicyRule**
+        5. Is this a runtime health/readiness check? → **StatusProbe**
+        6. Is this an atomic unit of work? → **Op**
+        7. Is this a composed operation built from Ops/Actions? → **Action**
+    - No → It's a **Construct**. See [Constructs](constructs.md).
