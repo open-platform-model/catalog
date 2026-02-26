@@ -30,28 +30,16 @@ package core
 
 	_allFields: {
 		for _, resource in #resources {
-			if resource.spec != _|_ {
-				for k, v in resource.spec {
-					(k): v
-				}
-			}
+			if resource.spec != _|_ {resource.spec}
 		}
 		if #traits != _|_ {
 			for _, trait in #traits {
-				if trait.spec != _|_ {
-					for k, v in trait.spec {
-						(k): v
-					}
-				}
+				if trait.spec != _|_ {trait.spec}
 			}
 		}
 		if #blueprints != _|_ {
 			for _, blueprint in #blueprints {
-				if blueprint.spec != _|_ {
-					for k, v in blueprint.spec {
-						(k): v
-					}
-				}
+				if blueprint.spec != _|_ {blueprint.spec}
 			}
 		}
 	}
