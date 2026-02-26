@@ -76,24 +76,7 @@ import (
 		}
 
 		// Build main container: base conversion via helper, unified with trait fields
-		_mainContainer: (#ToK8sContainer & {"in": _container}).out & {
-			if #component.spec.securityContext != _|_ {
-				let _sc = #component.spec.securityContext
-				if _sc.readOnlyRootFilesystem != _|_ || _sc.allowPrivilegeEscalation != _|_ || _sc.capabilities != _|_ {
-					securityContext: {
-						if _sc.readOnlyRootFilesystem != _|_ {
-							readOnlyRootFilesystem: _sc.readOnlyRootFilesystem
-						}
-						if _sc.allowPrivilegeEscalation != _|_ {
-							allowPrivilegeEscalation: _sc.allowPrivilegeEscalation
-						}
-						if _sc.capabilities != _|_ {
-							capabilities: _sc.capabilities
-						}
-					}
-				}
-			}
-		}
+		_mainContainer: (#ToK8sContainer & {"in": _container}).out
 
 		// Build container list (main container + optional sidecars)
 		_sidecarContainers: *optionalTraits["opmodel.dev/traits/workload@v1#SidecarContainers"].#defaults | [...]
@@ -101,14 +84,8 @@ import (
 			_sidecarContainers: #component.spec.sidecarContainers
 		}
 
-		_convertedSidecars: (#ToK8sContainers & {"in": _sidecarContainers}).out
-		_containers: list.Concat([
-			[_mainContainer],
-			_convertedSidecars,
-		])
-
 		// Extract init containers with defaults
-		_initContainers: *optionalTraits["opmodel.dev/traits/workload@v1#InitContainers"].#defaults | [...]
+		_initContainers: [...]
 		if #component.spec.initContainers != _|_ {
 			_initContainers: #component.spec.initContainers
 		}
@@ -131,7 +108,8 @@ import (
 				template: {
 					metadata: labels: #context.componentLabels
 					spec: {
-						containers: _containers
+						_convertedSidecars: (#ToK8sContainers & {"in": _sidecarContainers}).out
+						containers: list.Concat([[_mainContainer], _convertedSidecars])
 
 						if len(_initContainers) > 0 {
 							initContainers: (#ToK8sContainers & {"in": _initContainers}).out

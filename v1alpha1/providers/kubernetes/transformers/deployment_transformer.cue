@@ -86,50 +86,13 @@ import (
 		}
 
 		// Build main container: base conversion via helper, unified with trait fields
-		_mainContainer: (#ToK8sContainer & {"in": _container}).out & {
-			// HealthCheck: emit probes on main container
-			if #component.spec.healthCheck != _|_ {
-				if #component.spec.healthCheck.startupProbe != _|_ {
-					startupProbe: #component.spec.healthCheck.startupProbe
-				}
-				if #component.spec.healthCheck.livenessProbe != _|_ {
-					livenessProbe: #component.spec.healthCheck.livenessProbe
-				}
-				if #component.spec.healthCheck.readinessProbe != _|_ {
-					readinessProbe: #component.spec.healthCheck.readinessProbe
-				}
-			}
-
-			// SecurityContext: container-level fields
-			if #component.spec.securityContext != _|_ {
-				let _sc = #component.spec.securityContext
-				if _sc.readOnlyRootFilesystem != _|_ || _sc.allowPrivilegeEscalation != _|_ || _sc.capabilities != _|_ {
-					securityContext: {
-						if _sc.readOnlyRootFilesystem != _|_ {
-							readOnlyRootFilesystem: _sc.readOnlyRootFilesystem
-						}
-						if _sc.allowPrivilegeEscalation != _|_ {
-							allowPrivilegeEscalation: _sc.allowPrivilegeEscalation
-						}
-						if _sc.capabilities != _|_ {
-							capabilities: _sc.capabilities
-						}
-					}
-				}
-			}
-		}
+		_mainContainer: (#ToK8sContainer & {"in": _container}).out
 
 		// Build container list (main container + optional sidecars)
 		_sidecarContainers: *optionalTraits["opmodel.dev/traits/workload@v0#SidecarContainers"].#defaults | [...]
 		if #component.spec.sidecarContainers != _|_ {
 			_sidecarContainers: #component.spec.sidecarContainers
 		}
-
-		_convertedSidecars: (#ToK8sContainers & {"in": _sidecarContainers}).out
-		_containers: list.Concat([
-			[_mainContainer],
-			_convertedSidecars,
-		])
 
 		// Extract init containers with defaults
 		_initContainers: *optionalTraits["opmodel.dev/traits/workload@v0#InitContainers"].#defaults | [...]
@@ -156,7 +119,8 @@ import (
 				template: {
 					metadata: labels: #context.componentLabels
 					spec: {
-						containers: _containers
+						_convertedSidecars: (#ToK8sContainers & {"in": _sidecarContainers}).out
+						containers: list.Concat([[_mainContainer], _convertedSidecars])
 
 						if len(_initContainers) > 0 {
 							initContainers: (#ToK8sContainers & {"in": _initContainers}).out

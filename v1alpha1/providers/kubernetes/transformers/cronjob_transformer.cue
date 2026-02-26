@@ -69,43 +69,15 @@ import (
 		}
 
 		// Build main container: base conversion via helper, unified with trait fields
-		_mainContainer: (#ToK8sContainer & {"in": _container}).out & {
-			if #component.spec.healthCheck != _|_ {
-				if #component.spec.healthCheck.startupProbe != _|_ {
-					startupProbe: #component.spec.healthCheck.startupProbe
-				}
-				if #component.spec.healthCheck.livenessProbe != _|_ {
-					livenessProbe: #component.spec.healthCheck.livenessProbe
-				}
-				if #component.spec.healthCheck.readinessProbe != _|_ {
-					readinessProbe: #component.spec.healthCheck.readinessProbe
-				}
-			}
-			if #component.spec.securityContext != _|_ {
-				let _sc = #component.spec.securityContext
-				if _sc.readOnlyRootFilesystem != _|_ || _sc.allowPrivilegeEscalation != _|_ || _sc.capabilities != _|_ {
-					securityContext: {
-						if _sc.readOnlyRootFilesystem != _|_ {
-							readOnlyRootFilesystem: _sc.readOnlyRootFilesystem
-						}
-						if _sc.allowPrivilegeEscalation != _|_ {
-							allowPrivilegeEscalation: _sc.allowPrivilegeEscalation
-						}
-						if _sc.capabilities != _|_ {
-							capabilities: _sc.capabilities
-						}
-					}
-				}
-			}
-		}
+		_mainContainer: (#ToK8sContainer & {"in": _container}).out
 
 		// Extract optional sidecar and init containers with defaults
-		_sidecarContainers: *optionalTraits["opmodel.dev/traits/workload@v1#SidecarContainers"].#defaults | [...]
+		_sidecarContainers: [...]
 		if #component.spec.sidecarContainers != _|_ {
 			_sidecarContainers: #component.spec.sidecarContainers
 		}
 
-		_initContainers: *optionalTraits["opmodel.dev/traits/workload@v1#InitContainers"].#defaults | [...]
+		_initContainers: [...]
 		if #component.spec.initContainers != _|_ {
 			_initContainers: #component.spec.initContainers
 		}
