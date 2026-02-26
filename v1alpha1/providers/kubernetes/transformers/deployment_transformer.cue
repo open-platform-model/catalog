@@ -2,18 +2,18 @@ package transformers
 
 import (
 	"list"
-	k8sappsv1 "opmodel.dev/schemas/kubernetes/apps/v1@v0"
-	core "opmodel.dev/core@v0"
-	workload_resources "opmodel.dev/resources/workload@v0"
-	workload_traits "opmodel.dev/traits/workload@v0"
-	security_traits "opmodel.dev/traits/security@v0"
-	storage_resources "opmodel.dev/resources/storage@v0"
+	k8sappsv1 "opmodel.dev/schemas/kubernetes/apps/v1@v1"
+	core "opmodel.dev/core@v1"
+	workload_resources "opmodel.dev/resources/workload@v1"
+	workload_traits "opmodel.dev/traits/workload@v1"
+	security_traits "opmodel.dev/traits/security@v1"
+	storage_resources "opmodel.dev/resources/storage@v1"
 )
 
 // DeploymentTransformer converts stateless workload components to Kubernetes Deployments
 #DeploymentTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
 		name:        "deployment-transformer"
 		description: "Converts stateless workload components with Container resource to Kubernetes Deployments"
 
@@ -30,12 +30,12 @@ import (
 
 	// Required resources - Container MUST be present
 	requiredResources: {
-		"opmodel.dev/resources/workload@v0#Container": workload_resources.#ContainerResource
+		"opmodel.dev/resources/workload@v1#Container": workload_resources.#ContainerResource
 	}
 
 	// Optional resources
 	optionalResources: {
-		"opmodel.dev/resources/storage@v0#Volumes": storage_resources.#VolumesResource
+		"opmodel.dev/resources/storage@v1#Volumes": storage_resources.#VolumesResource
 	}
 
 	// No required traits
@@ -43,14 +43,14 @@ import (
 
 	// Optional traits that enhance deployment behavior
 	optionalTraits: {
-		"opmodel.dev/traits/workload@v0#Scaling":           workload_traits.#ScalingTrait
-		"opmodel.dev/traits/workload@v0#RestartPolicy":     workload_traits.#RestartPolicyTrait
-		"opmodel.dev/traits/workload@v0#UpdateStrategy":    workload_traits.#UpdateStrategyTrait
-		"opmodel.dev/traits/workload@v0#HealthCheck":       workload_traits.#HealthCheckTrait
-		"opmodel.dev/traits/workload@v0#SidecarContainers": workload_traits.#SidecarContainersTrait
-		"opmodel.dev/traits/workload@v0#InitContainers":    workload_traits.#InitContainersTrait
-		"opmodel.dev/traits/security@v0#SecurityContext":   security_traits.#SecurityContextTrait
-		"opmodel.dev/traits/security@v0#WorkloadIdentity":  security_traits.#WorkloadIdentityTrait
+		"opmodel.dev/traits/workload@v1#Scaling":           workload_traits.#ScalingTrait
+		"opmodel.dev/traits/workload@v1#RestartPolicy":     workload_traits.#RestartPolicyTrait
+		"opmodel.dev/traits/workload@v1#UpdateStrategy":    workload_traits.#UpdateStrategyTrait
+		"opmodel.dev/traits/workload@v1#HealthCheck":       workload_traits.#HealthCheckTrait
+		"opmodel.dev/traits/workload@v1#SidecarContainers": workload_traits.#SidecarContainersTrait
+		"opmodel.dev/traits/workload@v1#InitContainers":    workload_traits.#InitContainersTrait
+		"opmodel.dev/traits/security@v1#SecurityContext":   security_traits.#SecurityContextTrait
+		"opmodel.dev/traits/security@v1#WorkloadIdentity":  security_traits.#WorkloadIdentityTrait
 	}
 
 	// Transform function
@@ -62,7 +62,7 @@ import (
 		_container: #component.spec.container
 
 		// Apply defaults for optional traits
-		_scalingCount: *optionalTraits["opmodel.dev/traits/workload@v0#Scaling"].#defaults.count | int
+		_scalingCount: *optionalTraits["opmodel.dev/traits/workload@v1#Scaling"].#defaults.count | int
 		if #component.spec.scaling != _|_ if #component.spec.scaling.auto != _|_ {
 			_scalingCount: #component.spec.scaling.auto.min
 		}
@@ -70,7 +70,7 @@ import (
 			_scalingCount: #component.spec.scaling.count
 		}
 
-		_restartPolicy: *optionalTraits["opmodel.dev/traits/workload@v0#RestartPolicy"].#defaults | string
+		_restartPolicy: *optionalTraits["opmodel.dev/traits/workload@v1#RestartPolicy"].#defaults | string
 		if #component.spec.restartPolicy != _|_ {
 			_restartPolicy: #component.spec.restartPolicy
 		}
@@ -89,13 +89,13 @@ import (
 		_mainContainer: (#ToK8sContainer & {"in": _container}).out
 
 		// Build container list (main container + optional sidecars)
-		_sidecarContainers: *optionalTraits["opmodel.dev/traits/workload@v0#SidecarContainers"].#defaults | [...]
+		_sidecarContainers: *optionalTraits["opmodel.dev/traits/workload@v1#SidecarContainers"].#defaults | [...]
 		if #component.spec.sidecarContainers != _|_ {
 			_sidecarContainers: #component.spec.sidecarContainers
 		}
 
 		// Extract init containers with defaults
-		_initContainers: *optionalTraits["opmodel.dev/traits/workload@v0#InitContainers"].#defaults | [...]
+		_initContainers: *optionalTraits["opmodel.dev/traits/workload@v1#InitContainers"].#defaults | [...]
 		if #component.spec.initContainers != _|_ {
 			_initContainers: #component.spec.initContainers
 		}
@@ -180,9 +180,4 @@ import (
 			}
 		}
 	}
-}
-
-_testDeploymentTransformer: #DeploymentTransformer.#transform & {
-	#component: _testComponent
-	#context:   _testContext
 }

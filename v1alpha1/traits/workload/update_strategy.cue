@@ -12,7 +12,7 @@ import (
 
 #UpdateStrategyTrait: core.#Trait & {
 	metadata: {
-		cueModulePath: "opmodel.dev/traits/workload@v1"
+		modulePath: "opmodel.dev/traits/workload@v1"
 		name:          "update-strategy"
 		description:   "A trait to specify the update strategy for a workload"
 		labels: {

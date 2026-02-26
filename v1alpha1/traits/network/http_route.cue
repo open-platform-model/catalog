@@ -12,7 +12,7 @@ import (
 
 #HttpRouteTrait: core.#Trait & {
 	metadata: {
-		cueModulePath: "opmodel.dev/traits/network@v1"
+		modulePath: "opmodel.dev/traits/network@v1"
 		name:          "http-route"
 		description:   "HTTP routing rules for a workload"
 		labels: {

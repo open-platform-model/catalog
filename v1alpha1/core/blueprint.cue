@@ -12,11 +12,11 @@ import (
 	kind:       "Blueprint"
 
 	metadata: {
-		cueModulePath!: #CUEModulePathType // Example: "opmodel.dev/blueprints@v1"
+		modulePath!: #CUEModulePathType // Example: "opmodel.dev/blueprints@v1"
 		name!:          #NameType          // Example: "stateless-workload"
 		#definitionName: (#KebabToPascal & {"in": name}).out
 
-		fqn: #FQNType & "\(cueModulePath)#\(#definitionName)" // Example: "opmodel.dev/blueprints@v1#StatelessWorkload"
+		fqn: #FQNType & "\(modulePath)#\(#definitionName)" // Example: "opmodel.dev/blueprints@v1#StatelessWorkload"
 
 		// Human-readable description of the definition
 		description?: string
@@ -46,7 +46,7 @@ import (
 
 _testStatelessWorkloadBlueprint: #Blueprint & {
 	metadata: {
-		cueModulePath: "opmodel.dev/blueprints/workload@v1"
+		modulePath: "opmodel.dev/blueprints/workload@v1"
 		name:          "stateless-workload"
 		description:   "A stateless workload with no requirement for stable identity or storage"
 	}

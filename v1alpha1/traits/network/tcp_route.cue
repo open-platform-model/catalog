@@ -12,7 +12,7 @@ import (
 
 #TcpRouteTrait: core.#Trait & {
 	metadata: {
-		cueModulePath: "opmodel.dev/traits/network@v1"
+		modulePath: "opmodel.dev/traits/network@v1"
 		name:          "tcp-route"
 		description:   "TCP port-forwarding rules for a workload"
 		labels: {

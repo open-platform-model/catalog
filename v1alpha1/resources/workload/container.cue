@@ -11,7 +11,7 @@ import (
 
 #ContainerResource: core.#Resource & {
 	metadata: {
-		cueModulePath: "opmodel.dev/resources/workload@v1"
+		modulePath: "opmodel.dev/resources/workload@v1"
 		name:          "container"
 		description:   "A container definition for workloads"
 		labels: {

@@ -9,7 +9,7 @@ import (
 // ConfigMapTransformer converts ConfigMaps resources to Kubernetes ConfigMaps
 #ConfigMapTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v1"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
 		name:        "configmap-transformer"
 		description: "Converts ConfigMaps resources to Kubernetes ConfigMaps"
 
@@ -56,9 +56,4 @@ import (
 			}
 		}
 	}
-}
-
-_testConfigMapTransformer: #ConfigMapTransformer.#transform & {
-	#component: _testConfigMapComponent
-	#context:   _testContext
 }

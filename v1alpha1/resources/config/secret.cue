@@ -11,7 +11,7 @@ import (
 
 #SecretsResource: core.#Resource & {
 	metadata: {
-		cueModulePath: "opmodel.dev/resources/config@v1"
+		modulePath: "opmodel.dev/resources/config@v1"
 		name:          "secrets"
 		description:   "A Secret definition for sensitive configuration"
 		labels: {

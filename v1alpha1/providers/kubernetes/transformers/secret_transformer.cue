@@ -1,15 +1,15 @@
 package transformers
 
 import (
-	core "opmodel.dev/core@v0"
-	config_resources "opmodel.dev/resources/config@v0"
-	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v0"
+	core "opmodel.dev/core@v1"
+	config_resources "opmodel.dev/resources/config@v1"
+	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v1"
 )
 
 // SecretTransformer converts Secrets resources to Kubernetes Secrets
 #SecretTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
 		name:        "secret-transformer"
 		description: "Converts Secrets resources to Kubernetes Secrets"
 
@@ -23,7 +23,7 @@ import (
 
 	// Required resources - Secrets MUST be present
 	requiredResources: {
-		"opmodel.dev/resources/config@v0#Secrets": config_resources.#SecretsResource
+		"opmodel.dev/resources/config@v1#Secrets": config_resources.#SecretsResource
 	}
 
 	optionalResources: {}
@@ -57,9 +57,4 @@ import (
 			}
 		}
 	}
-}
-
-_testSecretTransformer: #SecretTransformer.#transform & {
-	#component: _testSecretComponent
-	#context:   _testContext
 }

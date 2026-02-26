@@ -12,7 +12,7 @@ import (
 
 multiTierModule: core.#Module & {
 	metadata: {
-		cueModulePath: "opmodel.dev@v1"
+		modulePath: "opmodel.dev"
 		name:          "multi-tier-module"
 		version:       "0.1.0"
 	}

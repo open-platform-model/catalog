@@ -12,7 +12,7 @@ import (
 
 #SidecarContainersTrait: core.#Trait & {
 	metadata: {
-		cueModulePath: "opmodel.dev/traits/workload@v1"
+		modulePath: "opmodel.dev/traits/workload@v1"
 		name:          "sidecar-containers"
 		description:   "A trait to specify sidecar containers for a workload"
 		labels: {

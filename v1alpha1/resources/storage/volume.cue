@@ -11,7 +11,7 @@ import (
 
 #VolumesResource: core.#Resource & {
 	metadata: {
-		cueModulePath: "opmodel.dev/resources/storage@v1"
+		modulePath: "opmodel.dev/resources/storage@v1"
 		name:          "volumes"
 		description:   "A volume definition for workloads"
 		labels: {

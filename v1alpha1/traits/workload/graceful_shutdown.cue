@@ -12,7 +12,7 @@ import (
 
 #GracefulShutdownTrait: core.#Trait & {
 	metadata: {
-		cueModulePath: "opmodel.dev/traits/workload@v1"
+		modulePath: "opmodel.dev/traits/workload@v1"
 		name:          "graceful-shutdown"
 		description:   "Termination grace period and pre-stop lifecycle hooks"
 		labels: {

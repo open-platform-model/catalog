@@ -10,12 +10,13 @@ import (
 	kind:       "Module"
 
 	metadata: {
-		cueModulePath!: #CUEModulePathType // Example: "example.com/modules@v1"
 		name!:          #NameType          // Example: "example-module"
 		#definitionName: (#KebabToPascal & {"in": name}).out
 
-		version!: #VersionType // Semantic version of this module definition
-		uuid:     #UUIDType & cue_uuid.SHA1(OPMNamespace, "\(cueModulePath)#\(#definitionName):\(version)")
+		modulePath!: #ModulePathType // Example: "example.com/modules"
+		version!:    #VersionType    // Semantic version of this module definition
+		fqn:         #ModuleFQNType & "\(modulePath)/\(name):\(version)"
+		uuid:        #UUIDType & cue_uuid.SHA1(OPMNamespace, fqn)
 
 		defaultNamespace?: string
 		description?:      string
@@ -59,7 +60,7 @@ import (
 
 _testModule: #Module & {
 	metadata: {
-		cueModulePath: "opmodel.dev/modules@v1"
+		modulePath: "opmodel.dev/modules"
 		name:          "test-module"
 		version:       "0.1.0"
 		description:   "A test module for demonstration purposes"

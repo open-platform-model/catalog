@@ -1,15 +1,15 @@
 package transformers
 
 import (
-	core "opmodel.dev/core@v0"
-	network_traits "opmodel.dev/traits/network@v0"
-	k8snetv1 "opmodel.dev/schemas/kubernetes/networking/v1@v0"
+	core "opmodel.dev/core@v1"
+	network_traits "opmodel.dev/traits/network@v1"
+	k8snetv1 "opmodel.dev/schemas/kubernetes/networking/v1@v1"
 )
 
 // IngressTransformer converts HttpRoute trait to Kubernetes Ingress
 #IngressTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
 		name:        "ingress-transformer"
 		description: "Converts HttpRoute trait to Kubernetes Ingress"
 
@@ -26,7 +26,7 @@ import (
 
 	// Required traits - HttpRoute MUST be present
 	requiredTraits: {
-		"opmodel.dev/traits/network@v0#HttpRoute": network_traits.#HttpRouteTrait
+		"opmodel.dev/traits/network@v1#HttpRoute": network_traits.#HttpRouteTrait
 	}
 
 	optionalTraits: {}
@@ -111,9 +111,4 @@ import (
 			}
 		}
 	}
-}
-
-_testIngressTransformer: #IngressTransformer.#transform & {
-	#component: _testIngressComponent
-	#context:   _testContext
 }

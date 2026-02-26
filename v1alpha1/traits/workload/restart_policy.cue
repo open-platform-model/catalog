@@ -12,7 +12,7 @@ import (
 
 #RestartPolicyTrait: core.#Trait & {
 	metadata: {
-		cueModulePath: "opmodel.dev/traits/workload@v1"
+		modulePath: "opmodel.dev/traits/workload@v1"
 		name:          "restart-policy"
 		description:   "A trait to specify the restart policy for a workload"
 		labels: {

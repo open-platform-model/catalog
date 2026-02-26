@@ -12,7 +12,7 @@ import (
 
 #PlacementTrait: core.#Trait & {
 	metadata: {
-		cueModulePath: "opmodel.dev/traits/workload@v1"
+		modulePath: "opmodel.dev/traits/workload@v1"
 		name:          "placement"
 		description:   "Workload placement intent across failure domains"
 		labels: {

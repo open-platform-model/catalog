@@ -12,7 +12,7 @@ import (
 
 #WorkloadIdentityTrait: core.#Trait & {
 	metadata: {
-		cueModulePath: "opmodel.dev/traits/security@v1"
+		modulePath: "opmodel.dev/traits/security@v1"
 		name:          "workload-identity"
 		description:   "A workload identity definition for service identity"
 		labels: {

@@ -1,15 +1,15 @@
 package transformers
 
 import (
-	core "opmodel.dev/core@v0"
-	storage_resources "opmodel.dev/resources/storage@v0"
-	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v0"
+	core "opmodel.dev/core@v1"
+	storage_resources "opmodel.dev/resources/storage@v1"
+	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v1"
 )
 
 // PVCTransformer creates standalone PersistentVolumeClaims from Volume resources
 #PVCTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
 		name:        "pvc-transformer"
 		description: "Creates standalone Kubernetes PersistentVolumeClaims from Volume resources"
 
@@ -23,7 +23,7 @@ import (
 
 	// Required resources - Volumes MUST be present
 	requiredResources: {
-		"opmodel.dev/resources/storage@v0#Volumes": storage_resources.#VolumesResource
+		"opmodel.dev/resources/storage@v1#Volumes": storage_resources.#VolumesResource
 	}
 
 	// No optional resources
@@ -74,9 +74,4 @@ import (
 			}
 		}
 	}
-}
-
-_testPVCTransformer: #PVCTransformer.#transform & {
-	#component: _testPVCComponent
-	#context:   _testContext
 }

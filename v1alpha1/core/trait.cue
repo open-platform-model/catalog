@@ -10,11 +10,11 @@ import (
 	kind:       "Trait"
 
 	metadata: {
-		cueModulePath!: #CUEModulePathType // Example: "opmodel.dev/traits/workload@v1"
+		modulePath!: #CUEModulePathType // Example: "opmodel.dev/traits/workload@v1"
 		name!:          #NameType          // Example: "scaling"
 		#definitionName: (#KebabToPascal & {"in": name}).out
 
-		fqn: #FQNType & "\(cueModulePath)#\(#definitionName)" // Example: "opmodel.dev/traits/workload@v1#Scaling"
+		fqn: #FQNType & "\(modulePath)#\(#definitionName)" // Example: "opmodel.dev/traits/workload@v1#Scaling"
 
 		// Human-readable description of the definition
 		description?: string
@@ -41,7 +41,7 @@ import (
 
 _testScalingTrait: #Trait & {
 	metadata: {
-		cueModulePath: "opmodel.dev/traits/workload@v1"
+		modulePath: "opmodel.dev/traits/workload@v1"
 		name:          "scaling"
 		description:   "A trait for scaling workloads"
 	}

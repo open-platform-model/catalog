@@ -12,7 +12,7 @@ import (
 
 #ExposeTrait: core.#Trait & {
 	metadata: {
-		cueModulePath: "opmodel.dev/traits/network@v1"
+		modulePath: "opmodel.dev/traits/network@v1"
 		name:          "expose"
 		description:   "A trait to expose a workload via a service"
 		labels: {

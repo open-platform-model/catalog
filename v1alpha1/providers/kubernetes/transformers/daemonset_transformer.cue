@@ -13,7 +13,7 @@ import (
 // DaemonSetTransformer converts daemon workload components to Kubernetes DaemonSets
 #DaemonSetTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v1"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
 		name:        "daemonset-transformer"
 		description: "Converts daemon workload components to Kubernetes DaemonSets"
 
@@ -156,9 +156,4 @@ import (
 			}
 		}
 	}
-}
-
-_testDaemonSetTransformer: #DaemonSetTransformer.#transform & {
-	#component: _testDaemonSetComponent
-	#context:   _testContext
 }

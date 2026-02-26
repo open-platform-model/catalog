@@ -9,11 +9,11 @@ package core
 	kind:       "Bundle"
 
 	metadata: {
-		cueModulePath!: #CUEModulePathType // Example: "opmodel.dev/bundles/core@v0"
+		modulePath!: #CUEModulePathType // Example: "opmodel.dev/bundles/core@v0"
 		name!:          #NameType          // Example: "example-bundle"
 		#definitionName: (#KebabToPascal & {"in": name}).out
 
-		fqn: #FQNType & "\(cueModulePath)#\(#definitionName)" // Example: "opmodel.dev/bundles/core@v0#ExampleBundle"
+		fqn: #FQNType & "\(modulePath)#\(#definitionName)" // Example: "opmodel.dev/bundles/core@v0#ExampleBundle"
 
 		// Human-readable description of the bundle
 		description?: string

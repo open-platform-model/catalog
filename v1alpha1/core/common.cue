@@ -13,6 +13,14 @@ import (
 // Example: "opmodel.dev/resources/workload@v1alpha1"
 #CUEModulePathType: string & =~"^[a-z0-9.-]+(/[a-z0-9.-]+)*@v[0-9]+$" & strings.MinRunes(1) & strings.MaxRunes(254)
 
+// ModulePathType: plain registry path without embedded version — used by #Module only
+// Example: "opmodel.dev/modules", "github.com/org/modules"
+#ModulePathType: string & =~"^[a-z0-9.-]+(/[a-z0-9.-]+)*$" & strings.MinRunes(1) & strings.MaxRunes(254)
+
+// ModuleFQNType: container-style FQN for #Module — path/name:semver
+// Example: "opmodel.dev/modules/my-app:1.2.3"
+#ModuleFQNType: string & =~"^[a-z0-9.-]+(/[a-z0-9.-]+)*/[a-z0-9]([a-z0-9-]*[a-z0-9])?:\\d+\\.\\d+\\.\\d+.*$"
+
 // Semver 2.0
 #VersionType: string & =~"^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
 

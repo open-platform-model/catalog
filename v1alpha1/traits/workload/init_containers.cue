@@ -12,7 +12,7 @@ import (
 
 #InitContainersTrait: core.#Trait & {
 	metadata: {
-		cueModulePath: "opmodel.dev/traits/workload@v1"
+		modulePath: "opmodel.dev/traits/workload@v1"
 		name:          "init-containers"
 		description:   "A trait to specify init containers for a workload"
 		labels: {

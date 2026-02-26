@@ -11,11 +11,11 @@ import (
 	kind:       "Resource"
 
 	metadata: {
-		cueModulePath!: #CUEModulePathType // Example: "resources.opmodel.dev/workload@v1"
+		modulePath!: #CUEModulePathType // Example: "resources.opmodel.dev/workload@v1"
 		name!:          #NameType          // Example: "container"
 		#definitionName: (#KebabToPascal & {"in": name}).out
 
-		fqn: #FQNType & "\(cueModulePath)#\(#definitionName)" // Example: "resources.opmodel.dev/workload@v1#Container"
+		fqn: #FQNType & "\(modulePath)#\(#definitionName)" // Example: "resources.opmodel.dev/workload@v1#Container"
 
 		// Human-readable description of the definition
 		description?: string
@@ -39,7 +39,7 @@ import (
 
 _testContainerResource: #Resource & {
 	metadata: {
-		cueModulePath: "opmodel.dev/resources/workload@v1"
+		modulePath: "opmodel.dev/resources/workload@v1"
 		name:          "container"
 		description:   "A container definition for workloads"
 	}

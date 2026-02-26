@@ -1,15 +1,15 @@
 package transformers
 
 import (
-	core "opmodel.dev/core@v0"
-	security_traits "opmodel.dev/traits/security@v0"
-	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v0"
+	core "opmodel.dev/core@v1"
+	security_traits "opmodel.dev/traits/security@v1"
+	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v1"
 )
 
 // ServiceAccountTransformer converts WorkloadIdentity traits to Kubernetes ServiceAccounts
 #ServiceAccountTransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
 		name:        "serviceaccount-transformer"
 		description: "Converts WorkloadIdentity traits to Kubernetes ServiceAccounts"
 
@@ -25,7 +25,7 @@ import (
 
 	// Required traits - WorkloadIdentity MUST be present
 	requiredTraits: {
-		"opmodel.dev/traits/security@v0#WorkloadIdentity": security_traits.#WorkloadIdentityTrait
+		"opmodel.dev/traits/security@v1#WorkloadIdentity": security_traits.#WorkloadIdentityTrait
 	}
 
 	optionalTraits: {}
@@ -51,9 +51,4 @@ import (
 			automountServiceAccountToken: _workloadIdentity.automountToken
 		}
 	}
-}
-
-_testServiceAccountTransformer: #ServiceAccountTransformer.#transform & {
-	#component: _testServiceAccountComponent
-	#context:   _testContext
 }

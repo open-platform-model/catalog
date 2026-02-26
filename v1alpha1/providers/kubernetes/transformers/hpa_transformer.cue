@@ -1,15 +1,15 @@
 package transformers
 
 import (
-	core "opmodel.dev/core@v0"
-	workload_traits "opmodel.dev/traits/workload@v0"
-	k8sasv2 "opmodel.dev/schemas/kubernetes/autoscaling/v2@v0"
+	core "opmodel.dev/core@v1"
+	workload_traits "opmodel.dev/traits/workload@v1"
+	k8sasv2 "opmodel.dev/schemas/kubernetes/autoscaling/v2@v1"
 )
 
 // HPATransformer converts Scaling auto config to Kubernetes HorizontalPodAutoscalers
 #HPATransformer: core.#Transformer & {
 	metadata: {
-		apiVersion:  "opmodel.dev/providers/kubernetes/transformers@v0"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
 		name:        "hpa-transformer"
 		description: "Converts Scaling auto config to Kubernetes HorizontalPodAutoscalers"
 
@@ -26,7 +26,7 @@ import (
 
 	// Required traits - Scaling MUST be present
 	requiredTraits: {
-		"opmodel.dev/traits/workload@v0#Scaling": workload_traits.#ScalingTrait
+		"opmodel.dev/traits/workload@v1#Scaling": workload_traits.#ScalingTrait
 	}
 
 	optionalTraits: {}
@@ -103,9 +103,4 @@ import (
 			}
 		}
 	}
-}
-
-_testHPATransformer: #HPATransformer.#transform & {
-	#component: _testHPAComponent
-	#context:   _testContext
 }

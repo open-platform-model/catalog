@@ -12,7 +12,7 @@ import (
 
 #EncryptionConfigTrait: core.#Trait & {
 	metadata: {
-		cueModulePath: "opmodel.dev/traits/security@v1"
+		modulePath: "opmodel.dev/traits/security@v1"
 		name:          "encryption"
 		description:   "Enforces encryption requirements"
 		labels: {

@@ -12,7 +12,7 @@ import (
 
 basicModule: core.#Module & {
 	metadata: {
-		cueModulePath: "opmodel.dev@v1"
+		modulePath: "opmodel.dev"
 		name:          "basic-module"
 		version:       "0.1.0"
 

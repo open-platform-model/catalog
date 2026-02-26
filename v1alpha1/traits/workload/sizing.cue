@@ -12,7 +12,7 @@ import (
 
 #SizingTrait: core.#Trait & {
 	metadata: {
-		cueModulePath: "opmodel.dev/traits/workload@v1"
+		modulePath: "opmodel.dev/traits/workload@v1"
 		name:          "sizing"
 		description:   "A trait to specify vertical sizing behavior for a workload"
 		labels: {

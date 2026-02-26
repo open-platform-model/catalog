@@ -11,7 +11,7 @@ import (
 
 #ConfigMapsResource: core.#Resource & {
 	metadata: {
-		cueModulePath: "opmodel.dev/resources/config@v1"
+		modulePath: "opmodel.dev/resources/config@v1"
 		name:          "config-maps"
 		description:   "A ConfigMap definition for external configuration"
 		labels: {

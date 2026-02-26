@@ -17,11 +17,11 @@ import "strings"
 	kind:       "Transformer"
 
 	metadata: {
-		cueModulePath!: #CUEModulePathType // Example: "opmodel.dev/transformers/kubernetes@v0"
+		modulePath!: #CUEModulePathType // Example: "opmodel.dev/transformers/kubernetes@v0"
 		name!:          #NameType          // Example: "deployment-transformer"
 		#definitionName: (#KebabToPascal & {"in": name}).out
 
-		fqn: #FQNType & "\(cueModulePath)#\(#definitionName)" // Example: "opmodel.dev/transformers/kubernetes@v0#DeploymentTransformer"
+		fqn: #FQNType & "\(modulePath)#\(#definitionName)" // Example: "opmodel.dev/transformers/kubernetes@v0#DeploymentTransformer"
 
 		description!: string // A brief description of what this transformer produces
 

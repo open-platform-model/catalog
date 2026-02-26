@@ -12,7 +12,7 @@ import (
 
 #JobConfigTrait: core.#Trait & {
 	metadata: {
-		cueModulePath: "opmodel.dev/traits/workload@v1"
+		modulePath: "opmodel.dev/traits/workload@v1"
 		name:          "job-config"
 		description:   "A trait to configure Job-specific settings for task workloads"
 		labels: {
