@@ -12,9 +12,10 @@ import (
 
 #DisruptionBudgetTrait: core.#Trait & {
 	metadata: {
-		modulePath: "opmodel.dev/traits/workload@v1"
-		name:          "disruption-budget"
-		description:   "Availability constraints during voluntary disruptions"
+		modulePath:  "opmodel.dev/traits/workload"
+		version:     "v1"
+		name:        "disruption-budget"
+		description: "Availability constraints during voluntary disruptions"
 		labels: {
 			"trait.opmodel.dev/category": "workload"
 		}

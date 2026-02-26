@@ -12,9 +12,10 @@ import (
 
 #HttpRouteTrait: core.#Trait & {
 	metadata: {
-		modulePath: "opmodel.dev/traits/network@v1"
-		name:          "http-route"
-		description:   "HTTP routing rules for a workload"
+		modulePath:  "opmodel.dev/traits/network"
+		version:     "v1"
+		name:        "http-route"
+		description: "HTTP routing rules for a workload"
 		labels: {
 			"trait.opmodel.dev/category": "network"
 		}

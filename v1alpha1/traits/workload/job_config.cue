@@ -12,9 +12,10 @@ import (
 
 #JobConfigTrait: core.#Trait & {
 	metadata: {
-		modulePath: "opmodel.dev/traits/workload@v1"
-		name:          "job-config"
-		description:   "A trait to configure Job-specific settings for task workloads"
+		modulePath:  "opmodel.dev/traits/workload"
+		version:     "v1"
+		name:        "job-config"
+		description: "A trait to configure Job-specific settings for task workloads"
 		labels: {
 			"trait.opmodel.dev/category": "workload"
 		}

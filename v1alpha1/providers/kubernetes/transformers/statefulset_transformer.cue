@@ -13,7 +13,8 @@ import (
 // StatefulsetTransformer converts stateful workload components to Kubernetes StatefulSets
 #StatefulsetTransformer: core.#Transformer & {
 	metadata: {
-		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
+		version:     "v1"
 		name:        "statefulset-transformer"
 		description: "Converts stateful workload components to Kubernetes StatefulSets"
 
@@ -30,12 +31,12 @@ import (
 
 	// Required resources - Container MUST be present
 	requiredResources: {
-		"opmodel.dev/resources/workload@v1#Container": workload_resources.#ContainerResource
+		"opmodel.dev/resources/workload/container@v1": workload_resources.#ContainerResource
 	}
 
 	// Optional resources
 	optionalResources: {
-		"opmodel.dev/resources/storage@v1#Volumes": storage_resources.#VolumesResource
+		"opmodel.dev/resources/storage/volumes@v1": storage_resources.#VolumesResource
 	}
 
 	// No required traits
@@ -43,14 +44,14 @@ import (
 
 	// Optional traits that enhance statefulset behavior
 	optionalTraits: {
-		"opmodel.dev/traits/workload@v1#Scaling":           workload_traits.#ScalingTrait
-		"opmodel.dev/traits/workload@v1#RestartPolicy":     workload_traits.#RestartPolicyTrait
-		"opmodel.dev/traits/workload@v1#UpdateStrategy":    workload_traits.#UpdateStrategyTrait
-		"opmodel.dev/traits/workload@v1#HealthCheck":       workload_traits.#HealthCheckTrait
-		"opmodel.dev/traits/workload@v1#SidecarContainers": workload_traits.#SidecarContainersTrait
-		"opmodel.dev/traits/workload@v1#InitContainers":    workload_traits.#InitContainersTrait
-		"opmodel.dev/traits/security@v1#SecurityContext":   security_traits.#SecurityContextTrait
-		"opmodel.dev/traits/security@v1#WorkloadIdentity":  security_traits.#WorkloadIdentityTrait
+		"opmodel.dev/traits/workload/scaling@v1":            workload_traits.#ScalingTrait
+		"opmodel.dev/traits/workload/restart-policy@v1":     workload_traits.#RestartPolicyTrait
+		"opmodel.dev/traits/workload/update-strategy@v1":    workload_traits.#UpdateStrategyTrait
+		"opmodel.dev/traits/workload/health-check@v1":       workload_traits.#HealthCheckTrait
+		"opmodel.dev/traits/workload/sidecar-containers@v1": workload_traits.#SidecarContainersTrait
+		"opmodel.dev/traits/workload/init-containers@v1":    workload_traits.#InitContainersTrait
+		"opmodel.dev/traits/security/security-context@v1":   security_traits.#SecurityContextTrait
+		"opmodel.dev/traits/security/workload-identity@v1":  security_traits.#WorkloadIdentityTrait
 	}
 
 	#transform: {
@@ -61,7 +62,7 @@ import (
 		_container: #component.spec.container
 
 		// Apply defaults for optional traits
-		_scalingCount: *optionalTraits["opmodel.dev/traits/workload@v1#Scaling"].#defaults.count | int
+		_scalingCount: *optionalTraits["opmodel.dev/traits/workload/scaling@v1"].#defaults.count | int
 		if #component.spec.scaling != _|_ if #component.spec.scaling.auto != _|_ {
 			_scalingCount: #component.spec.scaling.auto.min
 		}
@@ -69,7 +70,7 @@ import (
 			_scalingCount: #component.spec.scaling.count
 		}
 
-		_restartPolicy: *optionalTraits["opmodel.dev/traits/workload@v1#RestartPolicy"].#defaults | string
+		_restartPolicy: *optionalTraits["opmodel.dev/traits/workload/restart-policy@v1"].#defaults | string
 		if #component.spec.restartPolicy != _|_ {
 			_restartPolicy: #component.spec.restartPolicy
 		}
@@ -88,13 +89,13 @@ import (
 		_mainContainer: (#ToK8sContainer & {"in": _container}).out
 
 		// Build container list (main container + optional sidecars)
-		_sidecarContainers: *optionalTraits["opmodel.dev/traits/workload@v1#SidecarContainers"].#defaults | [...]
+		_sidecarContainers: *optionalTraits["opmodel.dev/traits/workload/sidecar-containers@v1"].#defaults | [...]
 		if #component.spec.sidecarContainers != _|_ {
 			_sidecarContainers: #component.spec.sidecarContainers
 		}
 
 		// Extract init containers with defaults
-		_initContainers: *optionalTraits["opmodel.dev/traits/workload@v1#InitContainers"].#defaults | [...]
+		_initContainers: *optionalTraits["opmodel.dev/traits/workload/init-containers@v1"].#defaults | [...]
 		if #component.spec.initContainers != _|_ {
 			_initContainers: #component.spec.initContainers
 		}

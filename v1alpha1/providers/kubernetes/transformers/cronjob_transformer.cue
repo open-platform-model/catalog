@@ -13,7 +13,8 @@ import (
 // CronJobTransformer converts scheduled task components to Kubernetes CronJobs
 #CronJobTransformer: core.#Transformer & {
 	metadata: {
-		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
+		version:     "v1"
 		name:        "cronjob-transformer"
 		description: "Converts scheduled task components to Kubernetes CronJobs"
 
@@ -30,26 +31,26 @@ import (
 
 	// Required resources - Container MUST be present
 	requiredResources: {
-		"opmodel.dev/resources/workload@v1#Container": workload_resources.#ContainerResource
+		"opmodel.dev/resources/workload/container@v1": workload_resources.#ContainerResource
 	}
 
 	// Optional resources
 	optionalResources: {
-		"opmodel.dev/resources/storage@v1#Volumes": storage_resources.#VolumesResource
+		"opmodel.dev/resources/storage/volumes@v1": storage_resources.#VolumesResource
 	}
 
 	// Required traits - CronJobConfig is mandatory for CronJob
 	requiredTraits: {
-		"opmodel.dev/traits/workload@v1#CronJobConfig": workload_traits.#CronJobConfigTrait
+		"opmodel.dev/traits/workload/cron-job-config@v1": workload_traits.#CronJobConfigTrait
 	}
 
 	// Optional traits
 	optionalTraits: {
-		"opmodel.dev/traits/workload@v1#RestartPolicy":     workload_traits.#RestartPolicyTrait
-		"opmodel.dev/traits/workload@v1#SidecarContainers": workload_traits.#SidecarContainersTrait
-		"opmodel.dev/traits/workload@v1#InitContainers":    workload_traits.#InitContainersTrait
-		"opmodel.dev/traits/security@v1#SecurityContext":   security_traits.#SecurityContextTrait
-		"opmodel.dev/traits/security@v1#WorkloadIdentity":  security_traits.#WorkloadIdentityTrait
+		"opmodel.dev/traits/workload/restart-policy@v1":     workload_traits.#RestartPolicyTrait
+		"opmodel.dev/traits/workload/sidecar-containers@v1": workload_traits.#SidecarContainersTrait
+		"opmodel.dev/traits/workload/init-containers@v1":    workload_traits.#InitContainersTrait
+		"opmodel.dev/traits/security/security-context@v1":   security_traits.#SecurityContextTrait
+		"opmodel.dev/traits/security/workload-identity@v1":  security_traits.#WorkloadIdentityTrait
 	}
 
 	#transform: {
@@ -101,17 +102,17 @@ import (
 					suspend: _cronConfig.suspend
 				}
 
-				concurrencyPolicy: *requiredTraits["opmodel.dev/traits/workload@v1#CronJobConfig"].#defaults.concurrencyPolicy | string
+				concurrencyPolicy: *requiredTraits["opmodel.dev/traits/workload/cron-job-config@v1"].#defaults.concurrencyPolicy | string
 				if _cronConfig.concurrencyPolicy != _|_ {
 					concurrencyPolicy: _cronConfig.concurrencyPolicy
 				}
 
-				successfulJobsHistoryLimit: *requiredTraits["opmodel.dev/traits/workload@v1#CronJobConfig"].#defaults.successfulJobsHistoryLimit | int
+				successfulJobsHistoryLimit: *requiredTraits["opmodel.dev/traits/workload/cron-job-config@v1"].#defaults.successfulJobsHistoryLimit | int
 				if _cronConfig.successfulJobsHistoryLimit != _|_ {
 					successfulJobsHistoryLimit: _cronConfig.successfulJobsHistoryLimit
 				}
 
-				failedJobsHistoryLimit: *requiredTraits["opmodel.dev/traits/workload@v1#CronJobConfig"].#defaults.failedJobsHistoryLimit | int
+				failedJobsHistoryLimit: *requiredTraits["opmodel.dev/traits/workload/cron-job-config@v1"].#defaults.failedJobsHistoryLimit | int
 				if _cronConfig.failedJobsHistoryLimit != _|_ {
 					failedJobsHistoryLimit: _cronConfig.failedJobsHistoryLimit
 				}
@@ -168,4 +169,3 @@ import (
 		}
 	}
 }
-

@@ -13,8 +13,8 @@ import (
 multiTierModule: core.#Module & {
 	metadata: {
 		modulePath: "opmodel.dev"
-		name:          "multi-tier-module"
-		version:       "0.1.0"
+		name:       "multi-tier-module"
+		version:    "0.1.0"
 	}
 
 	#components: {

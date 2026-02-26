@@ -1,19 +1,24 @@
 package core
 
-// #Bundle: Defines a collection of modules. Bundles enable grouping
-// related modules for easier distribution and management.
-// Bundles can contain multiple modules, each representing a set of
-// definitions (resources, traits, blueprints, policies).
+import (
+	cue_uuid "uuid"
+)
+
+// #Bundle: Defines a collection of modules.
+// Bundles enable grouping related modules for easier distribution and management.
 #Bundle: {
 	apiVersion: "opmodel.dev/core/v1alpha1"
 	kind:       "Bundle"
 
 	metadata: {
-		modulePath!: #CUEModulePathType // Example: "opmodel.dev/bundles/core@v0"
-		name!:          #NameType          // Example: "example-bundle"
-		#definitionName: (#KebabToPascal & {"in": name}).out
+		modulePath!: #ModulePathType                                     // Example: "opmodel.dev/bundles/core"
+		name!:       #NameType                                           // Example: "example-bundle"
+		version!:    #MajorVersionType                                   // Example: "0.1.0"
+		fqn:         #ModuleFQNType & "\(modulePath)/\(name):\(version)" // Example: "opmodel.dev/bundles/core/example-bundle:v0.1.0"
 
-		fqn: #FQNType & "\(modulePath)#\(#definitionName)" // Example: "opmodel.dev/bundles/core@v0#ExampleBundle"
+		// Unique identifier for the bundle, computed as a UUID v5 (SHA1) of the FQN using the OPM namespace UUID.
+		uuid: #UUIDType & cue_uuid.SHA1(OPMNamespace, fqn)
+		#definitionName: (#KebabToPascal & {"in": name}).out
 
 		// Human-readable description of the bundle
 		description?: string

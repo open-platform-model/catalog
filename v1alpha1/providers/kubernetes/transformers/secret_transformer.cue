@@ -9,7 +9,8 @@ import (
 // SecretTransformer converts Secrets resources to Kubernetes Secrets
 #SecretTransformer: core.#Transformer & {
 	metadata: {
-		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
+		version:     "v1"
 		name:        "secret-transformer"
 		description: "Converts Secrets resources to Kubernetes Secrets"
 
@@ -23,7 +24,7 @@ import (
 
 	// Required resources - Secrets MUST be present
 	requiredResources: {
-		"opmodel.dev/resources/config@v1#Secrets": config_resources.#SecretsResource
+		"opmodel.dev/resources/config/secrets@v1": config_resources.#SecretsResource
 	}
 
 	optionalResources: {}

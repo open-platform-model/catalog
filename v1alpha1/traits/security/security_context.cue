@@ -12,9 +12,10 @@ import (
 
 #SecurityContextTrait: core.#Trait & {
 	metadata: {
-		modulePath: "opmodel.dev/traits/security@v1"
-		name:          "security-context"
-		description:   "Container and pod-level security constraints"
+		modulePath:  "opmodel.dev/traits/security"
+		version:     "v1"
+		name:        "security-context"
+		description: "Container and pod-level security constraints"
 		labels: {
 			"trait.opmodel.dev/category": "security"
 		}

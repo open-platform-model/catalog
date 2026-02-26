@@ -11,9 +11,10 @@ import (
 
 #ConfigMapsResource: core.#Resource & {
 	metadata: {
-		modulePath: "opmodel.dev/resources/config@v1"
-		name:          "config-maps"
-		description:   "A ConfigMap definition for external configuration"
+		modulePath:  "opmodel.dev/resources/config"
+		version:     "v1"
+		name:        "config-maps"
+		description: "A ConfigMap definition for external configuration"
 		labels: {
 			"resource.opmodel.dev/category": "config"
 		}

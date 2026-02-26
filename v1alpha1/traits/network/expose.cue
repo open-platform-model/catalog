@@ -12,9 +12,10 @@ import (
 
 #ExposeTrait: core.#Trait & {
 	metadata: {
-		modulePath: "opmodel.dev/traits/network@v1"
-		name:          "expose"
-		description:   "A trait to expose a workload via a service"
+		modulePath:  "opmodel.dev/traits/network"
+		version:     "v1"
+		name:        "expose"
+		description: "A trait to expose a workload via a service"
 		labels: {
 			"trait.opmodel.dev/category": "network"
 		}

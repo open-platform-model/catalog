@@ -12,9 +12,10 @@ import (
 
 #InitContainersTrait: core.#Trait & {
 	metadata: {
-		modulePath: "opmodel.dev/traits/workload@v1"
-		name:          "init-containers"
-		description:   "A trait to specify init containers for a workload"
+		modulePath:  "opmodel.dev/traits/workload"
+		version:     "v1"
+		name:        "init-containers"
+		description: "A trait to specify init containers for a workload"
 		labels: {
 			"trait.opmodel.dev/category": "workload"
 		}
@@ -31,5 +32,4 @@ import (
 	#traits: {(#InitContainersTrait.metadata.fqn): #InitContainersTrait}
 }
 
-#InitContainersDefaults: schemas.#ContainerSchema & {
-}
+#InitContainersDefaults: schemas.#ContainerSchema & {}

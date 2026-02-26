@@ -9,7 +9,8 @@ import (
 // ServiceAccountTransformer converts WorkloadIdentity traits to Kubernetes ServiceAccounts
 #ServiceAccountTransformer: core.#Transformer & {
 	metadata: {
-		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
+		version:     "v1"
 		name:        "serviceaccount-transformer"
 		description: "Converts WorkloadIdentity traits to Kubernetes ServiceAccounts"
 
@@ -25,7 +26,7 @@ import (
 
 	// Required traits - WorkloadIdentity MUST be present
 	requiredTraits: {
-		"opmodel.dev/traits/security@v1#WorkloadIdentity": security_traits.#WorkloadIdentityTrait
+		"opmodel.dev/traits/security/workload-identity@v1": security_traits.#WorkloadIdentityTrait
 	}
 
 	optionalTraits: {}

@@ -9,7 +9,8 @@ import (
 // HPATransformer converts Scaling auto config to Kubernetes HorizontalPodAutoscalers
 #HPATransformer: core.#Transformer & {
 	metadata: {
-		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
+		version:     "v1"
 		name:        "hpa-transformer"
 		description: "Converts Scaling auto config to Kubernetes HorizontalPodAutoscalers"
 
@@ -26,7 +27,7 @@ import (
 
 	// Required traits - Scaling MUST be present
 	requiredTraits: {
-		"opmodel.dev/traits/workload@v1#Scaling": workload_traits.#ScalingTrait
+		"opmodel.dev/traits/workload/scaling@v1": workload_traits.#ScalingTrait
 	}
 
 	optionalTraits: {}

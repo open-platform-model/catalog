@@ -9,7 +9,8 @@ import (
 // ConfigMapTransformer converts ConfigMaps resources to Kubernetes ConfigMaps
 #ConfigMapTransformer: core.#Transformer & {
 	metadata: {
-		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
+		version:     "v1"
 		name:        "configmap-transformer"
 		description: "Converts ConfigMaps resources to Kubernetes ConfigMaps"
 
@@ -23,7 +24,7 @@ import (
 
 	// Required resources - ConfigMaps MUST be present
 	requiredResources: {
-		"opmodel.dev/resources/config@v1#ConfigMaps": config_resources.#ConfigMapsResource
+		"opmodel.dev/resources/config/config-maps@v1": config_resources.#ConfigMapsResource
 	}
 
 	optionalResources: {}

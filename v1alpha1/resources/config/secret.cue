@@ -11,9 +11,10 @@ import (
 
 #SecretsResource: core.#Resource & {
 	metadata: {
-		modulePath: "opmodel.dev/resources/config@v1"
-		name:          "secrets"
-		description:   "A Secret definition for sensitive configuration"
+		modulePath:  "opmodel.dev/resources/config"
+		version:     "v1"
+		name:        "secrets"
+		description: "A Secret definition for sensitive configuration"
 		labels: {
 			"resource.opmodel.dev/category": "config"
 		}

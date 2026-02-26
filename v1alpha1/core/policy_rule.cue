@@ -12,11 +12,12 @@ import (
 	kind:       "PolicyRule"
 
 	metadata: {
-		modulePath!: #CUEModulePathType // Example: "opmodel.dev/policies/security@v1"
-		name!:          #NameType          // Example: "encryption"
+		modulePath!: #ModulePathType   // Example: "opmodel.dev/policies/security"
+		version!:    #MajorVersionType // Example: "v1"
+		name!:       #NameType         // Example: "encryption"
 		#definitionName: (#KebabToPascal & {"in": name}).out
 
-		fqn: #FQNType & "\(modulePath)#\(#definitionName)" // Example: "opmodel.dev/policies/security@v1#Encryption"
+		fqn: #FQNType & "\(modulePath)/\(name)@\(version)" // Example: "opmodel.dev/policies/security/encryption@v1"
 
 		description?: string
 

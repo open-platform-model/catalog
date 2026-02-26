@@ -9,7 +9,8 @@ import (
 // PVCTransformer creates standalone PersistentVolumeClaims from Volume resources
 #PVCTransformer: core.#Transformer & {
 	metadata: {
-		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
+		version:     "v1"
 		name:        "pvc-transformer"
 		description: "Creates standalone Kubernetes PersistentVolumeClaims from Volume resources"
 
@@ -23,7 +24,7 @@ import (
 
 	// Required resources - Volumes MUST be present
 	requiredResources: {
-		"opmodel.dev/resources/storage@v1#Volumes": storage_resources.#VolumesResource
+		"opmodel.dev/resources/storage/volumes@v1": storage_resources.#VolumesResource
 	}
 
 	// No optional resources

@@ -11,9 +11,10 @@ import (
 
 #ContainerResource: core.#Resource & {
 	metadata: {
-		modulePath: "opmodel.dev/resources/workload@v1"
-		name:          "container"
-		description:   "A container definition for workloads"
+		modulePath:  "opmodel.dev/resources/workload"
+		version:     "v1"
+		name:        "container"
+		description: "A container definition for workloads"
 		labels: {
 			"resource.opmodel.dev/category": "workload"
 		}
@@ -34,5 +35,4 @@ import (
 	#resources: {(#ContainerResource.metadata.fqn): #ContainerResource}
 }
 
-#ContainerDefaults: schemas.#ContainerSchema & {
-}
+#ContainerDefaults: schemas.#ContainerSchema & {}

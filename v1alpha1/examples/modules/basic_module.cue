@@ -13,8 +13,8 @@ import (
 basicModule: core.#Module & {
 	metadata: {
 		modulePath: "opmodel.dev"
-		name:          "basic-module"
-		version:       "0.1.0"
+		name:       "basic-module"
+		version:    "0.1.0"
 
 		defaultNamespace: "default"
 

@@ -13,7 +13,8 @@ import (
 // JobTransformer converts task workload components to Kubernetes Jobs
 #JobTransformer: core.#Transformer & {
 	metadata: {
-		modulePath:  "opmodel.dev/providers/kubernetes/transformers@v1"
+		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
+		version:     "v1"
 		name:        "job-transformer"
 		description: "Converts task workload components to Kubernetes Jobs"
 
@@ -30,26 +31,26 @@ import (
 
 	// Required resources - Container MUST be present
 	requiredResources: {
-		"opmodel.dev/resources/workload@v1#Container": workload_resources.#ContainerResource
+		"opmodel.dev/resources/workload/container@v1": workload_resources.#ContainerResource
 	}
 
 	// Optional resources
 	optionalResources: {
-		"opmodel.dev/resources/storage@v1#Volumes": storage_resources.#VolumesResource
+		"opmodel.dev/resources/storage/volumes@v1": storage_resources.#VolumesResource
 	}
 
 	// Required traits - JobConfig is mandatory for Job
 	requiredTraits: {
-		"opmodel.dev/traits/workload@v1#JobConfig": workload_traits.#JobConfigTrait
+		"opmodel.dev/traits/workload/job-config@v1": workload_traits.#JobConfigTrait
 	}
 
 	// Optional traits
 	optionalTraits: {
-		"opmodel.dev/traits/workload@v1#RestartPolicy":     workload_traits.#RestartPolicyTrait
-		"opmodel.dev/traits/workload@v1#SidecarContainers": workload_traits.#SidecarContainersTrait
-		"opmodel.dev/traits/workload@v1#InitContainers":    workload_traits.#InitContainersTrait
-		"opmodel.dev/traits/security@v1#SecurityContext":   security_traits.#SecurityContextTrait
-		"opmodel.dev/traits/security@v1#WorkloadIdentity":  security_traits.#WorkloadIdentityTrait
+		"opmodel.dev/traits/workload/restart-policy@v1":     workload_traits.#RestartPolicyTrait
+		"opmodel.dev/traits/workload/sidecar-containers@v1": workload_traits.#SidecarContainersTrait
+		"opmodel.dev/traits/workload/init-containers@v1":    workload_traits.#InitContainersTrait
+		"opmodel.dev/traits/security/security-context@v1":   security_traits.#SecurityContextTrait
+		"opmodel.dev/traits/security/workload-identity@v1":  security_traits.#WorkloadIdentityTrait
 	}
 
 	#transform: {
@@ -72,12 +73,12 @@ import (
 		_mainContainer: (#ToK8sContainer & {"in": _container}).out
 
 		// Extract optional sidecar and init containers with defaults
-		_sidecarContainers: *optionalTraits["opmodel.dev/traits/workload@v1#SidecarContainers"].#defaults | [...]
+		_sidecarContainers: *optionalTraits["opmodel.dev/traits/workload/sidecar-containers@v1"].#defaults | [...]
 		if #component.spec.sidecarContainers != _|_ {
 			_sidecarContainers: #component.spec.sidecarContainers
 		}
 
-		_initContainers: *optionalTraits["opmodel.dev/traits/workload@v1#InitContainers"].#defaults | [...]
+		_initContainers: *optionalTraits["opmodel.dev/traits/workload/init-containers@v1"].#defaults | [...]
 		if #component.spec.initContainers != _|_ {
 			_initContainers: #component.spec.initContainers
 		}
@@ -95,27 +96,27 @@ import (
 				}
 			}
 			spec: {
-				completions: *requiredTraits["opmodel.dev/traits/workload@v1#JobConfig"].#defaults.completions | int
+				completions: *requiredTraits["opmodel.dev/traits/workload/job-config@v1"].#defaults.completions | int
 				if _jobConfig.completions != _|_ {
 					completions: _jobConfig.completions
 				}
 
-				parallelism: *requiredTraits["opmodel.dev/traits/workload@v1#JobConfig"].#defaults.parallelism | int
+				parallelism: *requiredTraits["opmodel.dev/traits/workload/job-config@v1"].#defaults.parallelism | int
 				if _jobConfig.parallelism != _|_ {
 					parallelism: _jobConfig.parallelism
 				}
 
-				backoffLimit: *requiredTraits["opmodel.dev/traits/workload@v1#JobConfig"].#defaults.backoffLimit | int
+				backoffLimit: *requiredTraits["opmodel.dev/traits/workload/job-config@v1"].#defaults.backoffLimit | int
 				if _jobConfig.backoffLimit != _|_ {
 					backoffLimit: _jobConfig.backoffLimit
 				}
 
-				activeDeadlineSeconds: *requiredTraits["opmodel.dev/traits/workload@v1#JobConfig"].#defaults.activeDeadlineSeconds | int
+				activeDeadlineSeconds: *requiredTraits["opmodel.dev/traits/workload/job-config@v1"].#defaults.activeDeadlineSeconds | int
 				if _jobConfig.activeDeadlineSeconds != _|_ {
 					activeDeadlineSeconds: _jobConfig.activeDeadlineSeconds
 				}
 
-				ttlSecondsAfterFinished: *requiredTraits["opmodel.dev/traits/workload@v1#JobConfig"].#defaults.ttlSecondsAfterFinished | int
+				ttlSecondsAfterFinished: *requiredTraits["opmodel.dev/traits/workload/job-config@v1"].#defaults.ttlSecondsAfterFinished | int
 				if _jobConfig.ttlSecondsAfterFinished != _|_ {
 					ttlSecondsAfterFinished: _jobConfig.ttlSecondsAfterFinished
 				}

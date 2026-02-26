@@ -11,9 +11,10 @@ import (
 
 #VolumesResource: core.#Resource & {
 	metadata: {
-		modulePath: "opmodel.dev/resources/storage@v1"
-		name:          "volumes"
-		description:   "A volume definition for workloads"
+		modulePath:  "opmodel.dev/resources/storage"
+		version:     "v1"
+		name:        "volumes"
+		description: "A volume definition for workloads"
 		labels: {
 			"resource.opmodel.dev/category": "storage"
 		}

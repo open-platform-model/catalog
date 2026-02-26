@@ -9,13 +9,13 @@ import (
 // NameType: RFC 1123 DNS label — lowercase alphanumeric with hyphens, max 63 chars
 #NameType: string & =~"^[a-z0-9]([a-z0-9-]*[a-z0-9])?$" & strings.MinRunes(1) & strings.MaxRunes(63)
 
-// CUEPathType: domain path with version suffix for metadata.cuePath fields
-// Example: "opmodel.dev/resources/workload@v1alpha1"
-#CUEModulePathType: string & =~"^[a-z0-9.-]+(/[a-z0-9.-]+)*@v[0-9]+$" & strings.MinRunes(1) & strings.MaxRunes(254)
-
-// ModulePathType: plain registry path without embedded version — used by #Module only
-// Example: "opmodel.dev/modules", "github.com/org/modules"
+// ModulePathType: plain registry path without embedded version
+// Example: "opmodel.dev/modules", "opmodel.dev/traits/workload"
 #ModulePathType: string & =~"^[a-z0-9.-]+(/[a-z0-9.-]+)*$" & strings.MinRunes(1) & strings.MaxRunes(254)
+
+// MajorVersionType: major version prefix used in primitive FQNs
+// Example: "v1", "v0"
+#MajorVersionType: string & =~"^v[0-9]+$"
 
 // ModuleFQNType: container-style FQN for #Module — path/name:semver
 // Example: "opmodel.dev/modules/my-app:1.2.3"
@@ -24,11 +24,11 @@ import (
 // Semver 2.0
 #VersionType: string & =~"^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
 
-// FQN (Fully Qualified Name) format: <domain>[/path]@v<major>#<Name>
-// Example: opmodel.dev/@v1#Container
-// Example: opmodel.dev/elements@v1#Container
-// Example: github.com/myorg/elements@v1#CustomWorkload
-#FQNType: string & =~"^([a-z0-9.-]+(?:/[a-z0-9.-]+)*)@v([0-9]+)#([A-Z][a-zA-Z0-9]*)$"
+// FQNType: primitive definition FQN — path/name@version
+// Example: "opmodel.dev/traits/workload/scaling@v1"
+// Example: "opmodel.dev/resources/workload/container@v1"
+// Example: "github.com/myorg/traits/network/expose@v2"
+#FQNType: string & =~"^[a-z0-9.-]+(/[a-z0-9.-]+)*/[a-z0-9]([a-z0-9-]*[a-z0-9])?@v[0-9]+$"
 
 // UUIDType: RFC 4122 UUID in standard format (lowercase hex)
 #UUIDType: string & =~"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"

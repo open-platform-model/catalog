@@ -10,11 +10,12 @@ import (
 	kind:       "Trait"
 
 	metadata: {
-		modulePath!: #CUEModulePathType // Example: "opmodel.dev/traits/workload@v1"
-		name!:          #NameType          // Example: "scaling"
+		modulePath!: #ModulePathType   // Example: "opmodel.dev/traits/workload"
+		version!:    #MajorVersionType // Example: "v1"
+		name!:       #NameType         // Example: "scaling"
 		#definitionName: (#KebabToPascal & {"in": name}).out
 
-		fqn: #FQNType & "\(modulePath)#\(#definitionName)" // Example: "opmodel.dev/traits/workload@v1#Scaling"
+		fqn: #FQNType & "\(modulePath)/\(name)@\(version)" // Example: "opmodel.dev/traits/workload/scaling@v1"
 
 		// Human-readable description of the definition
 		description?: string
@@ -41,9 +42,10 @@ import (
 
 _testScalingTrait: #Trait & {
 	metadata: {
-		modulePath: "opmodel.dev/traits/workload@v1"
-		name:          "scaling"
-		description:   "A trait for scaling workloads"
+		modulePath:  "opmodel.dev/traits/workload"
+		version:     "v1"
+		name:        "scaling"
+		description: "A trait for scaling workloads"
 	}
 
 	appliesTo: [_testContainerResource]

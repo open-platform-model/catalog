@@ -12,9 +12,10 @@ import (
 
 #ScalingTrait: core.#Trait & {
 	metadata: {
-		modulePath: "opmodel.dev/traits/workload@v1"
-		name:          "scaling"
-		description:   "A trait to specify scaling behavior for a workload"
+		modulePath:  "opmodel.dev/traits/workload"
+		version:     "v1"
+		name:        "scaling"
+		description: "A trait to specify scaling behavior for a workload"
 		labels: {
 			"trait.opmodel.dev/category": "workload"
 		}

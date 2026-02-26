@@ -10,13 +10,14 @@ import (
 	kind:       "Module"
 
 	metadata: {
-		name!:          #NameType          // Example: "example-module"
-		#definitionName: (#KebabToPascal & {"in": name}).out
+		modulePath!: #ModulePathType                                     // Example: "example.com/modules"
+		name!:       #NameType                                           // Example: "example-module"
+		version!:    #VersionType                                        // Example: "0.1.0"
+		fqn:         #ModuleFQNType & "\(modulePath)/\(name):\(version)" // Example: "example.com/modules/example-module:0.1.0"
 
-		modulePath!: #ModulePathType // Example: "example.com/modules"
-		version!:    #VersionType    // Semantic version of this module definition
-		fqn:         #ModuleFQNType & "\(modulePath)/\(name):\(version)"
-		uuid:        #UUIDType & cue_uuid.SHA1(OPMNamespace, fqn)
+		// Unique identifier for the module, computed as a UUID v5 (SHA1) of the FQN using the OPM namespace UUID.
+		uuid: #UUIDType & cue_uuid.SHA1(OPMNamespace, fqn)
+		#definitionName: (#KebabToPascal & {"in": name}).out
 
 		defaultNamespace?: string
 		description?:      string
@@ -60,10 +61,10 @@ import (
 
 _testModule: #Module & {
 	metadata: {
-		modulePath: "opmodel.dev/modules"
-		name:          "test-module"
-		version:       "0.1.0"
-		description:   "A test module for demonstration purposes"
+		modulePath:  "opmodel.dev/modules"
+		name:        "test-module"
+		version:     "0.1.0"
+		description: "A test module for demonstration purposes"
 		labels: {
 			"module.opmodel.dev/category": "test"
 		}

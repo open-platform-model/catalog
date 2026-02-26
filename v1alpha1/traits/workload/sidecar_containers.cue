@@ -12,9 +12,10 @@ import (
 
 #SidecarContainersTrait: core.#Trait & {
 	metadata: {
-		modulePath: "opmodel.dev/traits/workload@v1"
-		name:          "sidecar-containers"
-		description:   "A trait to specify sidecar containers for a workload"
+		modulePath:  "opmodel.dev/traits/workload"
+		version:     "v1"
+		name:        "sidecar-containers"
+		description: "A trait to specify sidecar containers for a workload"
 		labels: {
 			"trait.opmodel.dev/category": "workload"
 		}
@@ -31,5 +32,4 @@ import (
 	#traits: {(#SidecarContainersTrait.metadata.fqn): #SidecarContainersTrait}
 }
 
-#SidecarContainersDefaults: schemas.#ContainerSchema & {
-}
+#SidecarContainersDefaults: schemas.#ContainerSchema & {}
