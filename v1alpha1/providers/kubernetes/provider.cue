@@ -19,7 +19,7 @@ import (
 	}
 
 	// Transformer registry - maps transformer FQNs to transformer definitions
-	transformers: {
+	#transformers: {
 		(k8s_transformers.#DeploymentTransformer.metadata.fqn):     k8s_transformers.#DeploymentTransformer
 		(k8s_transformers.#StatefulsetTransformer.metadata.fqn):    k8s_transformers.#StatefulsetTransformer
 		(k8s_transformers.#DaemonSetTransformer.metadata.fqn):      k8s_transformers.#DaemonSetTransformer

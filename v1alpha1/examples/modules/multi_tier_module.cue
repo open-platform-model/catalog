@@ -45,16 +45,32 @@ multiTierModule: core.#Module & {
 	#config: {
 		database: {
 			scaling: int
-			image:   schemas.#Image
+			image: schemas.#Image & {
+				repository: string | *"postgres"
+				tag:        string | *"latest"
+				digest:     string | *""
+			}
 		}
 		logAgent: {
-			image: schemas.#Image
+			image: schemas.#Image & {
+				repository: string | *"prom/node-exporter"
+				tag:        string | *"v1.6.1"
+				digest:     string | *""
+			}
 		}
 		setupJob: {
-			image: schemas.#Image
+			image: schemas.#Image & {
+				repository: string | *"myregistry.io/migrations"
+				tag:        string | *"v2.0.0"
+				digest:     string | *""
+			}
 		}
 		backupJob: {
-			image:    schemas.#Image
+			image: schemas.#Image & {
+				repository: string | *"postgres"
+				tag:        string | *"latest"
+				digest:     string | *""
+			}
 			schedule: string
 		}
 	}

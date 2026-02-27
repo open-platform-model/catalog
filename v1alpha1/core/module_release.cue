@@ -32,24 +32,24 @@ import (
 	}
 
 	// Reference to the Module to deploy
-	#module!: #Module
-	_module: #module & {#config: values}
-
+	#module!:        #Module
 	#moduleMetadata: #module.metadata
 
+	_module: #module & {#config: values}
+
 	// Components defined in this module release
-	components: #module.#components
+	components: _module.#components
 
 	// Module-level policies (if any)
 	policies?: [Id=string]: #Policy
-	if #module.#policies != _|_ {
-		policies: #module.#policies
+	if _module.#policies != _|_ {
+		policies: _module.#policies
 	}
 
 	// Concrete values (everything closed/concrete)
 	// Must satisfy the #config from #module
 	// It is unified and validated in the runtime
-	_val:   #module.#config & values
+	// _val:   #module.#config & values
 	values: _
 }
 

@@ -1,11 +1,11 @@
 package data
 
 import (
-	core "opmodel.dev/core@v0"
-	schemas "opmodel.dev/schemas@v0"
-	workload_resources "opmodel.dev/resources/workload@v0"
-	storage_resources "opmodel.dev/resources/storage@v0"
-	workload_traits "opmodel.dev/traits/workload@v0"
+	core "opmodel.dev/core@v1"
+	schemas "opmodel.dev/schemas@v1"
+	workload_resources "opmodel.dev/resources/workload@v1"
+	storage_resources "opmodel.dev/resources/storage@v1"
+	workload_traits "opmodel.dev/traits/workload@v1"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -14,7 +14,8 @@ import (
 
 #SimpleDatabaseBlueprint: core.#Blueprint & {
 	metadata: {
-		apiVersion:  "opmodel.dev/blueprints/data@v0"
+		modulePath:  "opmodel.dev/blueprints/data"
+		version:     "v1"
 		name:        "simple-database"
 		description: "A simple database workload with persistent storage"
 	}
@@ -27,10 +28,9 @@ import (
 	composedTraits: [
 		workload_traits.#ScalingTrait,
 		workload_traits.#RestartPolicyTrait,
-		workload_traits.#HealthCheckTrait,
 	]
 
-	#spec: simpleDatabase: schemas.#SimpleDatabaseSchema
+	spec: simpleDatabase: schemas.#SimpleDatabaseSchema
 }
 
 #SimpleDatabase: core.#Component & {
@@ -44,7 +44,6 @@ import (
 	storage_resources.#Volumes
 	workload_traits.#Scaling
 	workload_traits.#RestartPolicy
-	workload_traits.#HealthCheck
 
 	// Default/generated values - what WILL be generated
 	spec: {
@@ -114,6 +113,35 @@ import (
 					data: _dataMount
 				}
 			}
+
+			if simpleDatabase.engine == "postgres" {
+				readinessProbe: {
+					exec: command: ["pg_isready", "-U", simpleDatabase.username]
+					initialDelaySeconds: 5
+					periodSeconds:       10
+				}
+			}
+			if simpleDatabase.engine == "mysql" {
+				readinessProbe: {
+					exec: command: ["mysqladmin", "ping", "-h", "localhost"]
+					initialDelaySeconds: 5
+					periodSeconds:       10
+				}
+			}
+			if simpleDatabase.engine == "mongodb" {
+				readinessProbe: {
+					exec: command: ["mongo", "--eval", "db.adminCommand('ping')"]
+					initialDelaySeconds: 5
+					periodSeconds:       10
+				}
+			}
+			if simpleDatabase.engine == "redis" {
+				readinessProbe: {
+					exec: command: ["redis-cli", "ping"]
+					initialDelaySeconds: 5
+					periodSeconds:       10
+				}
+			}
 		}
 
 		// Helper for volume mount - defines where to mount in container
@@ -157,45 +185,5 @@ import (
 
 		// Always restart
 		restartPolicy: "Always"
-
-		// Configure health checks based on engine
-		healthCheck: {
-			if simpleDatabase.engine == "postgres" {
-				readinessProbe: {
-					exec: {
-						command: ["pg_isready", "-U", simpleDatabase.username]
-					}
-					initialDelaySeconds: 5
-					periodSeconds:       10
-				}
-			}
-			if simpleDatabase.engine == "mysql" {
-				readinessProbe: {
-					exec: {
-						command: ["mysqladmin", "ping", "-h", "localhost"]
-					}
-					initialDelaySeconds: 5
-					periodSeconds:       10
-				}
-			}
-			if simpleDatabase.engine == "mongodb" {
-				readinessProbe: {
-					exec: {
-						command: ["mongo", "--eval", "db.adminCommand('ping')"]
-					}
-					initialDelaySeconds: 5
-					periodSeconds:       10
-				}
-			}
-			if simpleDatabase.engine == "redis" {
-				readinessProbe: {
-					exec: {
-						command: ["redis-cli", "ping"]
-					}
-					initialDelaySeconds: 5
-					periodSeconds:       10
-				}
-			}
-		}
 	}
 }

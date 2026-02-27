@@ -28,7 +28,7 @@ basicComponent: core.#Component & {
 
 	// Compose resources and traits, providing concrete values for the spec.
 	spec: {
-		scaling: count: int | *1
+		scaling: count: int
 		container: schemas.#ContainerSchema & {
 			name: "nginx-container"
 			image: {
