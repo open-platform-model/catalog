@@ -12,10 +12,10 @@ import (
 	// #ExposeTrait — closedness of the trait definition
 	// =========================================================================
 
-	exposeTrait: [
+	"#ExposeTrait": [
 		{
 			name:       "valid trait metadata"
-			definition: "#ExposeTrait"
+			definition: #ExposeTrait
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Trait"
@@ -26,16 +26,13 @@ import (
 				}
 			}
 			assert: {
-				valid:    true
-				concrete: false
-				fields: {
-					"metadata.fqn": equals: "opmodel.dev/traits/network@v0#Expose"
-				}
+				valid:  true
+				output: metadata: fqn: "opmodel.dev/traits/network@v0#Expose"
 			}
 		},
 		{
 			name:       "rejects extra field at root"
-			definition: "#ExposeTrait"
+			definition: #ExposeTrait
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Trait"
@@ -49,7 +46,7 @@ import (
 		},
 		{
 			name:       "rejects extra field in metadata"
-			definition: "#ExposeTrait"
+			definition: #ExposeTrait
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Trait"
@@ -67,10 +64,10 @@ import (
 	// #Expose — component with expose trait (spec closedness)
 	// =========================================================================
 
-	exposeComponent: [
+	"#Expose": [
 		{
 			name:       "valid expose component"
-			definition: "#Expose"
+			definition: #Expose
 			input: {
 				metadata: name: "my-app"
 				spec: expose: {
@@ -82,7 +79,7 @@ import (
 		},
 		{
 			name:       "valid with NodePort type"
-			definition: "#Expose"
+			definition: #Expose
 			input: {
 				metadata: name: "my-app"
 				spec: expose: {
@@ -90,16 +87,11 @@ import (
 					ports: http: targetPort: 8080
 				}
 			}
-			assert: {
-				valid: true
-				fields: {
-					"spec.expose.type": equals: "NodePort"
-				}
-			}
+			assert: output: spec: expose: type: "NodePort"
 		},
 		{
 			name:       "rejects extra field in spec (closedness)"
-			definition: "#Expose"
+			definition: #Expose
 			input: {
 				metadata: name: "my-app"
 				spec: {
@@ -114,7 +106,7 @@ import (
 		},
 		{
 			name:       "rejects invalid service type"
-			definition: "#Expose"
+			definition: #Expose
 			input: {
 				metadata: name: "my-app"
 				spec: expose: {
@@ -130,17 +122,14 @@ import (
 	// #ExposeDefaults
 	// =========================================================================
 
-	exposeDefaults: [
+	"#ExposeDefaults": [
 		{
 			name:       "provides default type"
-			definition: "#ExposeDefaults"
+			definition: #ExposeDefaults
 			input: {
 				ports: http: targetPort: 8080
 			}
-			assert: {
-				valid: true
-				fields: type: equals: "ClusterIP"
-			}
+			assert: output: type: "ClusterIP"
 		},
 	]
 }

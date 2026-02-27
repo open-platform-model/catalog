@@ -12,25 +12,17 @@ import (
 // TestCase holds a decoded test case from CUE.
 type TestCase struct {
 	Name       string
-	Definition string
+	Group      string    // group key from #tests (e.g. "#PortSchema")
+	Definition cue.Value // resolved CUE definition value
 	Input      cue.Value
 	Assert     AssertSpec
 }
 
 // AssertSpec holds the assertion configuration for a test case.
 type AssertSpec struct {
-	Valid         bool
-	Concrete      bool
-	Equal         *cue.Value
-	Contains      *cue.Value
-	Fields        map[string]FieldCheck
-	ErrorContains string
-	ErrorPath     string
-}
-
-// FieldCheck holds assertions for a single field.
-type FieldCheck struct {
-	Equals *cue.Value
+	Valid  bool
+	Output *cue.Value // CUE expression tree-walked against result (valid=true)
+	Error  *cue.Value // CUE constraint on error string (valid=false)
 }
 
 // LoadModule loads a CUE module from a directory with the given build tags.
@@ -84,7 +76,7 @@ func DiscoverTests(val cue.Value) (map[string][]TestCase, []string, error) {
 		groupName := iter.Selector().String()
 		groupVal := iter.Value()
 
-		cases, err := decodeTestCases(groupVal)
+		cases, err := decodeTestCases(groupVal, groupName)
 		if err != nil {
 			return nil, nil, fmt.Errorf("group %q: %w", groupName, err)
 		}
@@ -96,7 +88,7 @@ func DiscoverTests(val cue.Value) (map[string][]TestCase, []string, error) {
 	return result, groupNames, nil
 }
 
-func decodeTestCases(listVal cue.Value) ([]TestCase, error) {
+func decodeTestCases(listVal cue.Value, groupName string) ([]TestCase, error) {
 	iter, err := listVal.List()
 	if err != nil {
 		return nil, fmt.Errorf("expected list: %w", err)
@@ -104,7 +96,7 @@ func decodeTestCases(listVal cue.Value) ([]TestCase, error) {
 
 	var cases []TestCase
 	for iter.Next() {
-		tc, err := decodeTestCase(iter.Value())
+		tc, err := decodeTestCase(iter.Value(), groupName)
 		if err != nil {
 			return nil, err
 		}
@@ -113,8 +105,9 @@ func decodeTestCases(listVal cue.Value) ([]TestCase, error) {
 	return cases, nil
 }
 
-func decodeTestCase(val cue.Value) (TestCase, error) {
+func decodeTestCase(val cue.Value, groupName string) (TestCase, error) {
 	var tc TestCase
+	tc.Group = groupName
 
 	nameVal := val.LookupPath(cue.ParsePath("name"))
 	if nameVal.Err() != nil {
@@ -126,15 +119,15 @@ func decodeTestCase(val cue.Value) (TestCase, error) {
 	}
 	tc.Name = name
 
+	// definition is now a CUE value reference, not a string.
 	defVal := val.LookupPath(cue.ParsePath("definition"))
+	if !defVal.Exists() {
+		return tc, fmt.Errorf("test %q: missing definition", name)
+	}
 	if defVal.Err() != nil {
-		return tc, fmt.Errorf("test %q: missing definition: %w", name, defVal.Err())
+		return tc, fmt.Errorf("test %q: definition error: %w", name, defVal.Err())
 	}
-	def, err := defVal.String()
-	if err != nil {
-		return tc, fmt.Errorf("test %q: definition must be string: %w", name, err)
-	}
-	tc.Definition = def
+	tc.Definition = defVal
 
 	tc.Input = val.LookupPath(cue.ParsePath("input"))
 	if !tc.Input.Exists() {
@@ -162,73 +155,17 @@ func decodeAssert(val cue.Value) (AssertSpec, error) {
 		}
 	}
 
-	// concrete defaults to true
-	spec.Concrete = true
-	concreteVal := val.LookupPath(cue.ParsePath("concrete"))
-	if concreteVal.Exists() && concreteVal.Err() == nil {
-		v, err := concreteVal.Bool()
-		if err == nil {
-			spec.Concrete = v
-		}
+	// output: CUE expression for tree-walking against the result
+	outputVal := val.LookupPath(cue.ParsePath("output"))
+	if outputVal.Exists() && outputVal.Err() == nil {
+		spec.Output = &outputVal
 	}
 
-	// equal
-	equalVal := val.LookupPath(cue.ParsePath("equal"))
-	if equalVal.Exists() && equalVal.Err() == nil {
-		spec.Equal = &equalVal
-	}
-
-	// contains
-	containsVal := val.LookupPath(cue.ParsePath("contains"))
-	if containsVal.Exists() && containsVal.Err() == nil {
-		spec.Contains = &containsVal
-	}
-
-	// fields
-	fieldsVal := val.LookupPath(cue.ParsePath("fields"))
-	if fieldsVal.Exists() && fieldsVal.Err() == nil {
-		spec.Fields = make(map[string]FieldCheck)
-		fIter, err := fieldsVal.Fields(cue.All())
-		if err == nil {
-			for fIter.Next() {
-				fieldName := fIter.Selector().String()
-				fc, err := decodeFieldCheck(fIter.Value())
-				if err != nil {
-					return spec, fmt.Errorf("field %q: %w", fieldName, err)
-				}
-				spec.Fields[fieldName] = fc
-			}
-		}
-	}
-
-	// errorContains
-	ecVal := val.LookupPath(cue.ParsePath("errorContains"))
-	if ecVal.Exists() && ecVal.Err() == nil {
-		s, err := ecVal.String()
-		if err == nil {
-			spec.ErrorContains = s
-		}
-	}
-
-	// errorPath
-	epVal := val.LookupPath(cue.ParsePath("errorPath"))
-	if epVal.Exists() && epVal.Err() == nil {
-		s, err := epVal.String()
-		if err == nil {
-			spec.ErrorPath = s
-		}
+	// error: CUE constraint on the error string
+	errorVal := val.LookupPath(cue.ParsePath("error"))
+	if errorVal.Exists() && errorVal.Err() == nil {
+		spec.Error = &errorVal
 	}
 
 	return spec, nil
-}
-
-func decodeFieldCheck(val cue.Value) (FieldCheck, error) {
-	var fc FieldCheck
-
-	equalsVal := val.LookupPath(cue.ParsePath("equals"))
-	if equalsVal.Exists() && equalsVal.Err() == nil {
-		fc.Equals = &equalsVal
-	}
-
-	return fc, nil
 }

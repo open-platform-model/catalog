@@ -12,10 +12,10 @@ import (
 	// #ConfigMapsResource — closedness of the resource definition
 	// =========================================================================
 
-	configMapsResource: [
+	"#ConfigMapsResource": [
 		{
 			name:       "valid resource metadata"
-			definition: "#ConfigMapsResource"
+			definition: #ConfigMapsResource
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Resource"
@@ -26,16 +26,13 @@ import (
 				}
 			}
 			assert: {
-				valid:    true
-				concrete: false
-				fields: {
-					"metadata.fqn": equals: "opmodel.dev/resources/config@v0#ConfigMaps"
-				}
+				valid:  true
+				output: metadata: fqn: "opmodel.dev/resources/config@v0#ConfigMaps"
 			}
 		},
 		{
 			name:       "rejects extra field at root"
-			definition: "#ConfigMapsResource"
+			definition: #ConfigMapsResource
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Resource"
@@ -49,7 +46,7 @@ import (
 		},
 		{
 			name:       "rejects extra field in metadata"
-			definition: "#ConfigMapsResource"
+			definition: #ConfigMapsResource
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Resource"
@@ -67,10 +64,10 @@ import (
 	// #ConfigMaps — component closedness (spec: close({_allFields}))
 	// =========================================================================
 
-	configMapsComponent: [
+	"#ConfigMaps": [
 		{
 			name:       "valid configmaps component"
-			definition: "#ConfigMaps"
+			definition: #ConfigMaps
 			input: {
 				metadata: name: "my-config"
 				spec: configMaps: "app-config": data: {
@@ -82,7 +79,7 @@ import (
 		},
 		{
 			name:       "valid with multiple configmaps"
-			definition: "#ConfigMaps"
+			definition: #ConfigMaps
 			input: {
 				metadata: name: "configs"
 				spec: configMaps: {
@@ -94,7 +91,7 @@ import (
 		},
 		{
 			name:       "rejects extra field in spec (closedness)"
-			definition: "#ConfigMaps"
+			definition: #ConfigMaps
 			input: {
 				metadata: name: "my-config"
 				spec: {

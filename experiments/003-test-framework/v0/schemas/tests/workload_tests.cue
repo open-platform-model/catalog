@@ -12,12 +12,12 @@ import (
 	// #ContainerSchema
 	// =========================================================================
 
-	container: [
+	"#ContainerSchema": [
 
 		// ── Positive ──
 		{
 			name:       "minimal"
-			definition: "#ContainerSchema"
+			definition: #ContainerSchema
 			input: {
 				name:  "web"
 				image: "nginx:latest"
@@ -26,7 +26,7 @@ import (
 		},
 		{
 			name:       "full"
-			definition: "#ContainerSchema"
+			definition: #ContainerSchema
 			input: {
 				name:            "web"
 				image:           "nginx:1.25"
@@ -50,7 +50,7 @@ import (
 		},
 		{
 			name:       "with volume mounts"
-			definition: "#ContainerSchema"
+			definition: #ContainerSchema
 			input: {
 				name:  "app"
 				image: "myapp:latest"
@@ -72,7 +72,7 @@ import (
 		},
 		{
 			name:       "with probes"
-			definition: "#ContainerSchema"
+			definition: #ContainerSchema
 			input: {
 				name:  "sidecar"
 				image: "busybox:latest"
@@ -102,19 +102,19 @@ import (
 		// ── Negative ──
 		{
 			name:       "missing name"
-			definition: "#ContainerSchema"
+			definition: #ContainerSchema
 			input: image:  "nginx:latest"
 			assert: valid: false
 		},
 		{
 			name:       "missing image"
-			definition: "#ContainerSchema"
+			definition: #ContainerSchema
 			input: name:   "web"
 			assert: valid: false
 		},
 		{
 			name:       "bad pull policy"
-			definition: "#ContainerSchema"
+			definition: #ContainerSchema
 			input: {
 				name:            "web"
 				image:           "nginx:latest"
@@ -128,24 +128,24 @@ import (
 	// #ScalingSchema
 	// =========================================================================
 
-	scaling: [
+	"#ScalingSchema": [
 
 		// ── Positive ──
 		{
 			name:       "default count"
-			definition: "#ScalingSchema"
+			definition: #ScalingSchema
 			input: count:  1
 			assert: valid: true
 		},
 		{
 			name:       "max count"
-			definition: "#ScalingSchema"
+			definition: #ScalingSchema
 			input: count:  1000
 			assert: valid: true
 		},
 		{
 			name:       "autoscaling"
-			definition: "#ScalingSchema"
+			definition: #ScalingSchema
 			input: {
 				count: 2
 				auto: {
@@ -161,7 +161,7 @@ import (
 		},
 		{
 			name:       "autoscaling custom metric"
-			definition: "#ScalingSchema"
+			definition: #ScalingSchema
 			input: {
 				count: 3
 				auto: {
@@ -183,25 +183,25 @@ import (
 		// ── Negative ──
 		{
 			name:       "zero count"
-			definition: "#ScalingSchema"
+			definition: #ScalingSchema
 			input: count:  0
 			assert: valid: false
 		},
 		{
 			name:       "negative count"
-			definition: "#ScalingSchema"
+			definition: #ScalingSchema
 			input: count:  -5
 			assert: valid: false
 		},
 		{
 			name:       "over max count"
-			definition: "#ScalingSchema"
+			definition: #ScalingSchema
 			input: count:  1001
 			assert: valid: false
 		},
 		{
 			name:       "auto empty metrics"
-			definition: "#ScalingSchema"
+			definition: #ScalingSchema
 			input: {
 				count: 1
 				auto: {
@@ -218,12 +218,12 @@ import (
 	// #HealthCheckSchema
 	// =========================================================================
 
-	healthCheck: [
+	"#HealthCheckSchema": [
 
 		// ── Positive ──
 		{
 			name:       "HTTP probes"
-			definition: "#HealthCheckSchema"
+			definition: #HealthCheckSchema
 			input: {
 				livenessProbe: {
 					httpGet: {path: "/healthz", port: 8080}
@@ -236,7 +236,7 @@ import (
 		},
 		{
 			name:       "exec and tcp probes"
-			definition: "#HealthCheckSchema"
+			definition: #HealthCheckSchema
 			input: {
 				livenessProbe: exec: command: ["pg_isready", "-U", "postgres"]
 				readinessProbe: tcpSocket: port: 5432
@@ -245,7 +245,7 @@ import (
 		},
 		{
 			name:       "startup probe only"
-			definition: "#HealthCheckSchema"
+			definition: #HealthCheckSchema
 			input: startupProbe: {
 				exec: command: ["mc-health"]
 				periodSeconds:    10
@@ -258,13 +258,13 @@ import (
 		// ── Negative ──
 		{
 			name:       "bad port zero"
-			definition: "#HealthCheckSchema"
+			definition: #HealthCheckSchema
 			input: livenessProbe: httpGet: {path: "/healthz", port: 0}
 			assert: valid: false
 		},
 		{
 			name:       "port over max"
-			definition: "#HealthCheckSchema"
+			definition: #HealthCheckSchema
 			input: livenessProbe: httpGet: {path: "/", port: 65536}
 			assert: valid: false
 		},
@@ -274,12 +274,12 @@ import (
 	// #UpdateStrategySchema
 	// =========================================================================
 
-	updateStrategy: [
+	"#UpdateStrategySchema": [
 
 		// ── Positive ──
 		{
 			name:       "rolling update"
-			definition: "#UpdateStrategySchema"
+			definition: #UpdateStrategySchema
 			input: {
 				type: "RollingUpdate"
 				rollingUpdate: {
@@ -291,7 +291,7 @@ import (
 		},
 		{
 			name:       "recreate"
-			definition: "#UpdateStrategySchema"
+			definition: #UpdateStrategySchema
 			input: type:   "Recreate"
 			assert: valid: true
 		},
@@ -299,7 +299,7 @@ import (
 		// ── Negative ──
 		{
 			name:       "bad type"
-			definition: "#UpdateStrategySchema"
+			definition: #UpdateStrategySchema
 			input: type:   "InvalidStrategy"
 			assert: valid: false
 		},
@@ -309,10 +309,10 @@ import (
 	// #JobConfigSchema
 	// =========================================================================
 
-	jobConfig: [
+	"#JobConfigSchema": [
 		{
 			name:       "full config"
-			definition: "#JobConfigSchema"
+			definition: #JobConfigSchema
 			input: {
 				completions:             3
 				parallelism:             2
@@ -328,10 +328,10 @@ import (
 	// #CronJobConfigSchema
 	// =========================================================================
 
-	cronJobConfig: [
+	"#CronJobConfigSchema": [
 		{
 			name:       "full config"
-			definition: "#CronJobConfigSchema"
+			definition: #CronJobConfigSchema
 			input: {
 				scheduleCron:               "0 * * * *"
 				concurrencyPolicy:          "Forbid"
@@ -346,10 +346,10 @@ import (
 	// #StatelessWorkloadSchema
 	// =========================================================================
 
-	statelessWorkload: [
+	"#StatelessWorkloadSchema": [
 		{
 			name:       "full"
-			definition: "#StatelessWorkloadSchema"
+			definition: #StatelessWorkloadSchema
 			input: {
 				container: {
 					name:  "web"
@@ -371,10 +371,10 @@ import (
 	// #StatefulWorkloadSchema
 	// =========================================================================
 
-	statefulWorkload: [
+	"#StatefulWorkloadSchema": [
 		{
 			name:       "with volumes"
-			definition: "#StatefulWorkloadSchema"
+			definition: #StatefulWorkloadSchema
 			input: {
 				container: {
 					name:  "db"
@@ -396,10 +396,10 @@ import (
 	// #DaemonWorkloadSchema
 	// =========================================================================
 
-	daemonWorkload: [
+	"#DaemonWorkloadSchema": [
 		{
 			name:       "basic"
-			definition: "#DaemonWorkloadSchema"
+			definition: #DaemonWorkloadSchema
 			input: container: {
 				name:  "fluentd"
 				image: "fluentd:latest"
@@ -412,12 +412,12 @@ import (
 	// #TaskWorkloadSchema
 	// =========================================================================
 
-	taskWorkload: [
+	"#TaskWorkloadSchema": [
 
 		// ── Positive ──
 		{
 			name:       "with job config"
-			definition: "#TaskWorkloadSchema"
+			definition: #TaskWorkloadSchema
 			input: {
 				container: {
 					name:  "migration"
@@ -436,7 +436,7 @@ import (
 		// ── Negative ──
 		{
 			name:       "bad restart policy Always"
-			definition: "#TaskWorkloadSchema"
+			definition: #TaskWorkloadSchema
 			input: {
 				container: {
 					name:  "task"
@@ -452,12 +452,12 @@ import (
 	// #ScheduledTaskWorkloadSchema
 	// =========================================================================
 
-	scheduledTaskWorkload: [
+	"#ScheduledTaskWorkloadSchema": [
 
 		// ── Positive ──
 		{
 			name:       "with cron config"
-			definition: "#ScheduledTaskWorkloadSchema"
+			definition: #ScheduledTaskWorkloadSchema
 			input: {
 				container: {
 					name:  "backup"
@@ -475,7 +475,7 @@ import (
 		// ── Negative ──
 		{
 			name:       "missing cronJobConfig"
-			definition: "#ScheduledTaskWorkloadSchema"
+			definition: #ScheduledTaskWorkloadSchema
 			input: container: {
 				name:  "backup"
 				image: "backup:latest"
@@ -488,16 +488,16 @@ import (
 	// #DisruptionBudgetSchema
 	// =========================================================================
 
-	disruptionBudget: [
+	"#DisruptionBudgetSchema": [
 		{
 			name:       "minAvailable"
-			definition: "#DisruptionBudgetSchema"
+			definition: #DisruptionBudgetSchema
 			input: minAvailable: 1
 			assert: valid:       true
 		},
 		{
 			name:       "maxUnavailable percentage"
-			definition: "#DisruptionBudgetSchema"
+			definition: #DisruptionBudgetSchema
 			input: maxUnavailable: "25%"
 			assert: valid:         true
 		},
@@ -507,10 +507,10 @@ import (
 	// #GracefulShutdownSchema
 	// =========================================================================
 
-	gracefulShutdown: [
+	"#GracefulShutdownSchema": [
 		{
 			name:       "full"
-			definition: "#GracefulShutdownSchema"
+			definition: #GracefulShutdownSchema
 			input: {
 				terminationGracePeriodSeconds: 60
 				preStopCommand: ["nginx", "-s", "quit"]
@@ -523,10 +523,10 @@ import (
 	// #PlacementSchema
 	// =========================================================================
 
-	placement: [
+	"#PlacementSchema": [
 		{
 			name:       "with spread and requirements"
-			definition: "#PlacementSchema"
+			definition: #PlacementSchema
 			input: {
 				spreadAcross: "zones"
 				requirements: "node.kubernetes.io/instance-type": "m5.xlarge"
@@ -539,10 +539,10 @@ import (
 	// #EnvVarSchema
 	// =========================================================================
 
-	envVar: [
+	"#EnvVarSchema": [
 		{
 			name:       "minimal"
-			definition: "#EnvVarSchema"
+			definition: #EnvVarSchema
 			input: {
 				name:  "ENV_VAR"
 				value: "value"
@@ -551,7 +551,7 @@ import (
 		},
 		{
 			name:       "database URL"
-			definition: "#EnvVarSchema"
+			definition: #EnvVarSchema
 			input: {
 				name:  "DATABASE_URL"
 				value: "postgres://localhost:5432/mydb"
@@ -561,111 +561,23 @@ import (
 	]
 
 	// =========================================================================
-	// #ResourceRequirementsSchema (workload-specific tests)
-	// =========================================================================
-
-	resourceRequirementsWorkload: [
-		{
-			name:       "full string values"
-			definition: "#ResourceRequirementsSchema"
-			input: {
-				cpu: {request: "100m", limit: "500m"}
-				memory: {request: "128Mi", limit: "512Mi"}
-			}
-			assert: valid: true
-		},
-		{
-			name:       "numeric values"
-			definition: "#ResourceRequirementsSchema"
-			input: {
-				cpu: {request: 0.5, limit: 2}
-				memory: {request: 0.5, limit: 4}
-			}
-			assert: valid: true
-		},
-		{
-			name:       "CPU only"
-			definition: "#ResourceRequirementsSchema"
-			input: cpu: {request: "500m", limit: "2000m"}
-			assert: valid: true
-		},
-		{
-			name:       "memory only"
-			definition: "#ResourceRequirementsSchema"
-			input: memory: {request: "256Mi", limit: "1Gi"}
-			assert: valid: true
-		},
-		{
-			name:       "mixed types"
-			definition: "#ResourceRequirementsSchema"
-			input: {
-				cpu: {request: 2, limit: "8000m"}
-				memory: {request: "512Mi", limit: 4}
-			}
-			assert: valid: true
-		},
-		{
-			name:       "large values"
-			definition: "#ResourceRequirementsSchema"
-			input: {
-				cpu: {request: 16, limit: 64}
-				memory: {request: 32, limit: 128}
-			}
-			assert: valid: true
-		},
-		{
-			name:       "small fractions"
-			definition: "#ResourceRequirementsSchema"
-			input: {
-				cpu: {request: 0.1, limit: 0.5}
-				memory: {request: 0.125, limit: 0.25}
-			}
-			assert: valid: true
-		},
-		{
-			name:       "request only"
-			definition: "#ResourceRequirementsSchema"
-			input: {
-				cpu: request:    "500m"
-				memory: request: "256Mi"
-			}
-			assert: valid: true
-		},
-		{
-			name:       "limit only"
-			definition: "#ResourceRequirementsSchema"
-			input: {
-				cpu: limit:    "1000m"
-				memory: limit: "512Mi"
-			}
-			assert: valid: true
-		},
-		{
-			name:       "empty"
-			definition: "#ResourceRequirementsSchema"
-			input: {}
-			assert: valid: true
-		},
-	]
-
-	// =========================================================================
 	// #RestartPolicySchema
 	// =========================================================================
 
-	restartPolicy: [
-		{name: "Always", definition: "#RestartPolicySchema", input: "Always", assert: valid: true},
-		{name: "OnFailure", definition: "#RestartPolicySchema", input: "OnFailure", assert: valid: true},
-		{name: "Never", definition: "#RestartPolicySchema", input: "Never", assert: valid: true},
+	"#RestartPolicySchema": [
+		{name: "Always", definition: #RestartPolicySchema, input: "Always", assert: valid: true},
+		{name: "OnFailure", definition: #RestartPolicySchema, input: "OnFailure", assert: valid: true},
+		{name: "Never", definition: #RestartPolicySchema, input: "Never", assert: valid: true},
 	]
 
 	// =========================================================================
 	// #AutoscalingSpec
 	// =========================================================================
 
-	autoscaling: [
+	"#AutoscalingSpec": [
 		{
 			name:       "valid CPU autoscaling"
-			definition: "#AutoscalingSpec"
+			definition: #AutoscalingSpec
 			input: {
 				min: 1
 				max: 10
@@ -682,10 +594,10 @@ import (
 	// #MetricSpec
 	// =========================================================================
 
-	metricSpec: [
+	"#MetricSpec": [
 		{
 			name:       "custom metric missing name"
-			definition: "#MetricSpec"
+			definition: #MetricSpec
 			input: {
 				type: "custom"
 				target: averageValue: "100"

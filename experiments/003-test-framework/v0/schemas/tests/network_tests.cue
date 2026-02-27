@@ -12,12 +12,12 @@ import (
 	// #PortSchema
 	// =========================================================================
 
-	port: [
+	"#PortSchema": [
 
 		// ── Positive ──
 		{
 			name:       "minimal"
-			definition: "#PortSchema"
+			definition: #PortSchema
 			input: {
 				name:       "http"
 				targetPort: 80
@@ -26,7 +26,7 @@ import (
 		},
 		{
 			name:       "full"
-			definition: "#PortSchema"
+			definition: #PortSchema
 			input: {
 				name:        "https"
 				targetPort:  8443
@@ -39,7 +39,7 @@ import (
 		},
 		{
 			name:       "UDP protocol"
-			definition: "#PortSchema"
+			definition: #PortSchema
 			input: {
 				name:       "dns"
 				targetPort: 53
@@ -49,7 +49,7 @@ import (
 		},
 		{
 			name:       "SCTP protocol"
-			definition: "#PortSchema"
+			definition: #PortSchema
 			input: {
 				name:       "sctp-svc"
 				targetPort: 3868
@@ -59,7 +59,7 @@ import (
 		},
 		{
 			name:       "boundary min port"
-			definition: "#PortSchema"
+			definition: #PortSchema
 			input: {
 				name:       "min"
 				targetPort: 1
@@ -68,7 +68,7 @@ import (
 		},
 		{
 			name:       "boundary max port"
-			definition: "#PortSchema"
+			definition: #PortSchema
 			input: {
 				name:       "max"
 				targetPort: 65535
@@ -79,7 +79,7 @@ import (
 		// ── Negative ──
 		{
 			name:       "port zero"
-			definition: "#PortSchema"
+			definition: #PortSchema
 			input: {
 				name:       "http"
 				targetPort: 0
@@ -89,7 +89,7 @@ import (
 		},
 		{
 			name:       "port too high"
-			definition: "#PortSchema"
+			definition: #PortSchema
 			input: {
 				name:       "http"
 				targetPort: 70000
@@ -99,7 +99,7 @@ import (
 		},
 		{
 			name:       "bad protocol"
-			definition: "#PortSchema"
+			definition: #PortSchema
 			input: {
 				name:       "http"
 				targetPort: 8080
@@ -113,12 +113,12 @@ import (
 	// #ExposeSchema
 	// =========================================================================
 
-	expose: [
+	"#ExposeSchema": [
 
 		// ── Positive ──
 		{
 			name:       "ClusterIP"
-			definition: "#ExposeSchema"
+			definition: #ExposeSchema
 			input: {
 				ports: http: {
 					name:       "http"
@@ -130,7 +130,7 @@ import (
 		},
 		{
 			name:       "LoadBalancer"
-			definition: "#ExposeSchema"
+			definition: #ExposeSchema
 			input: {
 				ports: {
 					http: {
@@ -148,7 +148,7 @@ import (
 		},
 		{
 			name:       "NodePort"
-			definition: "#ExposeSchema"
+			definition: #ExposeSchema
 			input: {
 				ports: http: {
 					name:       "http"
@@ -162,7 +162,7 @@ import (
 		// ── Negative ──
 		{
 			name:       "bad type"
-			definition: "#ExposeSchema"
+			definition: #ExposeSchema
 			input: {
 				ports: http: {
 					name:       "http"
@@ -178,12 +178,12 @@ import (
 	// #HttpRouteSchema
 	// =========================================================================
 
-	httpRoute: [
+	"#HttpRouteSchema": [
 
 		// ── Positive ──
 		{
 			name:       "basic"
-			definition: "#HttpRouteSchema"
+			definition: #HttpRouteSchema
 			input: {
 				hostnames: ["example.com"]
 				rules: [{
@@ -200,7 +200,7 @@ import (
 		},
 		{
 			name:       "full with TLS and gateway"
-			definition: "#HttpRouteSchema"
+			definition: #HttpRouteSchema
 			input: {
 				hostnames: ["api.example.com"]
 				gatewayRef: {
@@ -244,7 +244,7 @@ import (
 		},
 		{
 			name:       "all HTTP methods"
-			definition: "#HttpRouteSchema"
+			definition: #HttpRouteSchema
 			input: {
 				hostnames: ["api.example.com"]
 				rules: [
@@ -261,7 +261,7 @@ import (
 		// ── Negative ──
 		{
 			name:       "empty rules"
-			definition: "#HttpRouteSchema"
+			definition: #HttpRouteSchema
 			input: {
 				hostnames: ["example.com"]
 				rules: []
@@ -274,10 +274,10 @@ import (
 	// #GrpcRouteSchema
 	// =========================================================================
 
-	grpcRoute: [
+	"#GrpcRouteSchema": [
 		{
 			name:       "basic"
-			definition: "#GrpcRouteSchema"
+			definition: #GrpcRouteSchema
 			input: {
 				hostnames: ["grpc.example.com"]
 				rules: [{
@@ -296,10 +296,10 @@ import (
 	// #TcpRouteSchema
 	// =========================================================================
 
-	tcpRoute: [
+	"#TcpRouteSchema": [
 		{
 			name:       "basic"
-			definition: "#TcpRouteSchema"
+			definition: #TcpRouteSchema
 			input: rules: [{backendPort: 5432}]
 			assert: valid: true
 		},
@@ -309,21 +309,21 @@ import (
 	// #IANA_SVC_NAME
 	// =========================================================================
 
-	ianaSvcName: [
-		{name: "simple", definition: "#IANA_SVC_NAME", input: "http", assert: valid: true},
-		{name: "with hyphen", definition: "#IANA_SVC_NAME", input: "my-svc", assert: valid: true},
-		{name: "max 15 chars", definition: "#IANA_SVC_NAME", input: "abcdefghijklmno", assert: valid: true},
-		{name: "single char", definition: "#IANA_SVC_NAME", input: "x", assert: valid: true},
+	"#IANA_SVC_NAME": [
+		{name: "simple", definition: #IANA_SVC_NAME, input: "http", assert: valid: true},
+		{name: "with hyphen", definition: #IANA_SVC_NAME, input: "my-svc", assert: valid: true},
+		{name: "max 15 chars", definition: #IANA_SVC_NAME, input: "abcdefghijklmno", assert: valid: true},
+		{name: "single char", definition: #IANA_SVC_NAME, input: "x", assert: valid: true},
 	]
 
 	// =========================================================================
 	// #RouteAttachmentSchema
 	// =========================================================================
 
-	routeAttachment: [
+	"#RouteAttachmentSchema": [
 		{
 			name:       "terminate"
-			definition: "#RouteAttachmentSchema"
+			definition: #RouteAttachmentSchema
 			input: {
 				gatewayRef: {
 					name:      "gateway"
@@ -338,7 +338,7 @@ import (
 		},
 		{
 			name:       "passthrough"
-			definition: "#RouteAttachmentSchema"
+			definition: #RouteAttachmentSchema
 			input: {
 				gatewayRef: name: "gateway"
 				tls: mode:        "Passthrough"

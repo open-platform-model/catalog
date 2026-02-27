@@ -12,12 +12,12 @@ import (
 	// #SimpleDatabaseSchema
 	// =========================================================================
 
-	simpleDatabase: [
+	"#SimpleDatabaseSchema": [
 
 		// ── Positive ──
 		{
 			name:       "postgres with persistence"
-			definition: "#SimpleDatabaseSchema"
+			definition: #SimpleDatabaseSchema
 			input: {
 				engine:   "postgres"
 				version:  "16"
@@ -34,7 +34,7 @@ import (
 		},
 		{
 			name:       "mysql"
-			definition: "#SimpleDatabaseSchema"
+			definition: #SimpleDatabaseSchema
 			input: {
 				engine:   "mysql"
 				version:  "8.0"
@@ -46,7 +46,7 @@ import (
 		},
 		{
 			name:       "mongodb with persistence"
-			definition: "#SimpleDatabaseSchema"
+			definition: #SimpleDatabaseSchema
 			input: {
 				engine:   "mongodb"
 				version:  "7"
@@ -62,7 +62,7 @@ import (
 		},
 		{
 			name:       "redis"
-			definition: "#SimpleDatabaseSchema"
+			definition: #SimpleDatabaseSchema
 			input: {
 				engine:   "redis"
 				version:  "7"
@@ -74,7 +74,7 @@ import (
 		},
 		{
 			name:       "persistence disabled"
-			definition: "#SimpleDatabaseSchema"
+			definition: #SimpleDatabaseSchema
 			input: {
 				engine:   "redis"
 				version:  "7"
@@ -89,7 +89,7 @@ import (
 		// ── Negative ──
 		{
 			name:       "bad engine"
-			definition: "#SimpleDatabaseSchema"
+			definition: #SimpleDatabaseSchema
 			input: {
 				engine:   "sqlite"
 				version:  "3"
@@ -101,7 +101,7 @@ import (
 		},
 		{
 			name:       "missing engine"
-			definition: "#SimpleDatabaseSchema"
+			definition: #SimpleDatabaseSchema
 			input: {
 				version:  "16"
 				dbName:   "mydb"
@@ -112,7 +112,7 @@ import (
 		},
 		{
 			name:       "bad persistence size"
-			definition: "#SimpleDatabaseSchema"
+			definition: #SimpleDatabaseSchema
 			input: {
 				engine:   "postgres"
 				version:  "16"

@@ -12,10 +12,10 @@ import (
 	// #SecurityContextSchema
 	// =========================================================================
 
-	securityContext: [
+	"#SecurityContextSchema": [
 		{
 			name:       "defaults"
-			definition: "#SecurityContextSchema"
+			definition: #SecurityContextSchema
 			input: {
 				runAsNonRoot:             true
 				readOnlyRootFilesystem:   false
@@ -25,7 +25,7 @@ import (
 		},
 		{
 			name:       "full"
-			definition: "#SecurityContextSchema"
+			definition: #SecurityContextSchema
 			input: {
 				runAsNonRoot:             true
 				runAsUser:                1000
@@ -41,7 +41,7 @@ import (
 		},
 		{
 			name:       "permissive"
-			definition: "#SecurityContextSchema"
+			definition: #SecurityContextSchema
 			input: {
 				runAsNonRoot:             false
 				readOnlyRootFilesystem:   false
@@ -51,7 +51,7 @@ import (
 		},
 		{
 			name:       "default drop capabilities"
-			definition: "#SecurityContextSchema"
+			definition: #SecurityContextSchema
 			input: capabilities: drop: ["ALL"]
 			assert: valid: true
 		},
@@ -61,16 +61,16 @@ import (
 	// #WorkloadIdentitySchema
 	// =========================================================================
 
-	workloadIdentity: [
+	"#WorkloadIdentitySchema": [
 		{
 			name:       "minimal"
-			definition: "#WorkloadIdentitySchema"
+			definition: #WorkloadIdentitySchema
 			input: name:   "my-service-account"
 			assert: valid: true
 		},
 		{
 			name:       "full"
-			definition: "#WorkloadIdentitySchema"
+			definition: #WorkloadIdentitySchema
 			input: {
 				name:           "my-sa"
 				automountToken: true

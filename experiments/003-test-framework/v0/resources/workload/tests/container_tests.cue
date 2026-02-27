@@ -12,10 +12,10 @@ import (
 	// #ContainerResource — closedness of the resource definition
 	// =========================================================================
 
-	containerResource: [
+	"#ContainerResource": [
 		{
 			name:       "valid resource metadata"
-			definition: "#ContainerResource"
+			definition: #ContainerResource
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Resource"
@@ -26,16 +26,13 @@ import (
 				}
 			}
 			assert: {
-				valid:    true
-				concrete: false // #spec and #defaults are inconcrete at definition level
-				fields: {
-					"metadata.fqn": equals: "opmodel.dev/resources/workload@v0#Container"
-				}
+				valid:  true
+				output: metadata: fqn: "opmodel.dev/resources/workload@v0#Container"
 			}
 		},
 		{
 			name:       "rejects extra field at root"
-			definition: "#ContainerResource"
+			definition: #ContainerResource
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Resource"
@@ -49,7 +46,7 @@ import (
 		},
 		{
 			name:       "rejects extra field in metadata"
-			definition: "#ContainerResource"
+			definition: #ContainerResource
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Resource"
@@ -67,10 +64,10 @@ import (
 	// #Container — component closedness (spec: close({_allFields}))
 	// =========================================================================
 
-	containerComponent: [
+	"#Container": [
 		{
 			name:       "valid container component"
-			definition: "#Container"
+			definition: #Container
 			input: {
 				metadata: {
 					name: "my-app"
@@ -85,7 +82,7 @@ import (
 		},
 		{
 			name:       "valid with ports and env"
-			definition: "#Container"
+			definition: #Container
 			input: {
 				metadata: {
 					name: "web-server"
@@ -102,7 +99,7 @@ import (
 		},
 		{
 			name:       "rejects extra field in spec (closedness)"
-			definition: "#Container"
+			definition: #Container
 			input: {
 				metadata: {
 					name: "my-app"
@@ -120,7 +117,7 @@ import (
 		},
 		{
 			name:       "rejects missing workload-type label"
-			definition: "#Container"
+			definition: #Container
 			input: {
 				metadata: name: "my-app"
 				spec: container: {
@@ -132,7 +129,7 @@ import (
 		},
 		{
 			name:       "rejects invalid workload-type"
-			definition: "#Container"
+			definition: #Container
 			input: {
 				metadata: {
 					name: "my-app"
@@ -151,31 +148,25 @@ import (
 	// #ContainerDefaults
 	// =========================================================================
 
-	containerDefaults: [
+	"#ContainerDefaults": [
 		{
 			name:       "provides default imagePullPolicy"
-			definition: "#ContainerDefaults"
+			definition: #ContainerDefaults
 			input: {
 				name:  "main"
 				image: "nginx:latest"
 			}
-			assert: {
-				valid: true
-				fields: imagePullPolicy: equals: "IfNotPresent"
-			}
+			assert: output: imagePullPolicy: "IfNotPresent"
 		},
 		{
 			name:       "allows overriding imagePullPolicy"
-			definition: "#ContainerDefaults"
+			definition: #ContainerDefaults
 			input: {
 				name:            "main"
 				image:           "nginx:latest"
 				imagePullPolicy: "Always"
 			}
-			assert: {
-				valid: true
-				fields: imagePullPolicy: equals: "Always"
-			}
+			assert: output: imagePullPolicy: "Always"
 		},
 	]
 }

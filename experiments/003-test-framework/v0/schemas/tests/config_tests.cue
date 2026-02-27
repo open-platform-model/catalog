@@ -12,10 +12,10 @@ import (
 	// #ConfigMapSchema
 	// =========================================================================
 
-	configMap: [
+	"#ConfigMapSchema": [
 		{
 			name:       "basic with data"
-			definition: "#ConfigMapSchema"
+			definition: #ConfigMapSchema
 			input: data: {
 				"app.conf":   "key=value\nother=thing"
 				"nginx.conf": "server { listen 80; }"
@@ -24,7 +24,7 @@ import (
 		},
 		{
 			name:       "empty data"
-			definition: "#ConfigMapSchema"
+			definition: #ConfigMapSchema
 			input: data: {}
 			assert: valid: true
 		},
@@ -34,16 +34,16 @@ import (
 	// #SecretSchema
 	// =========================================================================
 
-	secret: [
+	"#SecretSchema": [
 		{
 			name:       "default opaque"
-			definition: "#SecretSchema"
+			definition: #SecretSchema
 			input: data: password: "c2VjcmV0"
 			assert: valid: true
 		},
 		{
 			name:       "TLS type"
-			definition: "#SecretSchema"
+			definition: #SecretSchema
 			input: {
 				type: "kubernetes.io/tls"
 				data: {

@@ -45,7 +45,7 @@ func runTestSuite(t *testing.T, pkgDir string, pattern string) {
 			for _, tc := range cases {
 				tc := tc // capture
 				t.Run(tc.Name, func(t *testing.T) {
-					result := runner.Execute(ctx, mod, tc)
+					result := runner.Execute(ctx, tc)
 					runner.RunAssertions(t, result, tc)
 				})
 			}

@@ -12,10 +12,10 @@ import (
 	// #VolumeSchema
 	// =========================================================================
 
-	volume: [
+	"#VolumeSchema": [
 		{
 			name:       "emptyDir"
-			definition: "#VolumeSchema"
+			definition: #VolumeSchema
 			input: {
 				name: "tmp"
 				emptyDir: {
@@ -27,7 +27,7 @@ import (
 		},
 		{
 			name:       "persistent"
-			definition: "#VolumeSchema"
+			definition: #VolumeSchema
 			input: {
 				name: "data"
 				persistentClaim: {
@@ -40,7 +40,7 @@ import (
 		},
 		{
 			name:       "configMap"
-			definition: "#VolumeSchema"
+			definition: #VolumeSchema
 			input: {
 				name: "config"
 				configMap: data: "app.conf": "key=value"
@@ -49,7 +49,7 @@ import (
 		},
 		{
 			name:       "secret"
-			definition: "#VolumeSchema"
+			definition: #VolumeSchema
 			input: {
 				name: "certs"
 				secret: {
@@ -68,10 +68,10 @@ import (
 	// #VolumeMountSchema
 	// =========================================================================
 
-	volumeMount: [
+	"#VolumeMountSchema": [
 		{
 			name:       "minimal"
-			definition: "#VolumeMountSchema"
+			definition: #VolumeMountSchema
 			input: {
 				name:      "data"
 				mountPath: "/data"
@@ -80,7 +80,7 @@ import (
 		},
 		{
 			name:       "full"
-			definition: "#VolumeMountSchema"
+			definition: #VolumeMountSchema
 			input: {
 				name:      "config"
 				mountPath: "/etc/config"
@@ -95,16 +95,16 @@ import (
 	// #PersistentClaimSchema
 	// =========================================================================
 
-	persistentClaim: [
+	"#PersistentClaimSchema": [
 		{
 			name:       "defaults"
-			definition: "#PersistentClaimSchema"
+			definition: #PersistentClaimSchema
 			input: size:   "10Gi"
 			assert: valid: true
 		},
 		{
 			name:       "ReadWriteMany"
-			definition: "#PersistentClaimSchema"
+			definition: #PersistentClaimSchema
 			input: {
 				size:         "100Gi"
 				accessMode:   "ReadWriteMany"
@@ -114,7 +114,7 @@ import (
 		},
 		{
 			name:       "ReadOnlyMany"
-			definition: "#PersistentClaimSchema"
+			definition: #PersistentClaimSchema
 			input: {
 				size:       "50Gi"
 				accessMode: "ReadOnlyMany"
@@ -127,10 +127,10 @@ import (
 	// #VolumeBaseSchema
 	// =========================================================================
 
-	volumeBase: [
+	"#VolumeBaseSchema": [
 		{
 			name:       "defaults"
-			definition: "#VolumeBaseSchema"
+			definition: #VolumeBaseSchema
 			input: name:   "base-volume"
 			assert: valid: true
 		},

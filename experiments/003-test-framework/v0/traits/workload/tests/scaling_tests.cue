@@ -12,10 +12,10 @@ import (
 	// #ScalingTrait — closedness of the trait definition
 	// =========================================================================
 
-	scalingTrait: [
+	"#ScalingTrait": [
 		{
 			name:       "valid trait metadata"
-			definition: "#ScalingTrait"
+			definition: #ScalingTrait
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Trait"
@@ -27,16 +27,13 @@ import (
 				}
 			}
 			assert: {
-				valid:    true
-				concrete: false // #spec, #defaults, appliesTo are inconcrete at trait level
-				fields: {
-					"metadata.fqn": equals: "opmodel.dev/traits/workload@v0#Scaling"
-				}
+				valid:  true
+				output: metadata: fqn: "opmodel.dev/traits/workload@v0#Scaling"
 			}
 		},
 		{
 			name:       "rejects extra field at root"
-			definition: "#ScalingTrait"
+			definition: #ScalingTrait
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Trait"
@@ -50,7 +47,7 @@ import (
 		},
 		{
 			name:       "rejects extra field in metadata"
-			definition: "#ScalingTrait"
+			definition: #ScalingTrait
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Trait"
@@ -68,10 +65,10 @@ import (
 	// #Scaling — component with scaling trait (spec closedness)
 	// =========================================================================
 
-	scalingComponent: [
+	"#Scaling": [
 		{
 			name:       "valid scaling component with defaults"
-			definition: "#Scaling"
+			definition: #Scaling
 			input: {
 				metadata: name: "my-app"
 				spec: scaling: count: 1
@@ -80,21 +77,16 @@ import (
 		},
 		{
 			name:       "valid scaling component with count"
-			definition: "#Scaling"
+			definition: #Scaling
 			input: {
 				metadata: name: "my-app"
 				spec: scaling: count: 3
 			}
-			assert: {
-				valid: true
-				fields: {
-					"spec.scaling.count": equals: 3
-				}
-			}
+			assert: output: spec: scaling: count: 3
 		},
 		{
 			name:       "rejects extra field in spec (closedness)"
-			definition: "#Scaling"
+			definition: #Scaling
 			input: {
 				metadata: name: "my-app"
 				spec: {
@@ -106,7 +98,7 @@ import (
 		},
 		{
 			name:       "rejects count below minimum"
-			definition: "#Scaling"
+			definition: #Scaling
 			input: {
 				metadata: name: "my-app"
 				spec: scaling: count: 0
@@ -115,7 +107,7 @@ import (
 		},
 		{
 			name:       "rejects count above maximum"
-			definition: "#Scaling"
+			definition: #Scaling
 			input: {
 				metadata: name: "my-app"
 				spec: scaling: count: 1001
@@ -128,15 +120,12 @@ import (
 	// #ScalingDefaults
 	// =========================================================================
 
-	scalingDefaults: [
+	"#ScalingDefaults": [
 		{
 			name:       "provides default count"
-			definition: "#ScalingDefaults"
+			definition: #ScalingDefaults
 			input: {}
-			assert: {
-				valid: true
-				fields: count: equals: 1
-			}
+			assert: output: count: 1
 		},
 	]
 }

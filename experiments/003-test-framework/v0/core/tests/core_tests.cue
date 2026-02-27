@@ -12,52 +12,52 @@ import (
 	// #NameType
 	// =========================================================================
 
-	nameType: [
+	"#NameType": [
 		{
 			name:       "simple"
-			definition: "#NameType"
+			definition: #NameType
 			input:      "my-app"
 			assert: valid: true
 		},
 		{
 			name:       "single char"
-			definition: "#NameType"
+			definition: #NameType
 			input:      "a"
 			assert: valid: true
 		},
 		{
 			name:       "max length 63"
-			definition: "#NameType"
+			definition: #NameType
 			input:      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 			assert: valid: true
 		},
 		{
 			name:       "rejects uppercase"
-			definition: "#NameType"
+			definition: #NameType
 			input:      "MyApp"
 			assert: valid: false
 		},
 		{
 			name:       "rejects leading hyphen"
-			definition: "#NameType"
+			definition: #NameType
 			input:      "-my-app"
 			assert: valid: false
 		},
 		{
 			name:       "rejects trailing hyphen"
-			definition: "#NameType"
+			definition: #NameType
 			input:      "my-app-"
 			assert: valid: false
 		},
 		{
 			name:       "rejects empty"
-			definition: "#NameType"
+			definition: #NameType
 			input:      ""
 			assert: valid: false
 		},
 		{
 			name:       "rejects too long"
-			definition: "#NameType"
+			definition: #NameType
 			input:      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 			assert: valid: false
 		},
@@ -67,28 +67,28 @@ import (
 	// #APIVersionType
 	// =========================================================================
 
-	apiVersionType: [
+	"#APIVersionType": [
 		{
 			name:       "simple"
-			definition: "#APIVersionType"
+			definition: #APIVersionType
 			input:      "opmodel.dev/core@v0"
 			assert: valid: true
 		},
 		{
 			name:       "nested path"
-			definition: "#APIVersionType"
+			definition: #APIVersionType
 			input:      "opmodel.dev/resources/workload@v0"
 			assert: valid: true
 		},
 		{
 			name:       "rejects missing version"
-			definition: "#APIVersionType"
+			definition: #APIVersionType
 			input:      "opmodel.dev/core"
 			assert: valid: false
 		},
 		{
 			name:       "rejects uppercase"
-			definition: "#APIVersionType"
+			definition: #APIVersionType
 			input:      "Opmodel.dev/core@v0"
 			assert: valid: false
 		},
@@ -98,28 +98,28 @@ import (
 	// #FQNType
 	// =========================================================================
 
-	fqnType: [
+	"#FQNType": [
 		{
 			name:       "simple"
-			definition: "#FQNType"
+			definition: #FQNType
 			input:      "opmodel.dev@v0#Container"
 			assert: valid: true
 		},
 		{
 			name:       "with path"
-			definition: "#FQNType"
+			definition: #FQNType
 			input:      "opmodel.dev/resources/workload@v0#Container"
 			assert: valid: true
 		},
 		{
 			name:       "rejects lowercase definition name"
-			definition: "#FQNType"
+			definition: #FQNType
 			input:      "opmodel.dev@v0#container"
 			assert: valid: false
 		},
 		{
 			name:       "rejects missing hash"
-			definition: "#FQNType"
+			definition: #FQNType
 			input:      "opmodel.dev@v0Container"
 			assert: valid: false
 		},
@@ -129,10 +129,10 @@ import (
 	// #Resource
 	// =========================================================================
 
-	resource: [
+	"#Resource": [
 		{
 			name:       "valid minimal resource"
-			definition: "#Resource"
+			definition: #Resource
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Resource"
@@ -142,16 +142,13 @@ import (
 				}
 			}
 			assert: {
-				valid:    true
-				concrete: false // #spec is intentionally inconcrete at core level
-				fields: {
-					"metadata.fqn": equals: "opmodel.dev/resources/workload@v0#Container"
-				}
+				valid:  true
+				output: metadata: fqn: "opmodel.dev/resources/workload@v0#Container"
 			}
 		},
 		{
 			name:       "valid resource with description"
-			definition: "#Resource"
+			definition: #Resource
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Resource"
@@ -162,16 +159,13 @@ import (
 				}
 			}
 			assert: {
-				valid:    true
-				concrete: false
-				fields: {
-					"metadata.fqn": equals: "opmodel.dev/resources/config@v0#ConfigMaps"
-				}
+				valid:  true
+				output: metadata: fqn: "opmodel.dev/resources/config@v0#ConfigMaps"
 			}
 		},
 		{
 			name:       "valid resource with labels"
-			definition: "#Resource"
+			definition: #Resource
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Resource"
@@ -181,14 +175,11 @@ import (
 					labels: "core.opmodel.dev/workload-type": "stateless"
 				}
 			}
-			assert: {
-				valid:    true
-				concrete: false
-			}
+			assert: valid: true
 		},
 		{
 			name:       "rejects missing metadata.name"
-			definition: "#Resource"
+			definition: #Resource
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Resource"
@@ -198,7 +189,7 @@ import (
 		},
 		{
 			name:       "rejects missing metadata.apiVersion"
-			definition: "#Resource"
+			definition: #Resource
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Resource"
@@ -208,7 +199,7 @@ import (
 		},
 		{
 			name:       "rejects wrong kind"
-			definition: "#Resource"
+			definition: #Resource
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Trait"
@@ -221,7 +212,7 @@ import (
 		},
 		{
 			name:       "rejects extra field at root"
-			definition: "#Resource"
+			definition: #Resource
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Resource"
@@ -235,7 +226,7 @@ import (
 		},
 		{
 			name:       "rejects extra field in metadata"
-			definition: "#Resource"
+			definition: #Resource
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Resource"
@@ -253,10 +244,10 @@ import (
 	// #Trait
 	// =========================================================================
 
-	trait: [
+	"#Trait": [
 		{
 			name:       "valid minimal trait"
-			definition: "#Trait"
+			definition: #Trait
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Trait"
@@ -267,16 +258,13 @@ import (
 				appliesTo: []
 			}
 			assert: {
-				valid:    true
-				concrete: true // #spec is intentionally inconcrete at core level
-				fields: {
-					"metadata.fqn": equals: "opmodel.dev/traits/workload@v0#Scaling"
-				}
+				valid:  true
+				output: metadata: fqn: "opmodel.dev/traits/workload@v0#Scaling"
 			}
 		},
 		{
 			name:       "rejects wrong kind"
-			definition: "#Trait"
+			definition: #Trait
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Resource"
@@ -290,7 +278,7 @@ import (
 		},
 		{
 			name:       "rejects missing appliesTo"
-			definition: "#Trait"
+			definition: #Trait
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Trait"
@@ -303,7 +291,7 @@ import (
 		},
 		{
 			name:       "rejects extra field at root"
-			definition: "#Trait"
+			definition: #Trait
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Trait"
@@ -318,7 +306,7 @@ import (
 		},
 		{
 			name:       "rejects extra field in metadata"
-			definition: "#Trait"
+			definition: #Trait
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Trait"
@@ -337,10 +325,10 @@ import (
 	// #Blueprint
 	// =========================================================================
 
-	blueprint: [
+	"#Blueprint": [
 		{
 			name:       "valid minimal blueprint"
-			definition: "#Blueprint"
+			definition: #Blueprint
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Blueprint"
@@ -351,16 +339,13 @@ import (
 				composedResources: []
 			}
 			assert: {
-				valid:    true
-				concrete: false // #spec is intentionally inconcrete at core level
-				fields: {
-					"metadata.fqn": equals: "opmodel.dev/blueprints@v0#StatelessWorkload"
-				}
+				valid:  true
+				output: metadata: fqn: "opmodel.dev/blueprints@v0#StatelessWorkload"
 			}
 		},
 		{
 			name:       "rejects missing composedResources"
-			definition: "#Blueprint"
+			definition: #Blueprint
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Blueprint"
@@ -373,7 +358,7 @@ import (
 		},
 		{
 			name:       "rejects extra field at root"
-			definition: "#Blueprint"
+			definition: #Blueprint
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "Blueprint"
@@ -392,10 +377,10 @@ import (
 	// #PolicyRule
 	// =========================================================================
 
-	policyRule: [
+	"#PolicyRule": [
 		{
 			name:       "valid minimal policy rule"
-			definition: "#PolicyRule"
+			definition: #PolicyRule
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "PolicyRule"
@@ -409,16 +394,13 @@ import (
 				}
 			}
 			assert: {
-				valid:    true
-				concrete: false // #spec is intentionally inconcrete at core level
-				fields: {
-					"metadata.fqn": equals: "opmodel.dev/policies/network@v0#NetworkRules"
-				}
+				valid:  true
+				output: metadata: fqn: "opmodel.dev/policies/network@v0#NetworkRules"
 			}
 		},
 		{
 			name:       "valid policy rule with runtime enforcement"
-			definition: "#PolicyRule"
+			definition: #PolicyRule
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "PolicyRule"
@@ -431,14 +413,11 @@ import (
 					onViolation: "warn"
 				}
 			}
-			assert: {
-				valid:    true
-				concrete: false
-			}
+			assert: valid: true
 		},
 		{
 			name:       "rejects invalid enforcement mode"
-			definition: "#PolicyRule"
+			definition: #PolicyRule
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "PolicyRule"
@@ -455,7 +434,7 @@ import (
 		},
 		{
 			name:       "rejects extra field at root"
-			definition: "#PolicyRule"
+			definition: #PolicyRule
 			input: {
 				apiVersion: "opmodel.dev/core/v0"
 				kind:       "PolicyRule"
@@ -477,33 +456,24 @@ import (
 	// #KebabToPascal
 	// =========================================================================
 
-	kebabToPascal: [
+	"#KebabToPascal": [
 		{
 			name:       "single word"
-			definition: "#KebabToPascal"
+			definition: #KebabToPascal
 			input: "in": "container"
-			assert: {
-				valid: true
-				fields: out: equals: "Container"
-			}
+			assert: output: out: "Container"
 		},
 		{
 			name:       "two words"
-			definition: "#KebabToPascal"
+			definition: #KebabToPascal
 			input: "in": "config-maps"
-			assert: {
-				valid: true
-				fields: out: equals: "ConfigMaps"
-			}
+			assert: output: out: "ConfigMaps"
 		},
 		{
 			name:       "three words"
-			definition: "#KebabToPascal"
+			definition: #KebabToPascal
 			input: "in": "stateless-workload-type"
-			assert: {
-				valid: true
-				fields: out: equals: "StatelessWorkloadType"
-			}
+			assert: output: out: "StatelessWorkloadType"
 		},
 	]
 }
