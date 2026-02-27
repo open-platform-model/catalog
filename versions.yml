@@ -1,32 +1,7 @@
-# Catalog Module Version Registry
-# Format: module_name: {version: vMAJOR.MINOR.PATCH, checksum: sha256}
-# Modules listed in dependency order
-# Checksums cover .cue files excluding cue.mod/ — used by publish:smart
+# v1alpha1 Module Version Registry
+# Format: {version: vMAJOR.MINOR.PATCH, checksum: sha256}
+# Checksum covers .cue files excluding cue.mod/ — used by publish:smart
 
-core:
-  version: v0.1.31
-  checksum: "cf4411a35b76e195af104e055120644a5698103bc6a6bb7e4714a604eb45da93"
-schemas:
-  version: v0.2.7
-  checksum: "bea4d6739840c0d8c595f6a6796217e7cb88a085df26fae6df6f213f25a96183"
-schemas_kubernetes:
-  version: v0.0.2
-  checksum: "a201168a991b500928822b0edcd287f292341c1cb40d48846b18e78c6ead1a20"
-resources:
-  version: v0.2.42
-  checksum: "5a9c386f2ceef09691d62a176364581247de5a5b1755b3b778755e7e526ef286"
-traits:
-  version: v0.1.54
-  checksum: "c93d603f823bc8199cdbd43aa78f6be3bdb98f705473b3ccb2ce7bcfd38b234f"
-blueprints:
-  version: v0.1.58
-  checksum: "3a96bb213e7803aade3ebe3bf4cb6d08fb8295dd1edc929b18773adc7ff6c4ea"
-policies:
-  version: v0.1.46
-  checksum: "ff50daefcfa4bf6984021902f171741b458d50b60f607157cc99c157736bac77"
-providers:
-  version: v0.1.75
-  checksum: "693cb9a3c3a19a0a360d719f08560206c17423695f0f5afc1a2050a5a06ef708"
-examples:
-  version: v0.1.53
-  checksum: "a0a093d934abde7efb5bbfcba86fa732c70a7092968203282b1c44269068b536"
+v1alpha1:
+  version: v1.0.5
+  checksum: "b5b8e9eb43708ed41183d5bb138ee7c1e866fab2f0638403ca2b9d14b2fdbf54"

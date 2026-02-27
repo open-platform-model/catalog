@@ -2,7 +2,7 @@ version: '3'
 
 # Dependency Management Tasks
 #
-# Manages CUE module dependencies across catalog modules.
+# Manages CUE module dependencies for v1alpha1.
 
 includes:
   config:
@@ -15,15 +15,14 @@ tasks:
   # ============================================================================
 
   update-deps:
-    desc: Update all CUE dependencies to latest versions (all or specific MODULE)
+    desc: Update CUE dependencies to latest versions
     summary: |
-      For each enabled catalog module, fetch latest versions of all opmodel.dev
-      dependencies and run tidy. Updates checksums in versions.yml.
+      Fetch latest versions of all opmodel.dev dependencies in v1alpha1
+      and run tidy. Updates the checksum in versions.yml.
 
       Usage:
-        task deps:update-deps                  # Update all modules
-        task deps:update-deps MODULE=core      # Update specific module
-        task deps:update-deps DRY_RUN=true     # Preview changes without executing
+        task deps:update-deps                  # Update all deps
+        task deps:update-deps DRY_RUN=true     # Preview without executing
 
       Requires:
         - Local registry running (task registry:start)
@@ -34,10 +33,7 @@ tasks:
         2. Run 'cue mod get <dep>' for each (fetches latest)
         3. Run 'cue mod tidy' to clean up
         4. Recalculate and update checksum in versions.yml
-
-      Modules are processed in topological order to avoid conflicts.
     vars:
-      MODULE: '{{.MODULE | default ""}}'
       DRY_RUN: '{{.DRY_RUN | default "false"}}'
     preconditions:
       - sh: docker ps -f name={{.REGISTRY_CONTAINER}} | grep -q {{.REGISTRY_CONTAINER}}
@@ -49,8 +45,7 @@ tasks:
       - |
         set -euo pipefail
 
-        # ── Config ─────────────────────────────────────────────────────
-        V0_DIR="{{.V0_DIR}}"
+        MODULE_DIR="{{.V1ALPHA1_DIR}}"
         VERSION_FILE="{{.VERSION_FILE}}"
         DRY_RUN="{{.DRY_RUN}}"
 
@@ -64,78 +59,13 @@ tasks:
 
         # ── Helper Functions ────────────────────────────────────────────
 
-        # Compute checksum of .cue files in a module (excluding cue.mod/)
         compute_checksum() {
-          local path="$1"
-          find "$V0_DIR/$path" -name '*.cue' -not -path '*/cue.mod/*' | sort | xargs sha256sum | sha256sum | awk '{print $1}'
+          find "$MODULE_DIR" -name '*.cue' -not -path '*/cue.mod/*' | sort | xargs sha256sum | sha256sum | awk '{print $1}'
         }
 
-        # Extract opmodel.dev dependencies from module.cue
         extract_deps() {
-          local mod_path="$1"
-          sed -n '/^deps: {$/,/^}$/p' "$V0_DIR/$mod_path/cue.mod/module.cue" | \
+          sed -n '/^deps: {$/,/^}$/p' "$MODULE_DIR/cue.mod/module.cue" | \
             grep -oP '"opmodel\.dev/[^"]+@v[^"]*"' | tr -d '"' || true
-        }
-
-        # Update a single module's dependencies
-        update_module() {
-          local mod_name="$1"
-          local mod_path="$2"
-          local mod_dir="$V0_DIR/$mod_path"
-
-          echo -e "${BOLD}==> $mod_name${RESET}"
-
-          # Extract dependencies
-          local deps
-          deps=$(extract_deps "$mod_path")
-
-          if [ -z "$deps" ]; then
-            echo -e "    ${DIM}No opmodel.dev dependencies${RESET}"
-            return 0
-          fi
-
-          # Dry run: just show what would happen
-          if [ "$DRY_RUN" = "true" ]; then
-            while IFS= read -r dep; do
-              echo -e "    ${CYAN}Would run:${RESET} cue mod get $dep"
-            done <<< "$deps"
-            echo -e "    ${CYAN}Would run:${RESET} cue mod tidy"
-            
-            local old_checksum
-            old_checksum=$(yq ".$mod_name.checksum // \"(none)\"" "$VERSION_FILE" | tr -d '"')
-            echo -e "    ${CYAN}Would update checksum:${RESET} ${DIM}${old_checksum:0:12}...${RESET} -> ${DIM}(recalculated)${RESET}"
-            return 0
-          fi
-
-          # Real execution
-          cd "$mod_dir"
-
-          local update_count=0
-          while IFS= read -r dep; do
-            echo -e "    ${GREEN}cue mod get${RESET} $dep"
-            if ! cue mod get "$dep" 2>&1; then
-              echo -e "    ${YELLOW}Warning: Failed to update $dep${RESET}"
-              continue
-            fi
-            update_count=$((update_count + 1))
-          done <<< "$deps"
-
-          if [ $update_count -gt 0 ]; then
-            echo -e "    ${GREEN}cue mod tidy${RESET}"
-            if ! cue mod tidy 2>&1; then
-              echo -e "    ${YELLOW}Warning: cue mod tidy failed${RESET}"
-              return 1
-            fi
-
-            # Recalculate checksum
-            cd - >/dev/null
-            local new_checksum
-            new_checksum=$(compute_checksum "$mod_path")
-            yq -i ".$mod_name.checksum = \"$new_checksum\"" "$VERSION_FILE"
-            echo -e "    ${DIM}Checksum: ${new_checksum:0:12}...${RESET}"
-          else
-            echo -e "    ${DIM}No dependencies updated${RESET}"
-          fi
         }
 
         # ── Main Execution ──────────────────────────────────────────────
@@ -145,41 +75,53 @@ tasks:
           echo ""
         fi
 
-        TARGET_MODULE="{{.MODULE}}"
-        
-        if [ -n "$TARGET_MODULE" ]; then
-          # Single module mode
-          echo -e "${BOLD}Updating dependencies for $TARGET_MODULE...${RESET}"
-          echo ""
-          
-          # Find module path from CATALOG_MODULES
-          MOD_PATH=""
-          {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
-          if [ "{{$mod.name}}" = "$TARGET_MODULE" ]; then
-            MOD_PATH="{{$mod.path}}"
-          fi
-          {{end}}{{end}}
-          
-          if [ -z "$MOD_PATH" ]; then
-            echo "Error: Module '$TARGET_MODULE' not found or disabled"
-            exit 1
-          fi
-          
-          update_module "$TARGET_MODULE" "$MOD_PATH"
-          
-        else
-          # All modules mode (topological order)
-          echo -e "${BOLD}Updating dependencies for all catalog modules...${RESET}"
-          echo ""
-          
-          {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
-          update_module "{{$mod.name}}" "{{$mod.path}}"
-          echo ""
-          {{end}}{{end}}
+        echo -e "${BOLD}==> v1alpha1${RESET}"
+
+        deps=$(extract_deps)
+
+        if [ -z "$deps" ]; then
+          echo -e "    ${DIM}No opmodel.dev dependencies${RESET}"
+          exit 0
         fi
 
         if [ "$DRY_RUN" = "true" ]; then
+          while IFS= read -r dep; do
+            echo -e "    ${CYAN}Would run:${RESET} cue mod get $dep"
+          done <<< "$deps"
+          echo -e "    ${CYAN}Would run:${RESET} cue mod tidy"
+          old_checksum=$(yq '.v1alpha1.checksum // "(none)"' "$VERSION_FILE" | tr -d '"')
+          echo -e "    ${CYAN}Would update checksum:${RESET} ${DIM}${old_checksum:0:12}...${RESET} -> ${DIM}(recalculated)${RESET}"
+          echo ""
           echo -e "${DIM}No changes made (dry run)${RESET}"
-        else
-          echo -e "${GREEN}Done${RESET}"
+          exit 0
         fi
+
+        cd "$MODULE_DIR"
+
+        update_count=0
+        while IFS= read -r dep; do
+          echo -e "    ${GREEN}cue mod get${RESET} $dep"
+          if ! cue mod get "$dep" 2>&1; then
+            echo -e "    ${YELLOW}Warning: Failed to update $dep${RESET}"
+            continue
+          fi
+          update_count=$((update_count + 1))
+        done <<< "$deps"
+
+        if [ $update_count -gt 0 ]; then
+          echo -e "    ${GREEN}cue mod tidy${RESET}"
+          if ! cue mod tidy 2>&1; then
+            echo -e "    ${YELLOW}Warning: cue mod tidy failed${RESET}"
+            exit 1
+          fi
+
+          cd - >/dev/null
+          new_checksum=$(compute_checksum)
+          yq -i ".v1alpha1.checksum = \"$new_checksum\"" "$VERSION_FILE"
+          echo -e "    ${DIM}Checksum: ${new_checksum:0:12}...${RESET}"
+        else
+          echo -e "    ${DIM}No dependencies updated${RESET}"
+        fi
+
+        echo ""
+        echo -e "${GREEN}Done${RESET}"

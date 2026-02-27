@@ -1,17 +1,13 @@
 version: '3'
 
-# Catalog CUE Modules Taskfile
-# Self-contained tasks for catalog/v0/* modules (multi-module aware)
+# Catalog CUE Module Taskfile
+# Tasks for the v1alpha1/ module (opmodel.dev@v1).
 #
-# This Taskfile can be run standalone from the catalog/ directory:
-#   cd catalog && task fmt
-#   cd catalog && task fmt MODULE=schemas
-#   cd catalog && task version
-#   cd catalog && task publish:local MODULE=schemas
-#   cd catalog && task publish:all:local
-#
-# Or via root orchestration:
-#   task module:fmt MODULE=schemas
+# Usage:
+#   task fmt
+#   task vet
+#   task publish:local
+#   task publish:smart
 
 # Silent by default - set TASK_VERBOSE=1 or use --verbose to show commands
 silent: true
@@ -47,116 +43,59 @@ tasks:
   # ============================================================================
 
   fmt:
-    desc: Format CUE files (all modules or specific MODULE)
-    summary: |
-      Format CUE files in catalog modules.
-
-      Usage:
-        task fmt              # Format all modules
-        task fmt MODULE=schemas  # Format specific module
-    vars:
-      MODULE: '{{.MODULE | default ""}}'
+    desc: Format CUE files
     cmds:
       - |
-        if [ -n "{{.MODULE}}" ]; then
-          echo "Formatting {{.MODULE}}..."
-          cd "{{.V0_DIR}}/{{.MODULE}}" && cue fmt ./...
-          echo "Done"
-        else
-          echo "Formatting all catalog modules..."
-          {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
-          echo "  Formatting {{$mod.name}}..."
-          (cd "{{$.V0_DIR}}/{{$mod.path}}" && cue fmt ./...) || true
-          {{end}}{{end}}
-          echo "Done"
-        fi
+        echo "Formatting {{.V1ALPHA1_DIR}}..."
+        cd "{{.V1ALPHA1_DIR}}" && cue fmt ./...
+        echo "Done"
 
   # ============================================================================
   # Validation
   # ============================================================================
 
   vet:
-    desc: Validate CUE files (all modules or specific MODULE)
+    desc: Validate CUE files
     summary: |
-      Validate CUE files in catalog modules.
+      Validate CUE files in the v1alpha1 module.
 
       Usage:
-        task vet                        # Validate all modules
-        task vet MODULE=schemas         # Validate specific module
-        task vet CONCRETE=true          # Validate with concreteness checks
+        task vet
+        task vet CONCRETE=true    # Validate with concreteness checks
     vars:
-      MODULE: '{{.MODULE | default ""}}'
       CONCRETE: '{{.CONCRETE | default "false"}}'
       VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
     cmds:
       - |
-        if [ -n "{{.MODULE}}" ]; then
-          echo "Validating {{.MODULE}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
-          cd "{{.V0_DIR}}/{{.MODULE}}" && cue vet {{.VET_FLAGS}} ./...
-          echo "Done"
-        else
-          echo "Validating all catalog modules{{if eq .CONCRETE "true"}} (concrete){{end}}..."
-          FAILED=""
-          {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
-          echo "  Validating {{$mod.name}}..."
-          if ! (cd "{{$.V0_DIR}}/{{$mod.path}}" && cue vet {{$.VET_FLAGS}} ./... 2>&1); then
-            FAILED="${FAILED} {{$mod.name}}"
-          fi
-          {{end}}{{end}}
-          
-          if [ -n "$FAILED" ]; then
-            echo ""
-            echo "Failed:${FAILED}"
-            exit 1
-          fi
-          echo "Done"
-        fi
-
+        echo "Validating {{.V1ALPHA1_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.V1ALPHA1_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "Done"
 
   eval:
-    desc: Evaluate CUE files (all modules or specific MODULE)
+    desc: Evaluate CUE files
     summary: |
-      Evaluate CUE files in catalog modules and check for errors.
+      Evaluate CUE files in the v1alpha1 module.
 
       Usage:
-        task eval                          # Evaluate all modules
-        task eval MODULE=schemas           # Evaluate specific module
-        task eval OUTPUT=out.cue           # Evaluate all, write to file
+        task eval
+        task eval OUTPUT=out.cue    # Write output to file
     vars:
-      MODULE: '{{.MODULE | default ""}}'
       OUTPUT: '{{.OUTPUT | default ""}}'
       EVAL_REDIRECT: '{{if .OUTPUT}}> {{.OUTPUT}}{{end}}'
     cmds:
       - |
-        if [ -n "{{.MODULE}}" ]; then
-          echo "Evaluating {{.MODULE}}..."
-          cd "{{.V0_DIR}}/{{.MODULE}}" && cue eval ./... {{.EVAL_REDIRECT}}
-          echo "Done"
-        else
-          echo "Evaluating all catalog modules..."
-          FAILED=""
-          {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
-          echo "  Evaluating {{$mod.name}}..."
-          if ! (cd "{{$.V0_DIR}}/{{$mod.path}}" && cue eval ./... {{$.EVAL_REDIRECT}} 2>&1); then
-            FAILED="${FAILED} {{$mod.name}}"
-          fi
-          {{end}}{{end}}
-          
-          if [ -n "$FAILED" ]; then
-            echo ""
-            echo "Failed:${FAILED}"
-            exit 1
-          fi
-          echo "Done"
-        fi
+        echo "Evaluating {{.V1ALPHA1_DIR}}..."
+        cd "{{.V1ALPHA1_DIR}}" && cue eval ./... {{.EVAL_REDIRECT}}
+        echo "Done"
+
   # ============================================================================
   # Testing
   # ============================================================================
 
   test:
-    desc: Run CUE definition tests (all modules or specific MODULE)
+    desc: Run CUE definition tests
     summary: |
-      Run unit tests for CUE definitions.
+      Run unit tests for CUE definitions in v1alpha1.
 
       Tests are organized in two layers:
         1. Positive CUE tests: *_tests.cue files with @if(test) — validated via unification with concreteness check (-c).
@@ -168,15 +107,8 @@ tasks:
         <definition>_valid_<description>.yaml    → must pass cue vet
         <definition>_invalid_<description>.yaml  → must fail cue vet
 
-      The definition name is extracted from the filename prefix and converted to PascalCase:
-        resource_valid_minimal.yaml         → validated against #Resource
-        container-schema_invalid_no-image.yaml → validated against #ContainerSchema
-
       Usage:
-        task test                  # Test all modules
-        task test MODULE=core      # Test specific module
-    vars:
-      MODULE: '{{.MODULE | default ""}}'
+        task test
     cmds:
       - |
         set -euo pipefail
@@ -200,99 +132,70 @@ tasks:
           echo "$1" | sed -r 's/(^|[-])([a-z])/\U\2/g'
         }
 
-        run_module_tests() {
-          local mod_name="$1"
-          local mod_path="$2"
-          local mod_dir="{{.V0_DIR}}/$mod_path"
-          local has_tests=false
-
-          # ── Layer 1: Positive CUE tests (@if(test) files) ──────────
-          local test_file_count
-          test_file_count=$(find "$mod_dir" -name '*_tests.cue' 2>/dev/null | wc -l)
-
-          if [ "$test_file_count" -gt 0 ]; then
-            has_tests=true
-            echo -e "${BOLD}[$mod_name]${RESET} CUE unification tests"
-
-            # Run cue vet with test tag and concreteness check from the module directory
-            local output
-            if output=$(cd "$mod_dir" && cue vet -c -t test ./... 2>&1); then
-              echo -e "  ${GREEN}PASS${RESET}  cue vet -c -t test ./..."
-              PASSED=$((PASSED + 1))
-            else
-              echo -e "  ${RED}FAIL${RESET}  cue vet -c -t test ./..."
-              echo "$output" | sed 's/^/         /'
-              FAILED=$((FAILED + 1))
-              ERRORS="${ERRORS}\n  ${mod_name}: CUE unification tests failed"
-            fi
-
-
-          fi
-
-          # ── Layer 2+3: Data file tests (testdata/) ─────────────────
-          for testdata_dir in $(find "$mod_dir" -type d -name 'testdata' 2>/dev/null); do
-            for datafile in "$testdata_dir"/*.yaml "$testdata_dir"/*.json; do
-              [ -f "$datafile" ] || continue
-              has_tests=true
-
-              local basename
-              basename=$(basename "$datafile")
-              local noext="${basename%.*}"
-
-              # Extract definition name and expected outcome
-              local def_kebab
-              def_kebab=$(echo "$noext" | sed 's/_\(valid\|invalid\)_.*//')
-              local def_pascal
-              def_pascal=$(kebab_to_pascal "$def_kebab")
-              local def="#${def_pascal}"
-
-              # Compute path relative to mod_dir for cue vet
-              local rel_datafile="${datafile#$mod_dir/}"
-
-              if echo "$noext" | grep -q '_valid_'; then
-                # Should PASS
-                local output
-                if output=$(cd "$mod_dir" && cue vet -d "$def" ./... "$rel_datafile" 2>&1); then
-                  echo -e "  ${GREEN}PASS${RESET}  ${DIM}${basename}${RESET} → ${CYAN}${def}${RESET} (expect: valid)"
-                  PASSED=$((PASSED + 1))
-                else
-                  echo -e "  ${RED}FAIL${RESET}  ${basename} → ${def} (expected valid, got error)"
-                  echo "$output" | sed 's/^/         /'
-                  FAILED=$((FAILED + 1))
-                  ERRORS="${ERRORS}\n  ${mod_name}: ${basename} expected valid but got error"
-                fi
-              elif echo "$noext" | grep -q '_invalid_'; then
-                # Should FAIL
-                if (cd "$mod_dir" && cue vet -d "$def" ./... "$rel_datafile" >/dev/null 2>&1); then
-                  echo -e "  ${RED}FAIL${RESET}  ${basename} → ${def} (expected invalid, but passed)"
-                  FAILED=$((FAILED + 1))
-                  ERRORS="${ERRORS}\n  ${mod_name}: ${basename} expected invalid but passed"
-                else
-                  echo -e "  ${GREEN}PASS${RESET}  ${DIM}${basename}${RESET} → ${CYAN}${def}${RESET} (expect: invalid)"
-                  PASSED=$((PASSED + 1))
-                fi
-              else
-                echo -e "  ${YELLOW}SKIP${RESET}  ${basename} (filename must contain _valid_ or _invalid_)"
-                SKIPPED=$((SKIPPED + 1))
-              fi
-            done
-          done
-
-          if [ "$has_tests" = false ]; then
-            echo -e "${DIM}[$mod_name] no tests found${RESET}"
-          fi
-        }
+        MOD_DIR="{{.V1ALPHA1_DIR}}"
 
         echo -e "${BOLD}Running CUE definition tests${RESET}"
         echo ""
 
-        # Run for specific module or all
-        if [ -n "{{.MODULE}}" ]; then
-          run_module_tests "{{.MODULE}}" "{{.MODULE}}"
-        else
-          {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
-          run_module_tests "{{$mod.name}}" "{{$mod.path}}"
-          {{end}}{{end}}
+        # ── Layer 1: Positive CUE tests (@if(test) files) ──────────
+        test_file_count=$(find "$MOD_DIR" -name '*_tests.cue' 2>/dev/null | wc -l)
+
+        if [ "$test_file_count" -gt 0 ]; then
+          echo -e "${BOLD}[v1alpha1]${RESET} CUE unification tests"
+          local output
+          if output=$(cd "$MOD_DIR" && cue vet -c -t test ./... 2>&1); then
+            echo -e "  ${GREEN}PASS${RESET}  cue vet -c -t test ./..."
+            PASSED=$((PASSED + 1))
+          else
+            echo -e "  ${RED}FAIL${RESET}  cue vet -c -t test ./..."
+            echo "$output" | sed 's/^/         /'
+            FAILED=$((FAILED + 1))
+            ERRORS="${ERRORS}\n  v1alpha1: CUE unification tests failed"
+          fi
+        fi
+
+        # ── Layer 2: Data file tests (testdata/) ─────────────────
+        for testdata_dir in $(find "$MOD_DIR" -type d -name 'testdata' 2>/dev/null); do
+          for datafile in "$testdata_dir"/*.yaml "$testdata_dir"/*.json; do
+            [ -f "$datafile" ] || continue
+
+            basename=$(basename "$datafile")
+            noext="${basename%.*}"
+
+            def_kebab=$(echo "$noext" | sed 's/_\(valid\|invalid\)_.*//')
+            def_pascal=$(kebab_to_pascal "$def_kebab")
+            def="#${def_pascal}"
+
+            rel_datafile="${datafile#$MOD_DIR/}"
+
+            if echo "$noext" | grep -q '_valid_'; then
+              if output=$(cd "$MOD_DIR" && cue vet -d "$def" ./... "$rel_datafile" 2>&1); then
+                echo -e "  ${GREEN}PASS${RESET}  ${DIM}${basename}${RESET} → ${CYAN}${def}${RESET} (expect: valid)"
+                PASSED=$((PASSED + 1))
+              else
+                echo -e "  ${RED}FAIL${RESET}  ${basename} → ${def} (expected valid, got error)"
+                echo "$output" | sed 's/^/         /'
+                FAILED=$((FAILED + 1))
+                ERRORS="${ERRORS}\n  v1alpha1: ${basename} expected valid but got error"
+              fi
+            elif echo "$noext" | grep -q '_invalid_'; then
+              if (cd "$MOD_DIR" && cue vet -d "$def" ./... "$rel_datafile" >/dev/null 2>&1); then
+                echo -e "  ${RED}FAIL${RESET}  ${basename} → ${def} (expected invalid, but passed)"
+                FAILED=$((FAILED + 1))
+                ERRORS="${ERRORS}\n  v1alpha1: ${basename} expected invalid but passed"
+              else
+                echo -e "  ${GREEN}PASS${RESET}  ${DIM}${basename}${RESET} → ${CYAN}${def}${RESET} (expect: invalid)"
+                PASSED=$((PASSED + 1))
+              fi
+            else
+              echo -e "  ${YELLOW}SKIP${RESET}  ${basename} (filename must contain _valid_ or _invalid_)"
+              SKIPPED=$((SKIPPED + 1))
+            fi
+          done
+        done
+
+        if [ $((PASSED + FAILED + SKIPPED)) -eq 0 ]; then
+          echo -e "${DIM}[v1alpha1] no tests found${RESET}"
         fi
 
         # ── Summary ─────────────────────────────────────────────────
@@ -310,23 +213,12 @@ tasks:
   # ============================================================================
 
   tidy:
-    desc: Tidy module dependencies (all modules or specific MODULE)
-    vars:
-      MODULE: '{{.MODULE | default ""}}'
+    desc: Tidy module dependencies
     cmds:
       - |
-        if [ -n "{{.MODULE}}" ]; then
-          echo "Tidying {{.MODULE}} dependencies..."
-          cd "{{.V0_DIR}}/{{.MODULE}}" && cue mod tidy
-          echo "Done"
-        else
-          echo "Tidying all catalog module dependencies..."
-          {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
-          echo "  Tidying {{$mod.name}}..."
-          (cd "{{$.V0_DIR}}/{{$mod.path}}" && cue mod tidy) || true
-          {{end}}{{end}}
-          echo "Done"
-        fi
+        echo "Tidying {{.V1ALPHA1_DIR}} dependencies..."
+        cd "{{.V1ALPHA1_DIR}}" && cue mod tidy
+        echo "Done"
 
   # ============================================================================
   # Watch Mode
@@ -339,12 +231,10 @@ tasks:
         msg: "watchexec is required. Install: brew install watchexec"
     cmds:
       - |
-        echo "Watching catalog modules for changes..."
+        echo "Watching {{.V1ALPHA1_DIR}} for changes..."
         echo "Press Ctrl+C to stop"
-        cd "{{.V0_DIR}}" && watchexec -e cue -- bash -c '
-          {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
-          (cd "{{$mod.path}}" && cue fmt ./...) || true
-          {{end}}{{end}}
+        watchexec -w "{{.V1ALPHA1_DIR}}" -e cue -- bash -c '
+          cd "{{.V1ALPHA1_DIR}}" && cue fmt ./...
           echo "Formatted"
         '
 
@@ -355,19 +245,13 @@ tasks:
         msg: "watchexec is required. Install: brew install watchexec"
     cmds:
       - |
-        echo "Watching catalog modules for changes..."
+        echo "Watching {{.V1ALPHA1_DIR}} for changes..."
         echo "Press Ctrl+C to stop"
-        cd "{{.V0_DIR}}" && watchexec -e cue -- bash -c '
-          FAILED=""
-          {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
-          if ! (cd "{{$mod.path}}" && cue vet ./... 2>&1); then
-            FAILED="${FAILED} {{$mod.name}}"
-          fi
-          {{end}}{{end}}
-          if [ -n "$FAILED" ]; then
-            echo "Failed:${FAILED}"
+        watchexec -w "{{.V1ALPHA1_DIR}}" -e cue -- bash -c '
+          if cd "{{.V1ALPHA1_DIR}}" && cue vet ./... 2>&1; then
+            echo "Valid"
           else
-            echo "All valid"
+            echo "Validation failed"
           fi
         '
 
@@ -376,85 +260,46 @@ tasks:
   # ============================================================================
 
   check:
-    desc: Run fmt and vet on all modules
+    desc: Run fmt and vet
     cmds:
       - task fmt
       - task vet
-
-  # ============================================================================
-  # Module Info
-  # ============================================================================
-
-  list:
-    desc: List all catalog modules
-    cmds:
-      - |
-        echo "Catalog Modules:"
-        {{range $mod := .CATALOG_MODULES}}
-        {{if $mod.enabled}}
-        echo "  {{$mod.name}} ({{$mod.path}})"
-        {{else}}
-        echo "  {{$mod.name}} ({{$mod.path}}) (disabled)"
-        {{end}}
-        {{end}}
 
   # ============================================================================
   # Version Management
   # ============================================================================
 
   version:
-    desc: Show module versions (all or specific MODULE)
-    summary: |
-      Display versions for catalog modules.
-
-      Usage:
-        task version              # Show all module versions
-        task version MODULE=schemas  # Show specific module version
-    vars:
-      MODULE: '{{.MODULE | default ""}}'
+    desc: Show current module version
     preconditions:
       - sh: command -v yq >/dev/null 2>&1
         msg: "yq is required. Install: brew install yq"
     cmds:
       - |
-        if [ -n "{{.MODULE}}" ]; then
-          VERSION=$(yq '.{{.MODULE}}.version' {{.VERSION_FILE}})
-          echo "{{.MODULE}}: $VERSION"
-        else
-          echo "Catalog Module Versions"
-          echo "======================="
-          yq '.[] | key + ": " + .version' {{.VERSION_FILE}}
-        fi
+        VERSION=$(yq '.v1alpha1.version' {{.VERSION_FILE}})
+        echo "v1alpha1: $VERSION"
 
   version:bump:
-    desc: Bump module version (MODULE required, TYPE=patch/minor/major)
+    desc: Bump module version (TYPE=patch/minor/major)
     summary: |
-      Bump the version for a specific catalog module following SemVer.
+      Bump the version for the v1alpha1 module following SemVer.
 
       Usage:
-        task version:bump MODULE=schemas              # Bump patch (default)
-        task version:bump MODULE=schemas TYPE=patch   # v0.1.0 -> v0.1.1
-        task version:bump MODULE=schemas TYPE=minor   # v0.1.0 -> v0.2.0
-        task version:bump MODULE=schemas TYPE=major   # v0.1.0 -> v1.0.0
+        task version:bump              # Bump patch (default)
+        task version:bump TYPE=patch   # v1.0.0 -> v1.0.1
+        task version:bump TYPE=minor   # v1.0.0 -> v1.1.0
+        task version:bump TYPE=major   # v1.0.0 -> v2.0.0
     vars:
-      MODULE: '{{.MODULE | default ""}}'
       TYPE: '{{.TYPE | default "patch"}}'
     preconditions:
-      - sh: '[ -n "{{.MODULE}}" ]'
-        msg: "MODULE is required. Usage: task version:bump MODULE=schemas TYPE=patch"
       - sh: command -v yq >/dev/null 2>&1
         msg: "yq is required. Install: brew install yq"
     cmds:
       - |
-        CURRENT=$(yq '.{{.MODULE}}.version' {{.VERSION_FILE}} | sed 's/^v//')
-        
-        if [ "$CURRENT" = "null" ]; then
-          echo "Error: Module '{{.MODULE}}' not found in {{.VERSION_FILE}}"
-          exit 1
-        fi
-        
+        CURRENT=$(yq '.v1alpha1.version' {{.VERSION_FILE}} | sed 's/^v//')
+
         IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
-        
+
         case "{{.TYPE}}" in
           major)
             MAJOR=$((MAJOR + 1))
@@ -473,91 +318,51 @@ tasks:
             exit 1
             ;;
         esac
-        
+
         NEW="v${MAJOR}.${MINOR}.${PATCH}"
-        yq -i '.{{.MODULE}}.version = "'$NEW'"' {{.VERSION_FILE}}
-        echo "Bumped {{.MODULE}}: v${CURRENT} -> ${NEW}"
+        yq -i '.v1alpha1.version = "'$NEW'"' {{.VERSION_FILE}}
+        echo "Bumped v1alpha1: v${CURRENT} -> ${NEW}"
 
   # ============================================================================
   # Publishing
   # ============================================================================
 
   publish:local:
-    desc: Publish module to local registry (MODULE required)
+    desc: Publish v1alpha1 to local registry
     summary: |
-      Publish a specific catalog module to the local OCI registry.
+      Publish the v1alpha1 module to the local OCI registry.
 
       Usage:
-        task publish:local MODULE=schemas              # Use version from versions.yml
-        task publish:local MODULE=schemas VERSION=v0.2.0  # Use explicit version
+        task publish:local              # Use version from versions.yml
+        task publish:local VERSION=v1.0.1  # Use explicit version
     vars:
-      MODULE: '{{.MODULE | default ""}}'
       VERSION: '{{.VERSION | default ""}}'
     preconditions:
-      - sh: '[ -n "{{.MODULE}}" ]'
-        msg: "MODULE is required. Usage: task publish:local MODULE=schemas"
       - sh: command -v yq >/dev/null 2>&1
         msg: "yq is required. Install: brew install yq"
     cmds:
       - |
         if [ -z "{{.VERSION}}" ]; then
-          VERSION=$(yq '.{{.MODULE}}.version' {{.VERSION_FILE}})
+          VERSION=$(yq '.v1alpha1.version' {{.VERSION_FILE}})
         else
           VERSION="{{.VERSION}}"
         fi
-        
-        if [ "$VERSION" = "null" ]; then
-          echo "Error: Module '{{.MODULE}}' not found in {{.VERSION_FILE}}"
-          exit 1
-        fi
-        
-        echo "Publishing {{.MODULE}}@$VERSION to {{.LOCAL_REGISTRY}}..."
-        cd "{{.V0_DIR}}/{{.MODULE}}" && cue mod publish "$VERSION"
-        echo "Published {{.MODULE}}@$VERSION"
 
-  publish:all:local:
-    desc: Publish all modules to local registry (dependency order)
-    summary: |
-      Publish all catalog modules to the local OCI registry in dependency order.
-
-      Usage:
-        task publish:all:local
-    preconditions:
-      - sh: command -v yq >/dev/null 2>&1
-        msg: "yq is required. Install: brew install yq"
-    cmds:
-      - |
-        echo "Publishing all catalog modules to local registry..."
-        echo ""
-        
-        {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
-        VERSION=$(yq '.{{$mod.name}}.version' {{$.VERSION_FILE}})
-        echo "Publishing {{$mod.name}}@$VERSION..."
-        
-        if (cd "{{$.V0_DIR}}/{{$mod.path}}" && \
-            cue mod publish "$VERSION" 2>&1); then
-          echo "  Published {{$mod.name}}@$VERSION"
-        else
-          echo "  Failed to publish {{$mod.name}}"
-          exit 1
-        fi
-        echo ""
-        {{end}}{{end}}
-        
-        echo "All catalog modules published to {{.LOCAL_REGISTRY}}"
+        echo "Publishing v1alpha1@$VERSION to {{.LOCAL_REGISTRY}}..."
+        cd "{{.V1ALPHA1_DIR}}" && cue mod publish "$VERSION"
+        echo "Published v1alpha1@$VERSION"
 
   publish:smart:
-    desc: Auto-detect changes, cascade bump, and publish
+    desc: Auto-detect changes, bump version, and publish
     deps:
       - fmt
       - vet
     summary: |
-      Detect which modules have source changes (via checksum comparison),
-      compute the dependency cascade, bump versions, update dependency pins,
-      tidy, and publish in topological order.
+      Detect whether the v1alpha1 module has source changes (via checksum comparison),
+      bump the version, tidy, and publish.
 
       Change detection uses SHA-256 checksums of .cue files (excluding cue.mod/)
-      stored in versions.yml. This works regardless of git commit state.
+      stored in versions.yml.
 
       Usage:
         task publish:smart                    # Detect, bump patch, publish
@@ -577,16 +382,10 @@ tasks:
       - |
         set -euo pipefail
 
-        # ── Config (injected from Go templates) ─────────────────────
-        V0_DIR="{{.V0_DIR}}"
+        MODULE_DIR="{{.V1ALPHA1_DIR}}"
         VERSION_FILE="{{.VERSION_FILE}}"
         DRY_RUN="{{.DRY_RUN}}"
         BUMP_TYPE="{{.TYPE}}"
-
-        MODULES=({{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}"{{$mod.name}}" {{end}}{{end}})
-        PATHS=({{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}"{{$mod.path}}" {{end}}{{end}})
-        {{range $mod := .CATALOG_MODULES}}{{if $mod.enabled}}
-        DEPS_{{$mod.name}}="{{$mod.deps}}"{{end}}{{end}}
 
         # ── Colors ────────────────────────────────────────────────────
         BOLD='\033[1m'
@@ -594,28 +393,22 @@ tasks:
         RED='\033[0;31m'
         GREEN='\033[0;32m'
         YELLOW='\033[0;33m'
-        CYAN='\033[0;36m'
         RESET='\033[0m'
 
         # ── Helper functions ─────────────────────────────────────────
 
-        # Get current version from versions.yml
         get_version() {
-          yq ".$1.version" "$VERSION_FILE"
+          yq '.v1alpha1.version' "$VERSION_FILE"
         }
 
-        # Get stored checksum from versions.yml
         get_stored_checksum() {
-          yq ".$1.checksum // \"\"" "$VERSION_FILE"
+          yq '.v1alpha1.checksum // ""' "$VERSION_FILE"
         }
 
-        # Compute checksum of .cue files in a module (excluding cue.mod/)
         compute_checksum() {
-          local path="$1"
-          find "$V0_DIR/$path" -name '*.cue' -not -path '*/cue.mod/*' | sort | xargs sha256sum | sha256sum | awk '{print $1}'
+          find "$MODULE_DIR" -name '*.cue' -not -path '*/cue.mod/*' | sort | xargs sha256sum | sha256sum | awk '{print $1}'
         }
 
-        # Bump a version string: bump_version v0.1.0 patch → v0.1.1
         bump_version() {
           local ver="$1"
           local type="$2"
@@ -629,147 +422,67 @@ tasks:
           echo "v${major}.${minor}.${patch}"
         }
 
-        # Affected set as space-separated string
-        AFFECTED=""
-
-        is_affected() {
-          [[ " $AFFECTED " == *" $1 "* ]]
-        }
-
-        mark_affected() {
-          if ! is_affected "$1"; then
-            AFFECTED="$AFFECTED $1"
-          fi
-        }
-
-        # ── Phase 1: Detect changes (checksum-based) ────────────────
+        # ── Phase 1: Detect changes ──────────────────────────────────
 
         echo -e "${BOLD}Phase 1: Detecting changes...${RESET}"
-        CHANGED=""
 
-        # Store computed checksums for later
-        declare -A CURRENT_CHECKSUMS
+        stored=$(get_stored_checksum)
+        current=$(compute_checksum)
 
-        for i in "${!MODULES[@]}"; do
-          mod="${MODULES[$i]}"
-          path="${PATHS[$i]}"
-          stored=$(get_stored_checksum "$mod")
-          current=$(compute_checksum "$path")
-          CURRENT_CHECKSUMS[$mod]="$current"
-
-          if [ -z "$stored" ]; then
-            echo -e "  ${YELLOW}$mod${RESET}: ${YELLOW}changed${RESET} (no stored checksum)"
-            CHANGED="$CHANGED $mod"
-          elif [ "$stored" != "$current" ]; then
-            echo -e "  ${YELLOW}$mod${RESET}: ${YELLOW}changed${RESET}"
-            CHANGED="$CHANGED $mod"
-          else
-            echo -e "  ${DIM}$mod: unchanged${RESET}"
-          fi
-        done
-
-        if [ -z "$CHANGED" ]; then
+        if [ -z "$stored" ]; then
+          echo -e "  ${YELLOW}v1alpha1${RESET}: changed (no stored checksum)"
+        elif [ "$stored" != "$current" ]; then
+          echo -e "  ${YELLOW}v1alpha1${RESET}: changed"
+        else
+          echo -e "  v1alpha1: unchanged"
           echo ""
           echo -e "${GREEN}No changes detected. Nothing to publish.${RESET}"
           exit 0
         fi
 
-        # ── Phase 2: Compute cascade ────────────────────────────────
-
-        echo ""
-        echo -e "${BOLD}Phase 2: Computing cascade...${RESET}"
-
-        # Seed AFFECTED with directly changed modules
-        for mod in $CHANGED; do
-          mark_affected "$mod"
-        done
-
-        # Walk topo order, add dependents
-        for mod in "${MODULES[@]}"; do
-          if is_affected "$mod"; then
-            continue
-          fi
-          dep_var="DEPS_${mod}"
-          for dep in ${!dep_var}; do
-            if is_affected "$dep"; then
-              mark_affected "$mod"
-              echo -e "  ${CYAN}$mod${RESET}: added (depends on ${YELLOW}$dep${RESET})"
-              break
-            fi
-          done
-        done
-
-        echo ""
-        echo -e "Affected modules:${YELLOW}$AFFECTED${RESET}"
+        version=$(get_version)
+        new_version=$(bump_version "$version" "$BUMP_TYPE")
 
         # ── Dry run exit ─────────────────────────────────────────────
 
         if [ "$DRY_RUN" = "true" ]; then
           echo ""
           echo -e "${BOLD}Dry run — planned actions:${RESET}"
-          for mod in "${MODULES[@]}"; do
-            if is_affected "$mod"; then
-              version=$(get_version "$mod")
-              new_version=$(bump_version "$version" "$BUMP_TYPE")
-              echo -e "  ${YELLOW}$mod${RESET}: $version -> ${GREEN}$new_version${RESET} (bump + publish)"
-            fi
-          done
+          echo -e "  ${YELLOW}v1alpha1${RESET}: $version -> ${GREEN}$new_version${RESET} (bump + publish)"
           echo ""
           echo -e "${DIM}No changes made (dry run).${RESET}"
           exit 0
         fi
 
-        # ── Phase 3: Bump, update pins, tidy, publish, tag ──────────
+        # ── Phase 2: Bump, tidy, publish, tag ───────────────────────
 
         echo ""
-        echo -e "${BOLD}Phase 3: Publishing...${RESET}"
+        echo -e "${BOLD}Phase 2: Publishing...${RESET}"
+        echo ""
+        echo -e "${BOLD}${GREEN}[v1alpha1]${RESET} $version -> ${GREEN}$new_version${RESET}"
 
-        for i in "${!MODULES[@]}"; do
-          mod="${MODULES[$i]}"
-          path="${PATHS[$i]}"
+        # 1. Bump version
+        yq -i ".v1alpha1.version = \"${new_version}\"" "$VERSION_FILE"
 
-          if ! is_affected "$mod"; then
-            continue
-          fi
+        # 2. Tidy
+        echo "  Tidying..."
+        (cd "$MODULE_DIR" && cue mod tidy)
 
-          # 1. Bump version
-          old_version=$(get_version "$mod")
-          new_version=$(bump_version "$old_version" "$BUMP_TYPE")
-          yq -i ".${mod}.version = \"${new_version}\"" "$VERSION_FILE"
-          echo ""
-          echo -e "${BOLD}${GREEN}[$mod]${RESET} $old_version -> ${GREEN}$new_version${RESET}"
+        # 3. Publish
+        echo "  Publishing v1alpha1@${new_version}..."
+        if ! (cd "$MODULE_DIR" && cue mod publish "$new_version"); then
+          echo -e "  ${RED}Failed to publish v1alpha1${RESET}"
+          exit 1
+        fi
 
-          # 2. Update dependency pins (deps already bumped in versions.yml due to topo order)
-          dep_var="DEPS_${mod}"
-          for dep in ${!dep_var}; do
-            if is_affected "$dep"; then
-              dep_new_ver=$(get_version "$dep")
-              sed -i '/"opmodel.dev\/'"$dep"'@v0":/,/}/ s/v: ".*"/v: "'"$dep_new_ver"'"/' \
-                "$V0_DIR/$path/cue.mod/module.cue"
-              echo -e "  Updated pin: $dep -> ${CYAN}$dep_new_ver${RESET}"
-            fi
-          done
+        # 4. Tag
+        git tag "catalog/v1alpha1/${new_version}"
+        echo "  Tagged catalog/v1alpha1/${new_version}"
 
-          # 3. Tidy
-          echo "  Tidying..."
-          (cd "$V0_DIR/$path" && cue mod tidy)
-
-          # 4. Publish
-          echo "  Publishing ${mod}@${new_version}..."
-          if ! (cd "$V0_DIR/$path" && cue mod publish "$new_version"); then
-            echo -e "  ${RED}Failed to publish $mod${RESET}"
-            exit 1
-          fi
-
-          # 5. Tag
-          git tag "catalog/${mod}/${new_version}"
-          echo "  Tagged catalog/${mod}/${new_version}"
-
-          # 6. Store checksum (recompute after tidy may have changed cue.mod/)
-          new_checksum=$(compute_checksum "$path")
-          yq -i ".${mod}.checksum = \"${new_checksum}\"" "$VERSION_FILE"
-          echo -e "  Checksum: ${DIM}${new_checksum:0:12}...${RESET}"
-        done
+        # 5. Store checksum
+        new_checksum=$(compute_checksum)
+        yq -i ".v1alpha1.checksum = \"${new_checksum}\"" "$VERSION_FILE"
+        echo -e "  Checksum: ${DIM}${new_checksum:0:12}...${RESET}"
 
         echo ""
-        echo -e "${BOLD}${GREEN}Done.${RESET} Published:${YELLOW}$AFFECTED${RESET}"
+        echo -e "${BOLD}${GREEN}Done.${RESET} Published v1alpha1@${new_version}"
