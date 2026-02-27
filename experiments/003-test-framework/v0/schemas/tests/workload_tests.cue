@@ -6,6 +6,15 @@ import (
 	tst "experiments.dev/test-framework/testkit"
 )
 
+// ── UpdateStrategy types: strategy name → has rollingUpdate sub-fields ──
+_strategyTypes: ["RollingUpdate", "Recreate", "OnDelete"]
+
+// ── Metric types and whether metricName is required ──
+_metricTypes: ["cpu", "memory", "custom"]
+
+// ── Valid restart policies ──
+_restartPolicies: ["Always", "OnFailure", "Never"]
+
 #tests: tst.#Tests & {
 
 	// =========================================================================
@@ -276,24 +285,28 @@ import (
 
 	"#UpdateStrategySchema": [
 
-		// ── Positive ──
-		{
-			name:       "rolling update"
+		// for + if: generate one test per strategy type; conditionally set
+		// rollingUpdate input fields and assert them in output only for
+		// the type that supports them.
+		for s in _strategyTypes {
+			name:       "strategy \(s)"
 			definition: #UpdateStrategySchema
 			input: {
-				type: "RollingUpdate"
-				rollingUpdate: {
-					maxUnavailable: 1
-					maxSurge:       1
+				type: s
+				if s == "RollingUpdate" {
+					rollingUpdate: {maxUnavailable: 2, maxSurge: 1}
 				}
 			}
-			assert: valid: true
-		},
-		{
-			name:       "recreate"
-			definition: #UpdateStrategySchema
-			input: type:   "Recreate"
-			assert: valid: true
+			assert: {
+				valid: true
+				output: {
+					type: s
+					if s == "RollingUpdate" {
+						rollingUpdate: maxUnavailable: 2
+						rollingUpdate: maxSurge:       1
+					}
+				}
+			}
 		},
 
 		// ── Negative ──
@@ -565,9 +578,15 @@ import (
 	// =========================================================================
 
 	"#RestartPolicySchema": [
-		{name: "Always", definition: #RestartPolicySchema, input: "Always", assert: valid: true},
-		{name: "OnFailure", definition: #RestartPolicySchema, input: "OnFailure", assert: valid: true},
-		{name: "Never", definition: #RestartPolicySchema, input: "Never", assert: valid: true},
+		// for loop over all valid policy values
+		for p in _restartPolicies {
+			name:       p
+			definition: #RestartPolicySchema
+			input:      p
+			assert: valid: true
+		},
+		// ── Negative ──
+		{name: "invalid", definition: #RestartPolicySchema, input: "Sometimes", assert: valid: false},
 	]
 
 	// =========================================================================
@@ -595,8 +614,25 @@ import (
 	// =========================================================================
 
 	"#MetricSpec": [
+
+		// for + if in input: each metric type gets metricName only when
+		// type == "custom", mirroring the schema's own conditional guard.
+		for mt in _metricTypes {
+			name:       "\(mt) with target"
+			definition: #MetricSpec
+			input: {
+				type:   mt
+				target: averageUtilization: 80
+				if mt == "custom" {
+					metricName: "requests_per_second"
+				}
+			}
+			assert: valid: true
+		},
+
+		// custom without metricName must fail
 		{
-			name:       "custom metric missing name"
+			name:       "custom missing metricName"
 			definition: #MetricSpec
 			input: {
 				type: "custom"

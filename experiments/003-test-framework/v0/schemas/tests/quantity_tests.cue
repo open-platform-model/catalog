@@ -6,6 +6,73 @@ import (
 	tst "experiments.dev/test-framework/testkit"
 )
 
+// ── NormalizeCPU test data: {in, out} pairs ──
+_cpuCases: [
+	// Whole cores (number input)
+	{in: 1,  out: "1"},
+	{in: 2,  out: "2"},
+	{in: 8,  out: "8"},
+	{in: 16, out: "16"},
+	{in: 32, out: "32"},
+	{in: 64, out: "64"},
+
+	// Fractional cores (number input → millicore output)
+	{in: 0.5,   out: "500m"},
+	{in: 0.25,  out: "250m"},
+	{in: 1.5,   out: "1500m"},
+	{in: 0.1,   out: "100m"},
+
+	// Edge cases
+	{in: 0,     out: "0"},
+	{in: 0.001, out: "1m"},
+
+	// String passthrough (millicore format)
+	{in: "500m", out: "500m"},
+	{in: "100m", out: "100m"},
+	{in: "1m",   out: "1m"},
+	{in: "0m",   out: "0"},
+
+	// String: whole-core millicore values that normalize to cores
+	{in: "1000m",  out: "1"},
+	{in: "2000m",  out: "2"},
+	{in: "4000m",  out: "4"},
+	{in: "8000m",  out: "8"},
+	{in: "64000m", out: "64"},
+]
+
+// ── NormalizeMemory test data: {in, out} pairs ──
+_memoryCases: [
+	// Whole GiB (number input)
+	{in: 1,   out: "1Gi"},
+	{in: 4,   out: "4Gi"},
+	{in: 16,  out: "16Gi"},
+	{in: 32,  out: "32Gi"},
+	{in: 64,  out: "64Gi"},
+	{in: 128, out: "128Gi"},
+
+	// Fractional GiB (number input → Mi output)
+	{in: 0.5,         out: "512Mi"},
+	{in: 1.5,         out: "1536Mi"},
+	{in: 0.25,        out: "256Mi"},
+	{in: 0.125,       out: "128Mi"},
+	{in: 0.0625,      out: "64Mi"},
+	{in: 0.001953125, out: "2Mi"},
+
+	// Edge case: zero
+	{in: 0, out: "0Gi"},
+
+	// String passthrough (Mi/Gi format)
+	{in: "256Mi",   out: "256Mi"},
+	{in: "1024Mi",  out: "1024Mi"},
+	{in: "32768Mi", out: "32768Mi"},
+	{in: "4Gi",     out: "4Gi"},
+	{in: "8Gi",     out: "8Gi"},
+	{in: "128Gi",   out: "128Gi"},
+	{in: "0Mi",     out: "0Mi"},
+	{in: "1Mi",     out: "1Mi"},
+	{in: "0Gi",     out: "0Gi"},
+]
+
 #tests: tst.#Tests & {
 
 	// =========================================================================
@@ -13,37 +80,12 @@ import (
 	// =========================================================================
 
 	"#NormalizeCPU": [
-
-		// ── Whole cores (number input) ──
-		{name: "int 1", definition: #NormalizeCPU, input: {in: 1}, assert: output: out: "1"},
-		{name: "int 2", definition: #NormalizeCPU, input: {in: 2}, assert: output: out: "2"},
-		{name: "int 8", definition: #NormalizeCPU, input: {in: 8}, assert: output: out: "8"},
-		{name: "int 16", definition: #NormalizeCPU, input: {in: 16}, assert: output: out: "16"},
-		{name: "int 32", definition: #NormalizeCPU, input: {in: 32}, assert: output: out: "32"},
-		{name: "int 64", definition: #NormalizeCPU, input: {in: 64}, assert: output: out: "64"},
-
-		// ── Fractional cores (number input) ──
-		{name: "float 0.5", definition: #NormalizeCPU, input: {in: 0.5}, assert: output: out: "500m"},
-		{name: "float 0.25", definition: #NormalizeCPU, input: {in: 0.25}, assert: output: out: "250m"},
-		{name: "float 1.5", definition: #NormalizeCPU, input: {in: 1.5}, assert: output: out: "1500m"},
-		{name: "float 0.1", definition: #NormalizeCPU, input: {in: 0.1}, assert: output: out: "100m"},
-
-		// ── Edge cases: zero and minimum ──
-		{name: "zero", definition: #NormalizeCPU, input: {in: 0}, assert: output: out: "0"},
-		{name: "float 0.001", definition: #NormalizeCPU, input: {in: 0.001}, assert: output: out: "1m"},
-
-		// ── String passthrough (millicore format) ──
-		{name: "string 500m", definition: #NormalizeCPU, input: {in: "500m"}, assert: output: out: "500m"},
-		{name: "string 100m", definition: #NormalizeCPU, input: {in: "100m"}, assert: output: out: "100m"},
-		{name: "string 1m", definition: #NormalizeCPU, input: {in: "1m"}, assert: output: out: "1m"},
-		{name: "string 0m", definition: #NormalizeCPU, input: {in: "0m"}, assert: output: out: "0"},
-
-		// ── String: whole-core millicore values ──
-		{name: "string 1000m", definition: #NormalizeCPU, input: {in: "1000m"}, assert: output: out: "1"},
-		{name: "string 2000m", definition: #NormalizeCPU, input: {in: "2000m"}, assert: output: out: "2"},
-		{name: "string 4000m", definition: #NormalizeCPU, input: {in: "4000m"}, assert: output: out: "4"},
-		{name: "string 8000m", definition: #NormalizeCPU, input: {in: "8000m"}, assert: output: out: "8"},
-		{name: "string 64000m", definition: #NormalizeCPU, input: {in: "64000m"}, assert: output: out: "64"},
+		for c in _cpuCases {
+			name:       "cpu \(c.in) -> \(c.out)"
+			definition: #NormalizeCPU
+			input: in:  c.in
+			assert: output: out: c.out
+		},
 	]
 
 	// =========================================================================
@@ -51,36 +93,12 @@ import (
 	// =========================================================================
 
 	"#NormalizeMemory": [
-
-		// ── Whole GiB (number input) ──
-		{name: "int 1", definition: #NormalizeMemory, input: {in: 1}, assert: output: out: "1Gi"},
-		{name: "int 4", definition: #NormalizeMemory, input: {in: 4}, assert: output: out: "4Gi"},
-		{name: "int 16", definition: #NormalizeMemory, input: {in: 16}, assert: output: out: "16Gi"},
-		{name: "int 32", definition: #NormalizeMemory, input: {in: 32}, assert: output: out: "32Gi"},
-		{name: "int 64", definition: #NormalizeMemory, input: {in: 64}, assert: output: out: "64Gi"},
-		{name: "int 128", definition: #NormalizeMemory, input: {in: 128}, assert: output: out: "128Gi"},
-
-		// ── Fractional GiB (number input, converted to Mi) ──
-		{name: "float 0.5", definition: #NormalizeMemory, input: {in: 0.5}, assert: output: out: "512Mi"},
-		{name: "float 1.5", definition: #NormalizeMemory, input: {in: 1.5}, assert: output: out: "1536Mi"},
-		{name: "float 0.25", definition: #NormalizeMemory, input: {in: 0.25}, assert: output: out: "256Mi"},
-		{name: "float 0.125", definition: #NormalizeMemory, input: {in: 0.125}, assert: output: out: "128Mi"},
-		{name: "float 0.0625", definition: #NormalizeMemory, input: {in: 0.0625}, assert: output: out: "64Mi"},
-		{name: "float 0.001953125", definition: #NormalizeMemory, input: {in: 0.001953125}, assert: output: out: "2Mi"},
-
-		// ── Edge cases: zero ──
-		{name: "zero", definition: #NormalizeMemory, input: {in: 0}, assert: output: out: "0Gi"},
-
-		// ── String passthrough (Mi/Gi format) ──
-		{name: "string 256Mi", definition: #NormalizeMemory, input: {in: "256Mi"}, assert: output: out: "256Mi"},
-		{name: "string 1024Mi", definition: #NormalizeMemory, input: {in: "1024Mi"}, assert: output: out: "1024Mi"},
-		{name: "string 32768Mi", definition: #NormalizeMemory, input: {in: "32768Mi"}, assert: output: out: "32768Mi"},
-		{name: "string 4Gi", definition: #NormalizeMemory, input: {in: "4Gi"}, assert: output: out: "4Gi"},
-		{name: "string 8Gi", definition: #NormalizeMemory, input: {in: "8Gi"}, assert: output: out: "8Gi"},
-		{name: "string 128Gi", definition: #NormalizeMemory, input: {in: "128Gi"}, assert: output: out: "128Gi"},
-		{name: "string 0Mi", definition: #NormalizeMemory, input: {in: "0Mi"}, assert: output: out: "0Mi"},
-		{name: "string 1Mi", definition: #NormalizeMemory, input: {in: "1Mi"}, assert: output: out: "1Mi"},
-		{name: "string 0Gi", definition: #NormalizeMemory, input: {in: "0Gi"}, assert: output: out: "0Gi"},
+		for c in _memoryCases {
+			name:       "mem \(c.in) -> \(c.out)"
+			definition: #NormalizeMemory
+			input: in:  c.in
+			assert: output: out: c.out
+		},
 	]
 
 	// =========================================================================
