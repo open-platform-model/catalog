@@ -32,5 +32,6 @@ import (
 		(k8s_transformers.#ServiceAccountTransformer.metadata.fqn): k8s_transformers.#ServiceAccountTransformer
 		(k8s_transformers.#HPATransformer.metadata.fqn):            k8s_transformers.#HPATransformer
 		(k8s_transformers.#IngressTransformer.metadata.fqn):        k8s_transformers.#IngressTransformer
+		(k8s_transformers.#CRDTransformer.metadata.fqn):            k8s_transformers.#CRDTransformer
 	}
 }
