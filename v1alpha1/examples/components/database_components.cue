@@ -2,6 +2,7 @@ package components
 
 import (
 	core "opmodel.dev/core@v1"
+	schemas "opmodel.dev/schemas@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 	storage_resources "opmodel.dev/resources/storage@v1"
 	workload_traits "opmodel.dev/traits/workload@v1"
@@ -23,6 +24,8 @@ mongodbComponent: core.#Component & {
 	workload_resources.#Container
 	storage_resources.#Volumes
 	workload_traits.#Scaling
+
+	_volumes: spec.volumes
 
 	spec: {
 		scaling: count: 1
@@ -52,10 +55,9 @@ mongodbComponent: core.#Component & {
 				}
 			}
 			volumeMounts: {
-				"mongo-data": {
-					name:      "mongo-data"
+				"mongo-data": schemas.#VolumeMountSchema & {
 					mountPath: "/data/db"
-				}
+				} & _volumes["mongo-data"]
 			}
 		}
 		volumes: "mongo-data": {
@@ -80,6 +82,8 @@ postgresComponent: core.#Component & {
 	workload_resources.#Container
 	storage_resources.#Volumes
 	workload_traits.#Scaling
+
+	_volumes: spec.volumes
 
 	spec: {
 		scaling: count: 1
@@ -109,10 +113,9 @@ postgresComponent: core.#Component & {
 				}
 			}
 			volumeMounts: {
-				"postgres-data": {
-					name:      "postgres-data"
+				"postgres-data": schemas.#VolumeMountSchema & {
 					mountPath: "/var/lib/postgresql/data"
-				}
+				} & _volumes["postgres-data"]
 			}
 		}
 		volumes: "postgres-data": {

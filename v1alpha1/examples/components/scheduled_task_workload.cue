@@ -2,7 +2,9 @@ package components
 
 import (
 	core "opmodel.dev/core@v1"
+	schemas "opmodel.dev/schemas@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
+	storage_resources "opmodel.dev/resources/storage@v1"
 	workload_traits "opmodel.dev/traits/workload@v1"
 )
 
@@ -20,9 +22,12 @@ scheduledTaskWorkload: core.#Component & {
 
 	// Compose resources and traits using helpers
 	workload_resources.#Container
+	storage_resources.#Volumes
 	workload_traits.#RestartPolicy
 	workload_traits.#CronJobConfig
 	workload_traits.#InitContainers
+
+	_volumes: spec.volumes
 
 	spec: {
 		restartPolicy: "OnFailure"
@@ -83,9 +88,16 @@ scheduledTaskWorkload: core.#Component & {
 				}
 			}
 			volumeMounts: {
-				backups: {
-					name:      "backup-storage"
+				backups: schemas.#VolumeMountSchema & {
 					mountPath: "/backups"
+				} & _volumes.backups
+			}
+		}
+		volumes: {
+			backups: {
+				name: "backup-storage"
+				persistentClaim: {
+					size: "50Gi"
 				}
 			}
 		}

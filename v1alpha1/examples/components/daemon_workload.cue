@@ -2,7 +2,9 @@ package components
 
 import (
 	core "opmodel.dev/core@v1"
+	schemas "opmodel.dev/schemas@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
+	storage_resources "opmodel.dev/resources/storage@v1"
 	workload_traits "opmodel.dev/traits/workload@v1"
 )
 
@@ -20,8 +22,11 @@ daemonWorkload: core.#Component & {
 
 	// Compose resources and traits using helpers
 	workload_resources.#Container
+	storage_resources.#Volumes
 	workload_traits.#RestartPolicy
 	workload_traits.#UpdateStrategy
+
+	_volumes: spec.volumes
 
 	spec: {
 		restartPolicy: "Always"
@@ -55,16 +60,14 @@ daemonWorkload: core.#Component & {
 				}
 			}
 			volumeMounts: {
-				proc: {
-					name:      "proc"
+				proc: schemas.#VolumeMountSchema & {
 					mountPath: "/host/proc"
 					readOnly:  true
-				}
-				sys: {
-					name:      "sys"
+				} & _volumes.proc
+				sys: schemas.#VolumeMountSchema & {
 					mountPath: "/host/sys"
 					readOnly:  true
-				}
+				} & _volumes.sys
 			}
 			livenessProbe: {
 				httpGet: {
@@ -81,6 +84,16 @@ daemonWorkload: core.#Component & {
 				}
 				initialDelaySeconds: 5
 				periodSeconds:       10
+			}
+		}
+		volumes: {
+			proc: {
+				name: "proc"
+				hostPath: path: "/proc"
+			}
+			sys: {
+				name: "sys"
+				hostPath: path: "/sys"
 			}
 		}
 	}

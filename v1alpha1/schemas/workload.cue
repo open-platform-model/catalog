@@ -26,6 +26,9 @@ import (
 	// Environment variables for the container
 	env?: [envName=string]: #EnvVarSchema & {name: envName} // Name is automatically set to the key in the env map
 
+	// Bulk injection of all keys from ConfigMaps/Secrets as env vars
+	envFrom?: [...#EnvFromSource]
+
 	// Command to run in the container
 	command?: [...string]
 
@@ -88,9 +91,46 @@ import (
 	}
 }
 
+// Environment variable specification.
+// Exactly one of value, from, fieldRef, or resourceFieldRef must be set.
+//   value:            inline literal (non-sensitive config)
+//   from:             reference to a #Secret in #config (sensitive)
+//   fieldRef:         downward API (pod metadata)
+//   resourceFieldRef: container resource limits/requests
 #EnvVarSchema: {
-	name:   string
-	value!: string
+	name!: string
+
+	// Source — exactly one must be set
+	value?:            string                  // inline literal (non-sensitive)
+	from?:             #Secret                 // reference to a #Secret in #config
+	fieldRef?:         #FieldRefSchema         // downward API
+	resourceFieldRef?: #ResourceFieldRefSchema // container resource fields
+}
+
+// Downward API field reference — expose pod/container metadata as env vars.
+// Supported fieldPath values: metadata.name, metadata.namespace, metadata.uid,
+// metadata.labels['<KEY>'], metadata.annotations['<KEY>'], spec.nodeName,
+// spec.serviceAccountName, status.podIP, status.hostIP
+#FieldRefSchema: {
+	fieldPath!:  string
+	apiVersion?: string | *"v1"
+}
+
+// Container resource field reference — expose resource limits/requests as env vars.
+// Supported resource values: limits.cpu, limits.memory, limits.ephemeral-storage,
+// requests.cpu, requests.memory, requests.ephemeral-storage
+#ResourceFieldRefSchema: {
+	resource!:      string
+	containerName?: string // defaults to current container
+	divisor?:       string // e.g., "1m" for millicores, "1Mi" for mebibytes
+}
+
+// Bulk injection source — inject all keys from a ConfigMap or Secret as env vars.
+// Exactly one of secretRef or configMapRef must be set.
+#EnvFromSource: {
+	secretRef?: {name!: string} // K8s Secret name (= $secretName)
+	configMapRef?: {name!: string} // K8s ConfigMap name
+	prefix?: string // optional prefix for injected keys
 }
 
 #ResourceRequirementsSchema: {

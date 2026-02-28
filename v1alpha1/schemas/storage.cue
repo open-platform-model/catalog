@@ -10,7 +10,7 @@ package schemas
 
 	mountPath!: string
 	subPath?:   string
-	readOnly?:  bool | *false
+	readOnly:   bool | *false
 }
 
 // Volume specification - defines storage source
@@ -22,6 +22,7 @@ package schemas
 	persistentClaim?: #PersistentClaimSchema
 	configMap?:       #ConfigMapSchema
 	secret?:          #SecretSchema
+	hostPath?:        #HostPathSchema
 
 	// Exactly one volume source must be set
 	matchN(1, [
@@ -29,6 +30,7 @@ package schemas
 		{persistentClaim!: _},
 		{configMap!: _},
 		{secret!: _},
+		{hostPath!: _},
 	])
 
 	// // Optional fields for volume mounts. But only applicable when the volume is used as a mount
@@ -43,26 +45,15 @@ package schemas
 	sizeLimit?: string
 }
 
+// HostPath specification - mounts a file or directory from the host node
+#HostPathSchema: {
+	path!: string
+	type?: *"" | "DirectoryOrCreate" | "Directory" | "FileOrCreate" | "File" | "Socket" | "CharDevice" | "BlockDevice"
+}
+
 // Persistent claim specification
 #PersistentClaimSchema: {
 	size:         string
 	accessMode:   "ReadWriteOnce" | "ReadOnlyMany" | "ReadWriteMany" | *"ReadWriteOnce"
 	storageClass: string | *"standard"
 }
-
-_testVolume: #VolumeSchema & {
-	name: "test-volume"
-	configMap: {
-		data: {
-			"key1": "value1"
-			"key2": "value2"
-		}
-	}
-}
-
-_testVolumeMount: #VolumeMountSchema & {
-		name:      "test-volume"
-		mountPath: "/data"
-		subPath:   "subdir"
-		readOnly:  true
-} & _testVolume // Inherit the volume

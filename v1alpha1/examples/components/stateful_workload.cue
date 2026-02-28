@@ -2,6 +2,7 @@ package components
 
 import (
 	core "opmodel.dev/core@v1"
+	schemas "opmodel.dev/schemas@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 	storage_resources "opmodel.dev/resources/storage@v1"
 	workload_traits "opmodel.dev/traits/workload@v1"
@@ -26,6 +27,8 @@ statefulWorkload: core.#Component & {
 	workload_traits.#RestartPolicy
 	workload_traits.#UpdateStrategy
 	workload_traits.#InitContainers
+
+	_volumes: spec.volumes
 
 	spec: {
 		scaling: count: int | *1
@@ -107,10 +110,9 @@ statefulWorkload: core.#Component & {
 				}
 			}
 			volumeMounts: {
-				data: {
-					name:      "data"
+				data: schemas.#VolumeMountSchema & {
 					mountPath: "/var/lib/postgresql/data"
-				}
+				} & _volumes.data
 			}
 		}
 		volumes: data: {

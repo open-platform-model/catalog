@@ -184,22 +184,16 @@ _component: {
 			// but the container helper must strip source data from K8s output.
 			volumeMounts: {
 				"app-config": schemas.#VolumeMountSchema & {
-					name:      "app-config"
 					mountPath: "/etc/app"
 					readOnly:  true
-					configMap: _appConfigCM
-				}
+				} & volumes["app-config"]
 				"db-secrets": schemas.#VolumeMountSchema & {
-					name:      "db-secrets"
 					mountPath: "/etc/secrets/db"
 					readOnly:  true
-					secret:    _dbCredsSecret
-				}
+				} & volumes["db-secrets"]
 				"tmp": schemas.#VolumeMountSchema & {
-					name:      "tmp"
 					mountPath: "/tmp"
-					emptyDir: {}
-				}
+				} & volumes["tmp"]
 			}
 		}
 
@@ -213,7 +207,7 @@ _component: {
 				name:   "db-secrets"
 				secret: _dbCredsSecret
 			}
-			tmp: schemas.#VolumeSchema & {
+			"tmp": schemas.#VolumeSchema & {
 				name: "tmp"
 				emptyDir: {}
 			}
