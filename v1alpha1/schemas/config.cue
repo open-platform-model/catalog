@@ -178,47 +178,47 @@ import (
 // #DiscoverSecrets walks a resolved config (up to 3 levels deep)
 // and collects all fields whose value is a #Secret.
 //
-// The detection uses a negation test:
-//   (v & {$opm: !="secret", ...}) == _|_
-// This produces bottom ONLY when $opm is already "secret" on the value.
-// Anonymous open structs without $opm get the constraint added
-// harmlessly (no conflict), so they are correctly skipped.
-// Scalars (string, int, bool) fail the struct check and are skipped.
+// The detection checks for the presence of the $opm discriminator field:
+//   v.$opm != _|_
+// This succeeds only when $opm is already set on the value (concrete #Secret).
+// Scalars, closed structs (e.g., #Image), and open structs without $opm
+// are all correctly skipped.
+//
+// For recursion into nested structs, we check:
+//   v.$opm == _|_   (not a secret itself)
+//   (v & {...}) != _|_ (is a struct we can iterate into)
 //
 // The result is a flat map of all discovered secrets, keyed by
 // their path (e.g., "dbUser", "database/password", "auth/tokens/api").
 // The path keys are internal identifiers — grouping uses $secretName/$dataKey.
 #DiscoverSecrets: {
-	#in: {...}
+	X=#in: {...}
 	out: {
 		// Level 1: direct fields
-		for k1, v1 in #in
-		if ((v1 & {$opm: !="secret", ...}) == _|_)
-		if ((v1 & {...}) != _|_) {
+		for k1, v1 in X
+		if (v1.$opm != _|_) {
 			(k1): v1
 		}
 
 		// Level 2: one level of nesting
-		for k1, v1 in #in
-		if ((v1 & {$opm: !="secret", ...}) != _|_)
+		for k1, v1 in X
+		if (v1.$opm == _|_)
 		if ((v1 & {...}) != _|_) {
 			for k2, v2 in v1
-			if ((v2 & {$opm: !="secret", ...}) == _|_)
-			if ((v2 & {...}) != _|_) {
+			if (v2.$opm != _|_) {
 				("\(k1)/\(k2)"): v2
 			}
 		}
 
 		// Level 3: two levels of nesting
-		for k1, v1 in #in
-		if ((v1 & {$opm: !="secret", ...}) != _|_)
+		for k1, v1 in X
+		if (v1.$opm == _|_)
 		if ((v1 & {...}) != _|_) {
 			for k2, v2 in v1
-			if ((v2 & {$opm: !="secret", ...}) != _|_)
+			if (v2.$opm == _|_)
 			if ((v2 & {...}) != _|_) {
 				for k3, v3 in v2
-				if ((v3 & {$opm: !="secret", ...}) == _|_)
-				if ((v3 & {...}) != _|_) {
+				if (v3.$opm != _|_) {
 					("\(k1)/\(k2)/\(k3)"): v3
 				}
 			}
@@ -231,9 +231,9 @@ import (
 // The result structure mirrors the K8s Secret resource layout:
 //   { "db-creds": { username: #Secret, password: #Secret }, ... }
 #GroupSecrets: {
-	#in: {...}
+	X=#in: {...}
 	out: {
-		for _k, v in #in {
+		for _k, v in X {
 			(v.$secretName): (v.$dataKey): v
 		}
 	}
@@ -242,8 +242,9 @@ import (
 // #AutoSecrets discovers all #Secret instances from a resolved config
 // and groups them by $secretName/$dataKey in one step.
 // Output is ready to use as spec.secrets data entries.
+//
 #AutoSecrets: {
-	#in: {...}
-	_discovered: (#DiscoverSecrets & {#in: #in}).out
+	X=#in: {...}
+	let _discovered = (#DiscoverSecrets & {#in: X}).out
 	out: (#GroupSecrets & {#in: _discovered}).out
 }

@@ -36,22 +36,22 @@ import (
 	#module!:        #Module
 	#moduleMetadata: #module.metadata
 
-	_module: #module & {#config: values}
+	let unifiedModule = #module & {#config: values}
 
 	// Auto-discover all #Secret instances from the resolved config.
 	// Groups them by $secretName / $dataKey → K8s Secret resource layout.
 	// Empty when #config contains no #Secret fields.
 	// The CLI reads this field to generate the opm-secrets component at deploy time.
 	// CUE cannot generate that component here due to a core → resources/config import cycle.
-	_autoSecrets: (schemas.#AutoSecrets & {#in: _module.#config}).out
+	autoSecrets: (schemas.#AutoSecrets & {#in: unifiedModule.#config}).out
 
 	// Components defined in this module release
-	components: _module.#components
+	components: unifiedModule.#components
 
 	// Module-level policies (if any)
 	policies?: [Id=string]: #Policy
-	if _module.#policies != _|_ {
-		policies: _module.#policies
+	if unifiedModule.#policies != _|_ {
+		policies: unifiedModule.#policies
 	}
 
 	// Concrete values (everything closed/concrete)
