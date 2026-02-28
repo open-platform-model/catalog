@@ -187,16 +187,16 @@ import (
 		}
 		if vol.configMap != _|_ {
 			configMap: name: (schemas.#ImmutableName & {
-				#baseName:  vol.configMap.name
-				#data:      vol.configMap.data
-				#immutable: vol.configMap.immutable
+				baseName:  vol.configMap.name
+				data:      vol.configMap.data
+				immutable: vol.configMap.immutable
 			}).out
 		}
 		if vol.secret != _|_ {
 			secret: secretName: (schemas.#SecretImmutableName & {
-				#baseName:  vol.secret.name
-				#data:      vol.secret.data
-				#immutable: vol.secret.immutable
+				baseName:  vol.secret.name
+				data:      vol.secret.data
+				immutable: vol.secret.immutable
 			}).out
 		}
 	}]

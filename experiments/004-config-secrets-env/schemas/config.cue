@@ -65,35 +65,40 @@ import (
 // data holds #Secret entries (not plain strings).
 // name is auto-populated from the map key in resources/config/secret.cue.
 #SecretSchema: {
-	name!:      string
-	type?:      string | *"Opaque" | "kubernetes.io/service-account-token" | "kubernetes.io/dockercfg" | "kubernetes.io/dockerconfigjson" | "kubernetes.io/basic-auth" | "kubernetes.io/ssh-auth" | "kubernetes.io/tls" | "bootstrap.kubernetes.io/token"
-	immutable?: bool | *false
+	name!:     string
+	type:      *"Opaque" | "kubernetes.io/service-account-token" | "kubernetes.io/dockercfg" | "kubernetes.io/dockerconfigjson" | "kubernetes.io/basic-auth" | "kubernetes.io/ssh-auth" | "kubernetes.io/tls" | "bootstrap.kubernetes.io/token"
+	immutable: bool | *false
 	data: [string]: #Secret
 }
 
 // ConfigMap specification.
 // name is auto-populated from the map key in resources/config/configmap.cue.
 #ConfigMapSchema: {
-	name!:      string
-	immutable?: bool | *false
+	name!:     string
+	immutable: bool | *false
 	data: [string]: string
 }
 
 /////////////////////////////////////////////////////////////////
 //// Content Hash Helpers
+////
+//// These helpers use regular fields (not #-prefixed definitions)
+//// for their inputs. Definition fields lose concrete values when
+//// forwarded via `{#data: #data}` — only the constraint propagates.
+//// Regular fields carry concrete values through unification chains.
 /////////////////////////////////////////////////////////////////
 
 // #ContentHash computes a deterministic 10-character hex hash of a string data map.
 // Used by ConfigMapTransformer and as a building block for #SecretContentHash.
 #ContentHash: {
-	#data: [string]: string
+	data: [string]: string
 
 	// Step 1: Extract and sort keys for deterministic ordering
-	let _keys = [for k, _ in #data {k}]
+	let _keys = [for k, _ in data {k}]
 	let _sorted = list.SortStrings(_keys)
 
 	// Step 2: Concatenate sorted key=value pairs
-	let _pairs = [for _, k in _sorted {"\(k)=\(#data[k])"}]
+	let _pairs = [for _, k in _sorted {"\(k)=\(data[k])"}]
 	let _concat = strings.Join(_pairs, "\n")
 
 	// Step 3: SHA256 and take first 5 bytes (10 hex characters)
@@ -106,11 +111,11 @@ import (
 //   #SecretK8sRef   -> key=k8sref:<secretName>:<remoteKey>
 //   #SecretEsoRef   -> key=esoref:<externalPath>:<remoteKey>
 #SecretContentHash: {
-	#data: [string]: #Secret
+	data: [string]: #Secret
 
 	// Normalize each #Secret entry to a string for hashing
 	let _normalized = {
-		for k, v in #data {
+		for k, v in data {
 			if (v & #SecretLiteral) != _|_ {
 				"\(k)": v.value
 			}
@@ -123,40 +128,46 @@ import (
 		}
 	}
 
-	out: (#ContentHash & {#data: _normalized}).out
+	out: (#ContentHash & {data: _normalized}).out
 }
 
-// #ImmutableName computes the resource name, with or without hash suffix.
-// Used by ConfigMapTransformer with string data.
+// #ImmutableName computes the K8s resource name for a ConfigMap.
+// Appends a content-hash suffix when immutable (RFC-0003).
+//
+// Note: `let _d = data` is required to capture concrete field values.
+// CUE does not forward concrete entries through open patterns like
+// `[string]: string` when passed via `{data: data}` in definitions.
 #ImmutableName: {
-	#baseName: string
-	#data: [string]: string
-	#immutable: bool | *false
+	baseName:  string
+	data: [string]: string
+	immutable: bool | *false
 
-	_hash: (#ContentHash & {#data: #data}).out
+	let _d = data
+	_hash: (#ContentHash & {data: _d}).out
 
-	if #immutable {
-		out: "\(#baseName)-\(_hash)"
+	if immutable {
+		out: "\(baseName)-\(_hash)"
 	}
-	if !#immutable {
-		out: #baseName
+	if !immutable {
+		out: baseName
 	}
 }
 
-// #SecretImmutableName computes the resource name for secrets with #Secret data.
-// Used by SecretTransformer.
+// #SecretImmutableName computes the K8s resource name for a Secret.
+// Appends a content-hash suffix when immutable (RFC-0003).
 #SecretImmutableName: {
-	#baseName: string
-	#data: [string]: #Secret
-	#immutable: bool | *false
+	baseName:  string
+	data: [string]: #Secret
+	immutable: bool | *false
 
-	_hash: (#SecretContentHash & {#data: #data}).out
+	let _d = data
+	_hash: (#SecretContentHash & {data: _d}).out
 
-	if #immutable {
-		out: "\(#baseName)-\(_hash)"
+	if immutable {
+		out: "\(baseName)-\(_hash)"
 	}
-	if !#immutable {
-		out: #baseName
+	if !immutable {
+		out: baseName
 	}
 }
 

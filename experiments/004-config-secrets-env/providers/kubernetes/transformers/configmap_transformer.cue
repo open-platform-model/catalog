@@ -43,11 +43,11 @@ import (
 		output: {
 			for _cmName, cm in _configMaps {
 				// Compute the deterministic K8s resource name
-				let _k8sName = (schemas.#ImmutableName & {
-					#baseName:  cm.name
-					#data:      cm.data
-					#immutable: cm.immutable
-				}).out
+			let _k8sName = (schemas.#ImmutableName & {
+				baseName:  cm.name
+				data:      cm.data
+				immutable: cm.immutable
+			}).out
 
 				"\(_k8sName)": k8scorev1.#ConfigMap & {
 					apiVersion: "v1"

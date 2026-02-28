@@ -10,7 +10,7 @@ package schemas
 
 	mountPath!: string
 	subPath?:   string
-	readOnly?:  bool | *false
+	readOnly:   bool | *false
 }
 
 // Volume specification - defines storage source

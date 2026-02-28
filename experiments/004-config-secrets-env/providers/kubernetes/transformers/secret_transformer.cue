@@ -50,9 +50,9 @@ import (
 			for _secretName, secret in _secrets {
 				// Compute the deterministic K8s resource name
 				let _k8sName = (schemas.#SecretImmutableName & {
-					#baseName:  secret.name
-					#data:      secret.data
-					#immutable: secret.immutable
+					baseName:  secret.name
+					data:      secret.data
+					immutable: secret.immutable
 				}).out
 
 				// Collect #SecretLiteral entries for K8s Secret stringData
