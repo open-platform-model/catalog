@@ -1,0 +1,18 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "grub": "gruvbox",
+    "permission": {
+        "external_directory": {
+            "../cli/**": "allow",
+            "../opm/**": "allow",
+            "../opmodel.dev/**": "allow"
+        },
+        "read": {
+            "*": "allow",
+            "*.env": "deny",
+            "*.envrc": "deny",
+            "*.env.*": "deny",
+            "*.env.example": "allow"
+        }
+    }
+}
