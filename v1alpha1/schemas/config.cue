@@ -175,13 +175,20 @@ import (
 //// Secret Discovery Pipeline
 /////////////////////////////////////////////////////////////////
 
-// _#discoverSecrets walks a resolved config (up to 3 levels deep)
+// #DiscoverSecrets walks a resolved config (up to 3 levels deep)
 // and collects all fields whose value is a #Secret.
 //
 // The detection uses a negation test:
 //   (v & {$opm: !="secret", ...}) == _|_
 // This produces bottom ONLY when $opm is already "secret" on the value.
-_#discoverSecrets: {
+// Anonymous open structs without $opm get the constraint added
+// harmlessly (no conflict), so they are correctly skipped.
+// Scalars (string, int, bool) fail the struct check and are skipped.
+//
+// The result is a flat map of all discovered secrets, keyed by
+// their path (e.g., "dbUser", "database/password", "auth/tokens/api").
+// The path keys are internal identifiers — grouping uses $secretName/$dataKey.
+#DiscoverSecrets: {
 	#in: {...}
 	out: {
 		// Level 1: direct fields
@@ -219,13 +226,24 @@ _#discoverSecrets: {
 	}
 }
 
-// _#groupSecrets takes a flat map of discovered secrets and groups
+// #GroupSecrets takes a flat map of discovered secrets and groups
 // them by $secretName, keyed by $dataKey.
-_#groupSecrets: {
+// The result structure mirrors the K8s Secret resource layout:
+//   { "db-creds": { username: #Secret, password: #Secret }, ... }
+#GroupSecrets: {
 	#in: {...}
 	out: {
 		for _k, v in #in {
 			(v.$secretName): (v.$dataKey): v
 		}
 	}
+}
+
+// #AutoSecrets discovers all #Secret instances from a resolved config
+// and groups them by $secretName/$dataKey in one step.
+// Output is ready to use as spec.secrets data entries.
+#AutoSecrets: {
+	#in: {...}
+	_discovered: (#DiscoverSecrets & {#in: #in}).out
+	out: (#GroupSecrets & {#in: _discovered}).out
 }

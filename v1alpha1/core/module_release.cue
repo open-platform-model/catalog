@@ -2,6 +2,7 @@ package core
 
 import (
 	cue_uuid "uuid"
+	schemas "opmodel.dev/schemas@v1"
 )
 
 // #ModuleRelease: The concrete deployment instance
@@ -37,6 +38,13 @@ import (
 
 	_module: #module & {#config: values}
 
+	// Auto-discover all #Secret instances from the resolved config.
+	// Groups them by $secretName / $dataKey → K8s Secret resource layout.
+	// Empty when #config contains no #Secret fields.
+	// The CLI reads this field to generate the opm-secrets component at deploy time.
+	// CUE cannot generate that component here due to a core → resources/config import cycle.
+	_autoSecrets: (schemas.#AutoSecrets & {#in: _module.#config}).out
+
 	// Components defined in this module release
 	components: _module.#components
 
@@ -48,8 +56,6 @@ import (
 
 	// Concrete values (everything closed/concrete)
 	// Must satisfy the #config from #module
-	// It is unified and validated in the runtime
-	// _val:   #module.#config & values
 	values: _
 }
 
