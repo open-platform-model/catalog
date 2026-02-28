@@ -2,11 +2,13 @@ package transformers
 
 import (
 	core "opmodel.dev/core@v1"
+	schemas "opmodel.dev/schemas@v1"
 	config_resources "opmodel.dev/resources/config@v1"
 	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v1"
 )
 
-// ConfigMapTransformer converts ConfigMaps resources to Kubernetes ConfigMaps
+// ConfigMapTransformer converts ConfigMaps resources to Kubernetes ConfigMaps.
+// Supports immutable ConfigMaps with content-hash naming (RFC-0003).
 #ConfigMapTransformer: core.#Transformer & {
 	metadata: {
 		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
@@ -39,18 +41,27 @@ import (
 
 		// Generate a K8s ConfigMap for each entry in the map
 		output: {
-			for cmName, cm in _configMaps {
-				"\(cmName)": k8scorev1.#ConfigMap & {
+			for _cmName, cm in _configMaps {
+				// Compute the deterministic K8s resource name
+				let _k8sName = (schemas.#ImmutableName & {
+					#baseName:  cm.name
+					#data:      cm.data
+					#immutable: cm.immutable
+				}).out
+
+				"\(_k8sName)": k8scorev1.#ConfigMap & {
 					apiVersion: "v1"
 					kind:       "ConfigMap"
 					metadata: {
-						name:      cmName
+						name:      _k8sName
 						namespace: #context.namespace
 						labels:    #context.labels
-						// Include component annotations if present
 						if len(#context.componentAnnotations) > 0 {
 							annotations: #context.componentAnnotations
 						}
+					}
+					if cm.immutable == true {
+						immutable: true
 					}
 					data: cm.data
 				}

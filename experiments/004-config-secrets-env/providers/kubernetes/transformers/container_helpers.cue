@@ -8,6 +8,12 @@ import (
 // #ToK8sContainer converts an OPM #ContainerSchema to a Kubernetes #Container.
 // OPM uses struct-keyed env/ports/volumeMounts; Kubernetes expects lists.
 //
+// Env var dispatch:
+//   value?            -> { name, value }
+//   from?             -> { name, valueFrom: { secretKeyRef: ... } }
+//   fieldRef?         -> { name, valueFrom: { fieldRef: ... } }
+//   resourceFieldRef? -> { name, valueFrom: { resourceFieldRef: ... } }
+//
 // Usage:
 //   (#ToK8sContainer & {"in": _container}).out
 #ToK8sContainer: {
@@ -32,9 +38,68 @@ import (
 				if p.hostPort != _|_ {hostPort: p.hostPort}
 			}]
 		}
+
+		// Env var dispatch: map OPM source types to K8s env entries
 		if X.env != _|_ {
-			env: [for _, e in X.env {e}]
+			env: [for _, e in X.env {
+				// Literal value — inline string
+				if e.value != _|_ {
+					name:  e.name
+					value: e.value
+				}
+
+				// Secret reference — dispatch by variant
+				if e.from != _|_ {
+					name: e.name
+					// #SecretK8sRef: use the pre-existing K8s Secret name + key
+					if e.from.secretName != _|_ {
+						valueFrom: secretKeyRef: {
+							name: e.from.secretName
+							key:  e.from.remoteKey
+						}
+					}
+
+					// #SecretLiteral / #SecretEsoRef: use $secretName / $dataKey
+					if e.from.secretName == _|_ {
+						valueFrom: secretKeyRef: {
+							name: e.from.$secretName
+							key:  e.from.$dataKey
+						}
+					}
+				}
+
+				// Downward API — pod/container metadata
+				if e.fieldRef != _|_ {
+					name: e.name
+					valueFrom: fieldRef: {
+						fieldPath: e.fieldRef.fieldPath
+						if e.fieldRef.apiVersion != _|_ {
+							apiVersion: e.fieldRef.apiVersion
+						}
+					}
+				}
+
+				// Container resource limits/requests
+				if e.resourceFieldRef != _|_ {
+					name: e.name
+					valueFrom: resourceFieldRef: {
+						resource: e.resourceFieldRef.resource
+						if e.resourceFieldRef.containerName != _|_ {
+							containerName: e.resourceFieldRef.containerName
+						}
+						if e.resourceFieldRef.divisor != _|_ {
+							divisor: e.resourceFieldRef.divisor
+						}
+					}
+				}
+			}]
 		}
+
+		// Bulk injection from ConfigMaps/Secrets
+		if X.envFrom != _|_ {
+			envFrom: X.envFrom
+		}
+
 		if X.resources != _|_ {
 			resources: {
 				if X.resources.requests != _|_ {
@@ -60,9 +125,17 @@ import (
 				}
 			}
 		}
+
+		// Volume mounts: extract only K8s-valid fields (strip embedded volume source data)
 		if X.volumeMounts != _|_ {
-			volumeMounts: [for _, vm in X.volumeMounts {vm}]
+			volumeMounts: [for _, vm in X.volumeMounts {
+				name:      vm.name
+				mountPath: vm.mountPath
+				if vm.subPath != _|_ {subPath: vm.subPath}
+				if vm.readOnly == true {readOnly: vm.readOnly}
+			}]
 		}
+
 		if X.startupProbe != _|_ {
 			startupProbe: X.startupProbe
 		}
@@ -84,6 +157,48 @@ import (
 
 	out: [for c in X {
 		(#ToK8sContainer & {"in": c}).out
+	}]
+}
+
+// #ToK8sVolumes converts OPM volumes map to Kubernetes volumes list.
+// Handles all volume source types: emptyDir, persistentClaim, configMap, secret.
+// For configMap and secret sources, computes the deterministic K8s resource name
+// using the immutable name helpers (same helpers used by ConfigMap/Secret transformers).
+//
+// Usage:
+//   (#ToK8sVolumes & {"in": _component.spec.volumes}).out
+#ToK8sVolumes: {
+	X="in": [string]: schemas.#VolumeSchema
+
+	out: [for vName, vol in X {
+		name: vol.name | *vName
+		if vol.emptyDir != _|_ {
+			emptyDir: {
+				if vol.emptyDir.medium != _|_ if vol.emptyDir.medium == "memory" {
+					medium: "Memory"
+				}
+				if vol.emptyDir.sizeLimit != _|_ {
+					sizeLimit: vol.emptyDir.sizeLimit
+				}
+			}
+		}
+		if vol.persistentClaim != _|_ {
+			persistentVolumeClaim: claimName: vol.name | *vName
+		}
+		if vol.configMap != _|_ {
+			configMap: name: (schemas.#ImmutableName & {
+				#baseName:  vol.configMap.name
+				#data:      vol.configMap.data
+				#immutable: vol.configMap.immutable
+			}).out
+		}
+		if vol.secret != _|_ {
+			secret: secretName: (schemas.#SecretImmutableName & {
+				#baseName:  vol.secret.name
+				#data:      vol.secret.data
+				#immutable: vol.secret.immutable
+			}).out
+		}
 	}]
 }
 

@@ -63,14 +63,18 @@ import (
 
 // Secret specification for K8s Secret resources.
 // data holds #Secret entries (not plain strings).
+// name is auto-populated from the map key in resources/config/secret.cue.
 #SecretSchema: {
+	name!:      string
 	type?:      string | *"Opaque" | "kubernetes.io/service-account-token" | "kubernetes.io/dockercfg" | "kubernetes.io/dockerconfigjson" | "kubernetes.io/basic-auth" | "kubernetes.io/ssh-auth" | "kubernetes.io/tls" | "bootstrap.kubernetes.io/token"
 	immutable?: bool | *false
 	data: [string]: #Secret
 }
 
-// ConfigMap specification
+// ConfigMap specification.
+// name is auto-populated from the map key in resources/config/configmap.cue.
 #ConfigMapSchema: {
+	name!:      string
 	immutable?: bool | *false
 	data: [string]: string
 }

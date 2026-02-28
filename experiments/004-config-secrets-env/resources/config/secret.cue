@@ -24,7 +24,7 @@ import (
 	#defaults: #SecretsDefaults
 
 	// OpenAPIv3-compatible schema defining the structure of the Secrets spec
-	spec: close({secrets: [name=string]: schemas.#SecretSchema})
+	spec: close({secrets: [secretName=string]: schemas.#SecretSchema & {name: string | *secretName}})
 }
 
 #Secrets: core.#Component & {

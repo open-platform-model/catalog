@@ -152,14 +152,9 @@ import (
 									serviceAccountName: #component.spec.workloadIdentity.name
 								}
 
-								// Volumes: map persistent claim volumes to PVC references
+								// Volumes: map all volume types to Kubernetes volume specs
 								if #component.spec.volumes != _|_ {
-									volumes: [
-										for vName, vol in #component.spec.volumes if vol.persistentClaim != _|_ {
-											name: vol.name | *vName
-											persistentVolumeClaim: claimName: vol.name | *vName
-										},
-									]
+									volumes: (#ToK8sVolumes & {"in": #component.spec.volumes}).out
 								}
 							}
 						}

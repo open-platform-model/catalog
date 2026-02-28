@@ -24,7 +24,7 @@ import (
 	#defaults: #ConfigMapsDefaults
 
 	// OpenAPIv3-compatible schema defining the structure of the ConfigMaps spec
-	spec: close({configMaps: [name=string]: schemas.#ConfigMapSchema})
+	spec: close({configMaps: [cmName=string]: schemas.#ConfigMapSchema & {name: string | *cmName}})
 }
 
 #ConfigMaps: core.#Component & {
