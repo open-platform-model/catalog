@@ -3,5 +3,5 @@
 # Checksum covers .cue files excluding cue.mod/ — used by publish:smart
 
 v1alpha1:
-  version: v1.0.8
-  checksum: "e84d06237506192b830708c9579cb0a75fe3a06185a9d7d2870c709d5506fcac"
+  version: v1.0.9
+  checksum: "76a355aecd71c77075267ab74cff45c9f76df5b721c4447fe6cb0f01587b894d"
