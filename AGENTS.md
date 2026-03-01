@@ -94,6 +94,14 @@ When a commit is related to an OpenSpec change, include the change name. Each ph
   - Implementation includes a verification step before committing
 - **Syncing & archiving a change**: `chore(openspec): archive <change-name> change`
 
+## Catalog Index
+
+Each versioned module directory contains an `INDEX.md` listing all definitions with brief descriptions and a project structure tree.
+
+- `v1alpha1/INDEX.md` — index for the `v1alpha1` module
+
+**Keep this updated**: when adding, removing, or renaming a definition, update the corresponding `INDEX.md`.
+
 ## Glossary
 
 See [full glossary](docs/glossary.md) for detailed definitions.
