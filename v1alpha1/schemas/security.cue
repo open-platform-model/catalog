@@ -28,6 +28,30 @@ package schemas
 	}
 }
 
+// Standalone service account identity
+#ServiceAccountSchema: {
+	name!:           string
+	automountToken?: bool
+}
+
+// Single RBAC permission rule
+#PolicyRuleSchema: {
+	apiGroups!: [...string]
+	resources!: [...string]
+	verbs!: [...string]
+}
+
+// Role subject — embeds an identity directly via CUE reference
+#RoleSubjectSchema: {#WorkloadIdentitySchema | #ServiceAccountSchema}
+
+// RBAC role with rules and CUE-referenced subjects
+#RoleSchema: {
+	name!: string
+	scope: *"namespace" | "cluster"
+	rules!: [...#PolicyRuleSchema] & [_, ...]
+	subjects!: [...#RoleSubjectSchema] & [_, ...]
+}
+
 #EncryptionConfigSchema: {
 	atRest:    bool
 	inTransit: bool
