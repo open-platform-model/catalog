@@ -51,6 +51,18 @@ context: |
   - Fewer concepts that compose well over many specialized concepts
   - Explicit configuration over implicit convention
 
+  ### VIII. Self-Describing Distribution
+  Published modules, bundles, and providers MUST be self-describing. All information
+  required to deploy a distributable MUST be derivable from its CUE structure—not
+  from external metadata, lock files, or runtime discovery:
+  - CUE imports ARE dependency declarations
+  - CUE types ARE schema contracts
+  - Computed FQNs ARE version pins
+  - Provider compatibility IS derivable by matching transformer requirements against
+    a module's resource/trait FQN set
+  The CUE evaluation graph IS the dependency graph. This is not a convenience—it is
+  the architectural foundation for why OPM is built on CUE.
+
   ## Technology Standards
 
   ### CUE Tooling
