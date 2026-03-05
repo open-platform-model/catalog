@@ -7,7 +7,7 @@ OPM organizes its types into two families: **Primitives** and **Constructs**.
 **Constructs** are framework types — they organize, compose, deploy, render, and verify. They consume Primitives but don't define schemas for composition themselves.
 
 ```mermaid
-graph BT
+graph TB
     subgraph Primitives[" "]
         direction LR
         PolicyRule:::primitive
@@ -25,34 +25,40 @@ graph BT
         Status:::construct
         Lifecycle:::construct
         Workflow:::construct
+        Component:::construct
     end
 
-    %% Primitives define their direct constructs
-    PolicyRule -->|defines| Policy
-    StatusProbe -->|defines| Status
-    Op -->|defines| Action
-    Action -->|defines| Lifecycle
-    Action -->|defines| Workflow
+    %% Primitives compose their direct constructs
+    PolicyRule -->|composes| Policy
+    StatusProbe -->|composes| Status
+    Op -->|composes| Action
+    Action -->|consumed by| Lifecycle
+    Action -->|consumed by| Workflow
 
-    %% Primitives define Component
-    Resource -->|defines| Component:::construct
-    Trait -->|defines| Component
-    Blueprint -->|defines| Component
+    %% Primitives compose into Blueprint
+    Resource -->|composes| Blueprint
+    Trait -->|composes| Blueprint
 
-    %% Cross-cutting constructs extend Component/Module
-    Status -->|extends| Component
-    Lifecycle -->|extends| Component
-    Lifecycle -->|extends| Module
+    %% Primitives compose Component
+    Resource -->|composes| Component
+    Trait -->|composes| Component
+    Blueprint -->|composes| Component
+
+    %% Operational declarations for downstream systems
+    Status -->|declares| Component
+    Status -->|declares| Module
+    Lifecycle -->|declares| Component
+    Lifecycle -->|declares| Module
     Workflow -->|extends| Module
 
-    %% Structural containment
-    Policy -->|contains| Module:::construct
-    Policy -.->|references| Component
-    Component -->|contains| Module
+    %% Governance and containment
+    Policy -->|governs| Module:::construct
+    Policy -.->|governs| Component
+    Component -->|composes| Module
 
     %% Instantiation
     Module -->|instantiates| ModuleRelease:::construct
-    Module -->|contains| Bundle:::construct
+    Module -->|grouped into| Bundle:::construct
     Bundle -->|instantiates| BundleRelease:::construct
 
     classDef primitive fill:#e8f4f8,stroke:#2196F3,color:#1565C0
