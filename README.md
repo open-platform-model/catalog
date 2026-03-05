@@ -8,6 +8,8 @@ OPM provides a type-safe, portable application model that separates developer in
 
 The result: portable intent + governed runtime.
 
+**Self-Describing Distribution**: OPM modules, bundles, and providers carry all deployment information as structural facts—not metadata. CUE imports are dependency declarations. CUE types are schema contracts. Computed FQNs are version pins. No external manifests, lock files, or runtime discovery needed. The CUE evaluation graph **is** the dependency graph. See [Principle VIII](docs/principles.md#viii-self-describing-distribution) for details.
+
 ## Definition Types
 
 OPM organizes types into **Primitives** (schema contracts for what exists, how it behaves, and what rules apply) and **Constructs** (framework types that compose, deploy, and render).
@@ -56,7 +58,23 @@ MD --> MR
 
 The separation between schema (`#config`) and defaults (`values`) is key: Module Authors define the contract, Platform teams refine it, End-users provide environment-specific values. CUE's unification ensures all layers compose correctly or fail early.
 
+## Core Principles
+
+OPM is governed by eight core principles defined in [openspec/config.yaml](openspec/config.yaml):
+
+1. **Type Safety First** — CUE validates at definition time
+2. **Separation of Concerns** — Clear ownership boundaries (Module → ModuleRelease flow)
+3. **Composability** — Definitions compose without coupling
+4. **Declarative Intent** — Express WHAT, not HOW
+5. **Portability by Design** — Runtime-agnostic definitions
+6. **Semantic Versioning** — SemVer 2.0.0 for all artifacts
+7. **Simplicity & YAGNI** — Justified complexity only
+8. **Self-Describing Distribution** — CUE structure carries all dependency/schema/version info
+
+See [docs/principles.md](docs/principles.md) for detailed explanations of all principles.
+
 ## Further Reading
 
 - [docs/core/](docs/core/) — Complete definition type reference
 - [docs/glossary.md](docs/glossary.md) — Personas, CUE terms, workflow concepts
+- [docs/principles.md](docs/principles.md) — Core design principles
