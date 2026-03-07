@@ -8,11 +8,13 @@
 
 ## Summary
 
-Redesign `#Bundle` as OPM's composition and coordination layer for complex, multi-module deployments. Bundles group modules and other bundles into a recursive, composable structure with per-instance namespace control, cross-module config wiring, bundle-level policies, and CUE comprehension-based dynamic composition. Standalone `#ModuleRelease` remains the primary path for single-application deployments.
+Redesign `#Bundle` as OPM's composition and coordination layer for complex, multi-module deployments. Bundles group modules into a flat structure with per-instance namespace control, explicit values wiring, bundle-level policies, and CUE comprehension-based dynamic composition. Standalone `#ModuleRelease` remains the primary path for single-application deployments.
 
-Introduce `#BundleRelease` which resolves a bundle (including all nested bundles) into a flat map of `#ModuleRelease` instances — feeding directly into the existing provider/transformer pipeline with zero changes downstream.
+Introduce `#BundleRelease` which resolves a bundle into a flat map of `#ModuleRelease` instances — feeding directly into the existing provider/transformer pipeline with zero changes downstream.
 
-The key design insight: since OPM modules are CUE structural references (not opaque artifacts), bundle authors can unify with module internals, reference their fields, and CUE validates everything at definition time. This gives OPM bundles significantly more power than Timoni or Helm umbrella charts, where module/chart references are external and opaque.
+The key design insight: since OPM modules are CUE structural references (not opaque artifacts), bundle authors can reference module `#config` schemas directly in `#BundleInstance.values`, and CUE validates all wiring at definition time. This gives OPM bundles significantly more power than Timoni or Helm umbrella charts, where module/chart references are external and opaque.
+
+`#BundleInstance` is designed as a mini-release: each instance carries a module reference, metadata (name, namespace, labels, annotations), and optional values wiring. This mirrors the structure of `#ModuleRelease` and makes each instance's intent self-contained and readable.
 
 ## Motivation
 
@@ -136,10 +138,10 @@ bundle: {
 
 **Relevance to OPM:**
 
-- The `{module, namespace, values}` instance pattern is adopted by OPM as `#BundleInstance`
-- OPM diverges by using CUE structural references (not opaque OCI URLs), enabling cross-module field references and compile-time validation
-- OPM adds centralized `#config` at the bundle level for the consumer-facing schema, with explicit wiring to module configs
-- OPM adds recursive nesting, policies, and CUE comprehension-based dynamic composition
+- The `{module, namespace, values}` instance pattern is directly adopted by OPM as `#BundleInstance` — same structure, same intent
+- OPM diverges by using CUE structural references (not opaque OCI URLs), enabling cross-module field references and compile-time validation of `values` against `module.#config`
+- OPM adds centralized `#config` at the bundle level for the consumer-facing schema, with explicit wiring to module instance `values`
+- OPM adds bundle-level policies and CUE comprehension-based dynamic composition
 
 ### Helm Umbrella Charts
 
@@ -180,7 +182,7 @@ dependencies:
 │ Module reference     │ OCI URL          │ Chart dependency │ CUE struct ref   │
 │ Config model         │ Per-instance     │ Cascading values │ Central + wiring │
 │ Namespace control    │ Per-instance     │ Single namespace │ Per-instance     │
-│ Nesting              │ [ ]              │ [ ] (ad hoc)     │ [x] Recursive    │
+│ Nesting              │ [ ]              │ [ ] (ad hoc)     │ [ ] (flat)       │
 │ Cross-module policy  │ [ ]              │ [ ]              │ [x]              │
 │ Dynamic composition  │ [ ]              │ [ ]              │ [x] CUE for-loop │
 │ Compile-time valid.  │ CUE (partial)    │ [ ]              │ [x] Full CUE     │
@@ -199,9 +201,9 @@ The bundle system introduces three new types and revises the existing `#Bundle`:
 ┌─────────────────────────────────────────────────────────────────────┐
 │                       Bundle System                                  │
 │                                                                      │
-│  #BundleInstance   Per-module entry: {module, namespace}             │
-│  #Bundle           Recursive container: instances + bundles + config │
-│  #BundleRelease    Concrete deployment: flattens to ModuleReleases  │
+│  #BundleInstance   Mini-release: {module, metadata, values?}         │
+│  #Bundle           Flat container: instances + config + policies     │
+│  #BundleRelease    Concrete deployment: produces ModuleReleases      │
 │                                                                      │
 │  Existing types (unchanged):                                         │
 │  #Module, #ModuleRelease, #Component, #Policy, #Provider            │
@@ -217,29 +219,78 @@ The bundle system introduces three new types and revises the existing `#Bundle`:
 
 ### `#BundleInstance`
 
-Each entry within a bundle carries a reference to either a module or a nested bundle, plus an optional namespace override:
+Each entry within a bundle is a mini-release: it carries a module reference, per-instance metadata, and optional values wiring. This mirrors `#ModuleRelease` in structure and makes each instance's intent self-contained and readable.
 
 ```cue
 #BundleInstance: {
-    instance!:  #Module | #Bundle
-    namespace?: string
+    module!: #Module
+    metadata: {
+        // name is auto-derived from the #instances map key — do not set manually.
+        name!:      #NameType
+
+        // namespace is the target Kubernetes namespace for this module instance.
+        namespace!: #NameType
+
+        // Optional labels inherited by all resources in this module instance.
+        labels?:      #LabelsAnnotationsType
+
+        // Optional annotations inherited by all resources in this module instance.
+        annotations?: #LabelsAnnotationsType
+    }
+
+    // values wires config into the module's #config schema.
+    // If omitted, module defaults apply.
+    values?: module.#config
 }
 ```
 
-| Field       | Required | Purpose                        |
-|-------------|----------|--------------------------------|
-| `instance`  | Yes      | The module or bundle to include |
-| `namespace` | No       | Target namespace override (meaningful for `#Module`, ignored for `#Bundle`) |
+| Field                | Required | Purpose                                                     |
+|----------------------|----------|-------------------------------------------------------------|
+| `module`             | Yes      | The module to include as an instance                        |
+| `metadata.name`      | Yes      | Auto-derived from the `#instances` map key                  |
+| `metadata.namespace` | Yes      | Target Kubernetes namespace for this module instance        |
+| `metadata.labels`    | No       | Labels inherited by all resources in this instance          |
+| `metadata.annotations` | No     | Annotations inherited by all resources in this instance     |
+| `values`             | No       | Config values satisfying the module's `#config` schema      |
 
-The `instance` field accepts either a `#Module` or a `#Bundle`, discriminated by the `kind` field (`"Module"` vs `"Bundle"`). CUE validates the disjunction at definition time.
+**`metadata.name` is auto-derived** from the `#instances` map key via the `#Bundle` constraint:
 
-**Namespace behavior:**
-- When `instance` is a `#Module`: `namespace` overrides `module.metadata.defaultNamespace`. If omitted, the default namespace is resolved during flattening.
-- When `instance` is a `#Bundle`: `namespace` is ignored — the nested bundle controls its own namespace assignments internally.
+```cue
+#instances!: [Name=string]: #BundleInstance & {metadata: name: Name}
+```
 
-**Namespace cascade**: Module author sets `metadata.defaultNamespace` as the suggestion. Bundle author overrides via `#BundleInstance.namespace`. Consumer overrides at deploy time (mechanism deferred — see [Deferred Work](#deferred-work)).
+The bundle author never sets `metadata.name` manually. The key IS the name.
 
-The field is named `#instances` to signal these are instantiations. The same module MAY appear multiple times in the same bundle under different instance names (e.g., the Minecraft multi-server pattern). A bundle MAY also appear multiple times if needed.
+**`metadata.namespace` is required** on every instance. The bundle author is responsible for selecting the deployment namespace. Consumer-level namespace override is deferred (see [Deferred Work](#deferred-work)).
+
+**Values wiring:** Three patterns are supported — the bundle author chooses based on how much control they want to expose to consumers:
+
+```cue
+// Pattern 1: Hardcode — consumer cannot override
+server: {
+    module:             myModule
+    metadata: namespace: "my-ns"
+    values: { replicas: 3 }
+}
+
+// Pattern 2: Wire from bundle #config — consumer sets via bundle values
+server: {
+    module:             myModule
+    metadata: namespace: C.namespace
+    values: { replicas: C.replicas }
+}
+
+// Pattern 3: Passthrough — expose full module schema to consumer
+server: {
+    module:             myModule
+    metadata: namespace: C.namespace
+    values:             C.myServer  // where C.myServer: myModule.#config in bundle #config
+}
+```
+
+**Values type constraint:** `values?: module.#config` means CUE validates the values against the module's declared `#config` schema at definition time. Providing a value that violates the module's constraints is a CUE evaluation error — the same guarantee that `#ModuleRelease.values` provides for standalone releases.
+
+The field is named `#instances` to signal these are instantiations. The same module MAY appear multiple times in the same bundle under different instance names (e.g., the Minecraft multi-server pattern).
 
 ### `#Bundle` (Revised)
 
@@ -261,11 +312,11 @@ The field is named `#instances` to signal these are instantiations. The same mod
         annotations?: #LabelsAnnotationsType
     }
 
-    // Instances in this bundle — each is a module or a nested bundle
-    #instances!: [Name=string]: #BundleInstance
+    // Instances in this bundle — metadata.name is auto-derived from the map key.
+    #instances!: [Name=string]: #BundleInstance & {metadata: name: Name}
 
-    // Bundle-level config schema — consumer-facing
-    // Bundle author wires this to module configs via CUE unification
+    // Bundle-level config schema — consumer-facing.
+    // Bundle author wires this into instance values.
     #config!: _
 
     // Bundle-level policies — cross-module governance
@@ -278,11 +329,10 @@ The field is named `#instances` to signal these are instantiations. The same mod
 
 **Key properties:**
 
-- **Unified**: A single `#instances` field holds both module and bundle entries, discriminated by `instance.kind`
-- **Recursive**: Instances with `instance: #Bundle` enable platform-of-bundles composition
+- **Flat**: `#instances` contains only module instances — no nested bundles
 - **Required**: `#instances` is required — a bundle must contain at least one instance
-- **Meta-bundles allowed**: A bundle where all instances are other bundles (no direct modules) is valid
-- **Namespace ignored for bundles**: When an instance is a `#Bundle`, the `namespace` field is ignored — the nested bundle controls its own namespace assignments internally (see [D5: Nested Bundle Namespace](#d5-nested-bundle-namespace))
+- **Name auto-derived**: `metadata.name` on each instance is set automatically from the map key
+- **Namespace required**: Every instance must declare `metadata.namespace`
 
 ### `#BundleRelease`
 
@@ -304,41 +354,38 @@ The field is named `#instances` to signal these are instantiations. The same mod
     // Concrete values satisfying #bundle.#config
     values: _
 
-    // Flattened output: ALL nested bundles resolved to module releases
-    // Keys are kebab-case path-qualified (e.g., "observability-grafana")
+    // Output: each #BundleInstance becomes a #ModuleRelease.
+    // Keys are the instance names from #bundle.#instances.
+    // Release name: "{bundleReleaseName}-{instanceName}"
     releases: [string]: #ModuleRelease
-
-    // Bundle-level policies (resolved)
-    policies?: [string]: #Policy
 }
 ```
 
-**Flattening rules:**
+**Release key rules:**
 
-1. Direct instances produce keys equal to their instance name
-2. Nested bundle instances are prefixed with the bundle name, joined by hyphens
-3. All nesting levels are resolved recursively — the final output is always a flat map
-4. CUE unification catches key collisions at definition time
+1. Each key equals the instance name from `#bundle.#instances`
+2. Release `metadata.name` is `"{bundleReleaseName}-{instanceName}"`
+3. CUE unification catches key collisions at definition time
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  FLATTENING                                                              │
+│  BUNDLE RELEASE RESOLUTION                                               │
 │                                                                          │
 │  Input:                                                                  │
-│    platform-bundle                                                       │
+│    gamestack bundle                                                      │
 │    └── #instances:                                                       │
-│          cert-manager:  { instance: certMgrModule, ns: "cert-manager" }  │
-│          ingress:       { instance: ingressModule, ns: "ingress" }       │
-│          observability: { instance: obsBundle }          ◄── #Bundle     │
-│              └── #instances:                                             │
-│                    grafana:    { instance: grafanaModule, ns: "mon" }    │
-│                    prometheus: { instance: promModule,    ns: "mon" }    │
+│          server: { module: mc, metadata: { namespace: "game-stack" },   │
+│                    values: { maxPlayers: C.maxPlayers, ... } }           │
+│          proxy:  { module: vel, metadata: { namespace: "game-stack" },  │
+│                    values: { maxPlayers: C.maxPlayers, ... } }           │
 │                                                                          │
-│  Output (BundleRelease.releases):                                        │
-│    cert-manager:              ModuleRelease { ns: "cert-manager" }       │
-│    ingress:                   ModuleRelease { ns: "ingress" }            │
-│    observability-grafana:     ModuleRelease { ns: "monitoring" }         │
-│    observability-prometheus:  ModuleRelease { ns: "monitoring" }         │
+│  BundleRelease: name "my-game-stack", values: { maxPlayers: 50 }        │
+│                                                                          │
+│  Output (releases):                                                      │
+│    server: #ModuleRelease { name: "my-game-stack-server",               │
+│                             namespace: "game-stack", values: {...} }    │
+│    proxy:  #ModuleRelease { name: "my-game-stack-proxy",                │
+│                             namespace: "game-stack", values: {...} }    │
 │                                                                          │
 │  Every key is a valid #NameType (kebab-case, max 63 chars).             │
 └──────────────────────────────────────────────────────────────────────────┘
@@ -346,42 +393,37 @@ The field is named `#instances` to signal these are instantiations. The same mod
 
 ### Config Wiring
 
-Bundle authors wire `#config` to module configs explicitly using CUE unification. There is no automatic config cascading.
+Bundle authors wire `#bundle.#config` into module instances via the `values` field on each `#BundleInstance`. There is no automatic config cascading — all wiring is explicit and validated by CUE at definition time.
+
+The `C=#config` alias at package scope is used to reference the bundle's own `#config` inside `#instances` without ambiguity:
 
 ```cue
-observabilityStack: #Bundle & {
-    #config: {
-        storageClass: string | *"standard"
-        retention:    string | *"30d"
-        domain?:      string
-    }
+C=#config: {
+    storageClass: string | *"standard"
+    retention:    string | *"30d"
+    domain?:      string
+}
 
-    #instances: {
-        prometheus: {
-            instance: prometheusModule & {
-                #config: {
-                    storage: storageClass: #config.storageClass
-                    retention:             #config.retention
-                }
-            }
-            namespace: "monitoring"
+#instances: {
+    prometheus: {
+        module:             prometheusModule
+        metadata: namespace: "monitoring"
+        values: {
+            storage: storageClass: C.storageClass
+            retention:             C.retention
         }
-        grafana: {
-            instance: grafanaModule & {
-                #config: {
-                    datasources: prometheus: url: "http://prometheus-server.monitoring:9090"
-                    if #config.domain != _|_ {
-                        ingress: host: "grafana.\(#config.domain)"
-                    }
-                }
-            }
-            namespace: "monitoring"
+    }
+    grafana: {
+        module:             grafanaModule
+        metadata: namespace: "monitoring"
+        values: {
+            datasources: prometheus: url: "http://prometheus-server.monitoring:9090"
         }
     }
 }
 ```
 
-Each nesting level wires independently. A platform bundle maps platform config to child bundle configs. The child bundle maps its config to module configs. No hidden magic.
+Config wiring is per-instance and explicit. There is no hidden magic: every field the module receives is traceable to a `values` entry in the instance definition.
 
 ### Cross-Module Policies
 
@@ -406,82 +448,83 @@ Policy scope resolution for nested bundles (does a parent bundle's policy apply 
 
 ### Dynamic Composition (For-Loops)
 
-CUE comprehensions in `#instances` enable dynamic module instantiation from config:
+CUE comprehensions in `#instances` enable dynamic module instantiation from config. Each generated entry is a full `#BundleInstance` with `metadata` and `values`:
 
 ```cue
-minecraftHosting: #Bundle & {
-    #config: {
-        servers: [string]: {
-            gameMode:   "survival" | "creative" | *"survival"
-            maxPlayers: int | *20
-            memory:     string | *"2Gi"
-        }
+C=#config: {
+    servers: [string]: {
+        gameMode:   "survival" | "creative" | *"survival"
+        maxPlayers: int | *20
+        memory:     string | *"2Gi"
     }
+}
 
-    #instances: {
-        for name, cfg in #config.servers {
-            (name): {
-                instance: minecraftServerModule & {
-                    #config: {
-                        gameMode:   cfg.gameMode
-                        maxPlayers: cfg.maxPlayers
-                        memory:     cfg.memory
-                    }
-                }
-                namespace: "mc-\(name)"
+#instances: {
+    for serverName, cfg in C.servers {
+        (serverName): {
+            module:             minecraftServerModule
+            metadata: namespace: "mc-\(serverName)"
+            values: {
+                gameMode:   cfg.gameMode
+                maxPlayers: cfg.maxPlayers
+                memory:     cfg.memory
             }
         }
     }
+}
 
-    debugValues: servers: {
-        lobby:    { gameMode: "creative", maxPlayers: 100, memory: "4Gi" }
-        survival: { gameMode: "survival", maxPlayers: 50 }
-        creative: { gameMode: "creative", maxPlayers: 30 }
-    }
+debugValues: servers: {
+    lobby:    { gameMode: "creative", maxPlayers: 100, memory: "4Gi" }
+    survival: { gameMode: "survival", maxPlayers: 50 }
+    creative: { gameMode: "creative", maxPlayers: 30 }
 }
 ```
 
-This generates three module releases from one module definition. Each instance gets its own namespace, its own config, and its own `#ModuleRelease` in the flattened output.
+This generates three module releases from one module definition. Each instance gets its own namespace, its own `values`, and its own `#ModuleRelease` in the output.
 
 Note: similar dynamic composition is possible within a module using for-loops over `#components`. The difference:
 
 | | Module for-loop (components) | Bundle for-loop (instances) |
 |---|---|---|
-| Unit generated | Components | Modules |
+| Unit generated | Components | Module instances |
 | Namespace | Shared (one namespace) | Independent (per-instance) |
 | Lifecycle | One release, one lifecycle | Separate releases |
 | Use case | N workers in one app | N independent instances |
 
 ### Dependencies
 
-CUE imports and structural references naturally encode the dependency graph between modules and bundles. When a bundle author writes:
+CUE imports naturally encode the dependency graph between modules used in a bundle. When a bundle author imports a module package, the CUE module dependency is explicit at the language level:
 
 ```cue
-import core "opmodel.dev/bundles/core@v1"
+import (
+    mc  "opmodel.dev/examples/modules/minecraft@v1"
+    vel "opmodel.dev/examples/modules/velocity@v1"
+)
 
-authBundle: #Bundle & {
-    #instances: {
-        "core": {
-            instance: core.coreBundle  // CUE import = implicit dependency
-        }
-        dex: {
-            instance: dexModule & {
-                // CUE reference to core's instance = implicit dependency
-                #config: ingressClass: #instances.core.instance.#instances.ingress.instance.metadata.name
-            }
-            namespace: "auth"
-        }
+// CUE import = implicit dependency on both modules.
+// The CLI/orchestrator can derive the deployment graph from CUE's module dependency tree.
+// No separate `dependsOn` metadata needed.
+#instances: {
+    server: {
+        module:             mc
+        metadata: namespace: C.namespace
+        values: { /* ... */ }
+    }
+    proxy: {
+        module:             vel
+        metadata: namespace: C.namespace
+        values: { /* ... */ }
     }
 }
 ```
 
-The CUE import of `core` makes the dependency explicit at the language level. No separate `dependsOn` metadata is needed for structural dependencies. The CLI/orchestrator can derive the deployment graph from CUE's module dependency tree.
+The CUE import of each module package makes the dependency explicit at the language level.
 
 ## Decisions
 
 ### D1: Bundle Structure — Flat vs Recursive
 
-**Context**: Bundles need to support both simple module groupings (observability stack) and large platform compositions (core + auth + observability + databases + AI bundles).
+**Context**: Bundles need to support module groupings (observability stack, game server, etc.) with clear, readable authoring.
 
 **Options considered:**
 
@@ -489,54 +532,51 @@ The CUE import of `core` makes the dependency explicit at the language level. No
 2. **Recursive** — Bundle contains Modules and/or other Bundles.
 3. **Flat with external deps** — Bundle contains only Modules but declares `dependsOn` other Bundles by name.
 
-**Decision**: Option 2 — Recursive.
+**Decision**: Option 1 — Flat.
 
-**Rationale**: CUE handles recursive types well. Config cascading is not automatic (each level wires explicitly via CUE unification), so depth does not add hidden complexity. The advanced platform scenario requires formal composition. Typical nesting depth is 2 levels (platform → area → module). CUE imports and structural references naturally encode the dependency graph.
+**Rationale**: Nested bundles introduce hidden config cascade complexity, ambiguous namespace semantics (does a parent namespace override override a child bundle's internal choices?), and make the dependency graph harder to trace. The bundle as a mini-release design (each instance is a self-contained `{module, metadata, values}` triple) is cleaner and consistent with how `#ModuleRelease` works. Platform-level composition can be achieved by importing and referencing modules from multiple CUE packages directly. Flat structure is Timoni-compatible and easier to reason about.
 
-### D2: Entry Type — Bare Reference vs Instance Wrapper
+### D2: Entry Type — Mini-Release vs Bare Reference
 
-**Context**: Bundles need per-entry metadata (at minimum: namespace for modules). The current `#ModuleMap` is `[string]: #Module` — a bare map with no room for per-instance config.
-
-**Options considered:**
-1. **Bare maps** — Keep `#modules: [string]: #Module` and `#bundles: [string]: #Bundle`. Namespace lives only on `#ModuleRelease`.
-2. **Instance wrapper** — `#instances: [string]: { instance: #Module | #Bundle, namespace? }`.
-
-**Decision**: Option 2 — Instance wrapper (`#BundleInstance`).
-
-**Rationale**: Inspired by Timoni bundles. The namespace gap between `#Bundle` (authoring) and `#ModuleRelease` (deployment) is a real structural problem. The wrapper solves it and is extensible for future per-instance settings. The `instance` field uses a `#Module | #Bundle` disjunction, giving a single unified `#instances` map. Named `#instances` to signal instantiation semantics — the same module or bundle can appear multiple times.
-
-### D3: BundleRelease Output — Nested vs Flattened
-
-**Context**: `#BundleRelease` resolves a bundle with concrete values. The output could preserve nesting or flatten everything.
+**Context**: Bundles need per-entry metadata (at minimum: namespace). The original design had bare `{ module?, bundle?, namespace? }`. The redesign elevates each entry to a mini-release.
 
 **Options considered:**
 
-1. **Nested** — Output preserves bundle structure with nested `#BundleRelease` entries.
-2. **Flattened** — Output is `[string]: #ModuleRelease`. All nesting resolved.
+1. **Bare fields** — `{ module!, namespace? }` — minimal, no nesting.
+2. **Mini-release wrapper** — `{ module!, metadata: { name!, namespace!, labels?, annotations? }, values? }` — mirrors `#ModuleRelease`.
 
-**Decision**: Option 2 — Flattened.
+**Decision**: Option 2 — Mini-release wrapper (`#BundleInstance`).
 
-**Rationale**: The provider/transformer pipeline operates on `#ModuleRelease`. Preserving nesting would require every downstream consumer to handle recursion. Flattening at the bundle level keeps the consumer interface simple. Kebab-case path-qualified keys avoid collisions.
+**Rationale**: Mirroring `#ModuleRelease` makes instances predictable and self-contained. Bundle authors write the same kind of definition for an instance as consumers write for a standalone release. The `values` field provides an explicit, type-safe config wiring channel — validated against `module.#config` at definition time. `metadata.namespace!` being required prevents silent misconfiguration that would only surface at deploy time. `metadata.name` auto-derived from the map key eliminates redundancy while preserving the ability to reference it in release name generation.
 
-### D4: Namespace Assignment Cascade
+### D3: BundleRelease Output — Map of ModuleReleases
 
-**Context**: Three actors need namespace control: module author (default), bundle author (override), consumer (final override at deploy time).
+**Context**: `#BundleRelease` resolves a bundle with concrete values. The output must be consumable by the existing provider/transformer pipeline.
 
-**Decision**: Three-layer cascade via `#BundleInstance`:
+**Decision**: Output is `[string]: #ModuleRelease`. Keys equal the instance names from `#bundle.#instances`. Release names are `"{bundleReleaseName}-{instanceName}"`.
 
-1. Module author sets `metadata.defaultNamespace` (suggestion)
-2. Bundle author overrides via `#BundleInstance.namespace` (composition)
-3. Consumer overrides at deploy time (mechanism deferred)
+**Rationale**: The provider/transformer pipeline operates on `#ModuleRelease`. A flat map is the simplest interface for the downstream engine. Key collisions within a single flat bundle are caught by CUE unification at definition time.
 
-**Rationale**: Matches the ownership model. Module author suggests, bundle author overrides for their composition, consumer has final say.
+### D4: Namespace Assignment
 
-### D5: Nested Bundle Namespace — Ignored
+**Context**: Namespace must be set on every `#ModuleRelease`. Where does it come from in the bundle flow?
 
-**Context**: When bundle A includes bundle B as an instance, should the `namespace` field on that instance override the namespaces of modules inside bundle B?
+**Decision**: `metadata.namespace!` is required on every `#BundleInstance`. The bundle author is the authoritative source.
 
-**Decision**: No. When `instance` is a `#Bundle`, the `namespace` field on `#BundleInstance` is ignored. The nested bundle controls its own namespace assignments internally.
+**Rationale**: The bundle author designs the composition — they know which namespace each module instance belongs in. Making it required at the instance level surfaces the decision explicitly in the bundle definition, rather than relying on module defaults that may be wrong for the bundle context. Consumer-level namespace override is deferred (see [Deferred Work](#deferred-work)).
 
-**Rationale**: If bundle A overrides namespaces inside bundle B, it breaks bundle B's internal assumptions (service discovery, network policies, inter-module references). The bundle author of B designed their namespace layout intentionally. Bundle A trusts bundle B's choices. If different namespaces are needed, the consumer should fork or configure bundle B directly.
+### D5: Config Pattern — Values on Instance
+
+**Context**: Bundle `#config` defines the consumer-facing schema. Module `#config` defines each module's schema. How do values flow from bundle consumer → module instance?
+
+**Options considered:**
+
+1. **Inline unification** — `module: mc & { #config: { field: #config.value } }` inside the instance.
+2. **Explicit `values` field** — `values: { field: C.value }` on the instance, constrained to `module.#config`.
+
+**Decision**: Option 2 — Explicit `values` field on `#BundleInstance`.
+
+**Rationale**: Inline unification (`mc & { #config: {...} }`) is idiomatic CUE but obscures intent: the module reference and the config wiring are tangled together. The `values` field separates them cleanly — `module` is a pure reference, `values` is explicit config. The type constraint `values?: module.#config` validates wiring against the module schema at definition time, catching mismatches immediately. The three wiring patterns (hardcode, wire from bundle #config, passthrough) are all natural expressions of the `values` field and cover the full authoring flexibility spectrum.
 
 ### D6: Bundle-Level Policies
 
@@ -546,29 +586,20 @@ The CUE import of `core` makes the dependency explicit at the language level. No
 
 **Rationale**: `appliesTo.matchLabels` naturally works across modules — it matches any component whose labels satisfy the selector. No changes to `#Policy` needed.
 
-### D7: Config Pattern — Explicit Wiring
+### D7: Release Key Format
 
-**Context**: Bundle `#config` defines the consumer-facing schema. Module `#config` defines each module's schema. How do values flow?
+**Context**: `#BundleRelease.releases` needs unique keys derived from instance names.
 
-**Decision**: Explicit wiring by the bundle author using CUE unification.
-
-**Rationale**: Each level maps its `#config` fields to child configs explicitly. This is just CUE — no new mechanism. No hidden cascading. A passthrough mechanism for bundles that just group modules without custom config is deferred.
-
-### D8: Release Key Format
-
-**Context**: Flattened `#BundleRelease.releases` needs unique keys when the same instance name could appear in different nested bundles.
-
-**Decision**: Kebab-case path-qualified keys. Nested instances are prefixed with their parent bundle name, joined by hyphens.
+**Decision**: Keys equal the instance name directly from `#bundle.#instances`. Release `metadata.name` is `"{bundleReleaseName}-{instanceName}"`.
 
 **Examples:**
 
-- Direct instance `grafana` → key: `grafana`
-- Instance `grafana` inside bundle `observability` → key: `observability-grafana`
-- Instance `agent` inside bundle `logging` inside bundle `observability` → key: `observability-logging-agent`
+- Instance `grafana` → key: `grafana`, release name: `"my-obs-grafana"`
+- Instance `server` → key: `server`, release name: `"my-game-stack-server"`
 
-**Rationale**: Consistent with `#NameType` constraints. Produces valid kebab-case identifiers.
+**Rationale**: Simple and consistent. Collisions within a bundle are caught by CUE at definition time. The release name prefixing (`{bundleReleaseName}-`) ensures globally unique names across bundle releases.
 
-### D9: Bundle Positioning — Complex Deployments
+### D8: Bundle Positioning — Complex Deployments
 
 **Context**: Should Bundle be positioned as the primary deployment unit for all cases, or scoped to complex multi-module scenarios?
 
@@ -576,84 +607,69 @@ The CUE import of `core` makes the dependency explicit at the language level. No
 
 **Rationale**: Bundles add value when there is cross-module coordination (shared config, policies, multi-namespace, dynamic composition). For a single application with one module and one namespace, `#ModuleRelease` is simpler and sufficient. Bundles shine for platforms, curated stacks, and multi-instance patterns. The flow depends on complexity: simple apps use `Module Author → Consumer (ModuleRelease)`, complex systems use `Module Author → Bundle Author → Consumer (BundleRelease)`.
 
-### D10: Unified Instance Field
+### D9: Instance Name — Map Key vs Explicit Field
 
-**Context**: Should modules and bundles within a bundle use the same field name or separate fields?
+**Context**: Each instance needs a name for release name generation. The `#instances` map already has a string key. Should `metadata.name` be auto-derived or explicitly required?
 
-**Options considered:**
+**Decision**: `metadata.name` is auto-derived from the `#instances` map key via the `#Bundle` constraint: `#instances!: [Name=string]: #BundleInstance & {metadata: name: Name}`.
 
-1. **Separate fields** — `#instances` for modules, `#bundles` for nested bundles.
-2. **Unified field** — Single `#instances` containing both module and bundle entries via `instance!: #Module | #Bundle`.
-
-**Decision**: Option 2 — Unified field.
-
-**Rationale**: A single `#instances` field with `instance!: #Module | #Bundle` provides a simpler mental model: a bundle contains instances, each instance is either a module or another bundle. The `namespace` field is present on all entries but only meaningful for modules (ignored for bundles). CUE's `kind` field discriminates between `#Module` and `#Bundle` at evaluation time. This avoids two parallel maps with different entry types and keeps the API surface minimal.
+**Rationale**: The key IS the canonical instance name. Requiring it again in `metadata.name` would create redundancy and the possibility of key ≠ name inconsistencies. Auto-derivation eliminates busywork while keeping the name accessible on the instance struct for downstream reference (e.g., in comprehensions that need `inst.metadata.name`).
 
 ## Scenarios
 
-### Scenario 1: Observability Stack (Simple Bundle)
+### Scenario 1: Observability Stack
 
-A platform team bundles Grafana Operator, Prometheus Operator, and a log collection stack into a ready-to-use observability package.
+A platform team bundles Grafana Operator, Prometheus Operator, and a log collection stack into a ready-to-use observability package. Config is wired explicitly from the bundle-level `#config` into each module instance via `values`.
 
 ```cue
-observabilityStack: #Bundle & {
-    metadata: {
-        modulePath: "opmodel.dev/bundles"
-        name:       "observability-stack"
-        version:    "v1"
-    }
+// The C alias captures bundle #config at package scope for safe reference inside #instances.
+C=#config: {
+    storageClass:     string | *"standard"
+    retention:        string | *"30d"
+    prometheusUrl:    string | *"http://prometheus-server.monitoring:9090"
+    logStoreEndpoint: string | *"http://loki.logging:3100"
+    domain?:          string
+}
 
-    #instances: {
-        "grafana-operator": {
-            instance: grafanaOperatorModule & {
-                #config: {
-                    datasources: prometheus: url: #config.prometheusUrl
-                }
-            }
-            namespace: "monitoring"
-        }
-        "prometheus-operator": {
-            instance: prometheusOperatorModule & {
-                #config: {
-                    storage: storageClass: #config.storageClass
-                    retention:             #config.retention
-                }
-            }
-            namespace: "monitoring"
-        }
-        "log-collector": {
-            instance: logCollectorModule & {
-                #config: {
-                    outputEndpoint: #config.logStoreEndpoint
-                }
-            }
-            namespace: "logging"
+#instances: {
+    "grafana-operator": {
+        module:             grafanaOperatorModule
+        metadata: namespace: "monitoring"
+        values: {
+            datasources: prometheus: url: C.prometheusUrl
         }
     }
-
-    #policies: {
-        "observability-network": network.#SharedNetwork & {
-            appliesTo: matchLabels: {
-                "bundle.opmodel.dev/name": "observability-stack"
-            }
-            spec: sharedNetwork: {}
+    "prometheus-operator": {
+        module:             prometheusOperatorModule
+        metadata: namespace: "monitoring"
+        values: {
+            storage: storageClass: C.storageClass
+            retention:             C.retention
         }
     }
-
-    #config: {
-        storageClass:     string | *"standard"
-        retention:        string | *"30d"
-        prometheusUrl:    string | *"http://prometheus-server.monitoring:9090"
-        logStoreEndpoint: string | *"http://loki.logging:3100"
-        domain?:          string
+    "log-collector": {
+        module:             logCollectorModule
+        metadata: namespace: "logging"
+        values: {
+            outputEndpoint: C.logStoreEndpoint
+        }
     }
+}
 
-    debugValues: {
-        storageClass:     "standard"
-        retention:        "7d"
-        prometheusUrl:    "http://prometheus-server.monitoring:9090"
-        logStoreEndpoint: "http://loki.logging:3100"
+#policies: {
+    "observability-network": network.#SharedNetwork & {
+        appliesTo: matchLabels: {
+            "bundle.opmodel.dev/name": "observability-stack"
+        }
+        spec: sharedNetwork: {}
     }
+}
+
+debugValues: {
+    storageClass:     "standard"
+    retention:        "7d"
+    prometheusUrl:    "http://prometheus-server.monitoring:9090"
+    logStoreEndpoint: "http://loki.logging:3100"
 }
 ```
 
@@ -664,177 +680,90 @@ obsRelease: #BundleRelease & {
     metadata: name: "obs-prod"
     #bundle: observabilityStack
     values: {
-        storageClass:  "gp3"
-        retention:     "90d"
-        domain:        "monitoring.example.com"
+        storageClass: "gp3"
+        retention:    "90d"
+        domain:       "monitoring.example.com"
     }
 }
 ```
 
-**Flattened output:**
+**Output:**
 
 ```text
 releases:
-  grafana-operator:     #ModuleRelease { namespace: "monitoring", ... }
-  prometheus-operator:  #ModuleRelease { namespace: "monitoring", ... }
-  log-collector:        #ModuleRelease { namespace: "logging", ... }
+  grafana-operator:     #ModuleRelease { namespace: "monitoring", name: "obs-prod-grafana-operator" }
+  prometheus-operator:  #ModuleRelease { namespace: "monitoring", name: "obs-prod-prometheus-operator" }
+  log-collector:        #ModuleRelease { namespace: "logging",    name: "obs-prod-log-collector" }
 ```
 
-### Scenario 2: Platform Composition (Nested Bundles)
+### Scenario 2: Dynamic Multi-Instance (For-Loop)
 
-A platform team composes an entire platform from area-specific bundles. Core is required; others are optional and can be added later.
+A game hosting company deploys N Minecraft servers from a single module template. CUE comprehensions in `#instances` generate one instance per config entry.
 
 ```cue
-import (
-    core "opmodel.dev/bundles/core@v1"
-    obs  "opmodel.dev/bundles/observability@v1"
-    db   "opmodel.dev/bundles/databases@v1"
-)
-
-acmePlatform: #Bundle & {
-    metadata: {
-        modulePath: "acme.com/platform"
-        name:       "acme-platform"
-        version:    "v2"
+C=#config: {
+    servers: [string]: {
+        gameMode:   "survival" | "creative" | *"survival"
+        maxPlayers: int | *20
+        memory:     string | *"2Gi"
     }
+}
 
-    // All instances are bundles — this is a meta-bundle
-    #instances: {
-        "core": {
-            instance: core.coreBundle & {
-                #config: domain: #config.domain
-            }
-        }
-        "observability": {
-            instance: obs.observabilityStack & {
-                #config: {
-                    domain:       #config.domain
-                    storageClass: #config.storageClass
-                }
-            }
-        }
-        "databases": {
-            instance: db.databasesBundle & {
-                #config: {
-                    storageClass: #config.storageClass
-                }
+#instances: {
+    for serverName, cfg in C.servers {
+        (serverName): {
+            module:             minecraftServerModule
+            metadata: namespace: "mc-\(serverName)"
+            values: {
+                gameMode:   cfg.gameMode
+                maxPlayers: cfg.maxPlayers
+                memory:     cfg.memory
             }
         }
     }
+}
 
-    #config: {
-        domain!:       string
-        storageClass:  string | *"standard"
-        environment:   "dev" | "staging" | "production"
-    }
-
-    debugValues: {
-        domain:       "dev.acme.internal"
-        storageClass: "standard"
-        environment:  "dev"
-    }
+debugValues: servers: {
+    lobby:    { gameMode: "creative", maxPlayers: 100, memory: "4Gi" }
+    survival: { gameMode: "survival", maxPlayers: 50 }
+    creative: { gameMode: "creative", maxPlayers: 30 }
 }
 ```
 
-**Flattened output (assuming core has cert-manager and ingress, obs has grafana/prometheus/logs, db has cnpg/redis):**
+**BundleRelease with debug values produces:**
 
 ```text
 releases:
-  core-cert-manager:              #ModuleRelease { namespace: "cert-manager" }
-  core-ingress:                   #ModuleRelease { namespace: "ingress" }
-  observability-grafana-operator: #ModuleRelease { namespace: "monitoring" }
-  observability-prometheus:       #ModuleRelease { namespace: "monitoring" }
-  observability-log-collector:    #ModuleRelease { namespace: "logging" }
-  databases-cnpg-operator:        #ModuleRelease { namespace: "databases" }
-  databases-redis-operator:       #ModuleRelease { namespace: "databases" }
-```
-
-All nested structure resolved. Seven module releases from one bundle release. Each key is kebab-case path-qualified.
-
-### Scenario 3: Dynamic Multi-Instance (For-Loop)
-
-A game hosting company deploys N Minecraft servers from a single module template.
-
-```cue
-minecraftHosting: #Bundle & {
-    metadata: {
-        modulePath: "gamehosting.com/bundles"
-        name:       "minecraft-hosting"
-        version:    "v1"
-    }
-
-    #instances: {
-        for name, cfg in #config.servers {
-            (name): {
-                instance: minecraftServerModule & {
-                    #config: {
-                        gameMode:   cfg.gameMode
-                        maxPlayers: cfg.maxPlayers
-                        memory:     cfg.memory
-                    }
-                }
-                namespace: "mc-\(name)"
-            }
-        }
-    }
-
-    #config: {
-        servers: [string]: {
-            gameMode:   "survival" | "creative" | *"survival"
-            maxPlayers: int | *20
-            memory:     string | *"2Gi"
-        }
-    }
-
-    debugValues: servers: {
-        lobby:    { gameMode: "creative", maxPlayers: 100, memory: "4Gi" }
-        survival: { gameMode: "survival", maxPlayers: 50 }
-        creative: { gameMode: "creative", maxPlayers: 30 }
-    }
-}
-```
-
-**BundleRelease with debug values flattens to:**
-
-```text
-releases:
-  lobby:    #ModuleRelease { namespace: "mc-lobby",    values: { ... } }
-  survival: #ModuleRelease { namespace: "mc-survival", values: { ... } }
-  creative: #ModuleRelease { namespace: "mc-creative", values: { ... } }
+  lobby:    #ModuleRelease { namespace: "mc-lobby",    name: "hosting-lobby",    values: { ... } }
+  survival: #ModuleRelease { namespace: "mc-survival", name: "hosting-survival", values: { ... } }
+  creative: #ModuleRelease { namespace: "mc-creative", name: "hosting-creative", values: { ... } }
 ```
 
 Three module releases from one module definition. Adding a server is adding a key to `values.servers`.
 
-### Scenario 4: Single Module as Bundle (Minimal)
+### Scenario 3: Single Module as Bundle (Minimal)
 
-While standalone `#ModuleRelease` is preferred for single-application deployments, wrapping a single module in a bundle is valid when namespace control or a unified config surface is needed at the bundle level.
+While standalone `#ModuleRelease` is preferred for single-application deployments, wrapping a single module in a bundle is valid when a unified config surface at the bundle level is needed, or when the module will later grow into a multi-module deployment.
 
 ```cue
-myApp: #Bundle & {
-    metadata: {
-        modulePath: "example.com/bundles"
-        name:       "my-app"
-        version:    "v1"
+C=#config: myAppModule.#config  // full passthrough — consumer gets the full module schema
+
+#instances: {
+    app: {
+        module:             myAppModule
+        metadata: namespace: "my-app"
+        values:             C  // passthrough pattern
     }
-
-    #instances: {
-        app: {
-            instance:  myAppModule
-            namespace: "my-app"
-        }
-    }
-
-    #config: myAppModule.#config
-
-    debugValues: myAppModule.debugValues
 }
+
+debugValues: myAppModule.debugValues
 ```
 
-**Flattened output:**
+**Output:**
 
 ```text
 releases:
-  app: #ModuleRelease { namespace: "my-app", ... }
+  app: #ModuleRelease { namespace: "my-app", name: "my-release-app", ... }
 ```
 
 Trivial case. One module, one release. For most single-application deployments, a standalone `#ModuleRelease` is simpler and preferred.
@@ -865,20 +794,17 @@ If the components share a lifecycle (always deployed together, same team, same c
 
 ## Risks / Trade-offs
 
-**[Risk]** Recursive bundle evaluation could be slow for deeply nested structures.
-**Mitigation**: Practical nesting depth is 2-3 levels. CUE handles this well. Document recommended max depth.
-
-**[Risk]** Flattened release key collisions if two nested bundles have instances with identical derived names.
-**Mitigation**: CUE unification will fail with a conflict error, surfacing the collision at definition time. Bundle authors MUST ensure unique instance names across their composition.
+**[Risk]** Instance name collisions within a bundle if two instances have the same key.
+**Mitigation**: CUE unification will fail with a conflict error, surfacing the collision at definition time. Bundle authors MUST ensure unique instance names.
 
 **[Risk]** Bundle-level policies could conflict with module-level policies.
 **Mitigation**: CUE unification catches conflicting field values at definition time. Complementary policies (different rule FQNs) merge cleanly.
 
-**[Trade-off]** `#BundleInstance` wrapper adds verbosity compared to bare `#ModuleMap`.
-**Accepted**: The namespace control and extensibility justify the extra structure. Namespace defaults to `module.metadata.defaultNamespace` for the common case.
+**[Trade-off]** `#BundleInstance` mini-release wrapper adds verbosity compared to bare `{ module, namespace }`.
+**Accepted**: The `metadata` struct and explicit `values` field significantly improve clarity, compile-time safety, and authoring flexibility. The verbosity is justified by the gains in intent clarity and error message quality.
 
-**[Trade-off]** `namespace` on `#BundleInstance` is ignored when `instance` is a `#Bundle`, limiting flexibility.
-**Accepted**: Preserves ownership boundaries. The alternative creates ambiguous semantics and breaks bundle encapsulation.
+**[Trade-off]** `metadata.namespace!` required on every instance — no default from `module.metadata.defaultNamespace`.
+**Accepted**: Making namespace required at the bundle authoring level is an explicit decision rather than a silent default. Bundle authors know their composition context. Consumer-level override is deferred.
 
 ## Deferred Work
 
@@ -886,14 +812,10 @@ If the components share a lifecycle (always deployed together, same team, same c
 
 How the end-user overrides bundle-author namespace choices at deploy time. Requires further research into whether this belongs in `values`, a dedicated override map, or a separate mechanism.
 
-### Passthrough Config Mechanism
+### Instance Labels and Annotations Propagation
 
-An explicit mechanism for bundles that group modules without defining a custom `#config` schema. Would auto-mirror module configs under a namespace key. Needs separate design.
+`#BundleInstance.metadata.labels` and `annotations` fields exist in the schema but are not yet wired into the `#BundleRelease` comprehension or the downstream `#ModuleRelease` metadata merge. Propagation semantics (merge order with module labels) need separate design.
 
-### Policy Scope in Nested Bundles
+### Policy Scope for Cross-Bundle Compositions
 
-Whether a parent bundle's policies apply to all nested components or only to direct instances. Needs separate design.
-
-### Removing ModuleRelease / BundleRelease Separation
-
-The current split creates a structural gap where the bundle author (who writes `#Bundle`) cannot fully control deploy-time concerns (which live on Release types). Collapsing them would simplify namespace cascading but requires rethinking the render pipeline, `#TransformerContext`, `autoSecrets`, and all consumer-facing APIs. Major undertaking.
+When a bundle is deployed alongside other bundles (e.g., a platform operator deploys observability + databases separately), how bundle-level policies interact with policies from other deployments. Needs separate design.
