@@ -1,7 +1,8 @@
 package modules
 
 import (
-	core "opmodel.dev/core@v1"
+	module "opmodel.dev/core/module@v1"
+	modulerelease "opmodel.dev/core/modulerelease@v1"
 	schemas "opmodel.dev/schemas@v1"
 	components "opmodel.dev/examples/components@v1"
 )
@@ -10,7 +11,7 @@ import (
 //// Multi-Tier Module Example
 /////////////////////////////////////////////////////////////////
 
-multiTierModule: core.#Module & {
+multiTierModule: module.#Module & {
 	metadata: {
 		modulePath: "opmodel.dev"
 		name:       "multi-tier-module"
@@ -109,7 +110,7 @@ multiTierModule: core.#Module & {
 	}
 }
 
-multiTierModuleRelease: core.#ModuleRelease & {
+multiTierModuleRelease: modulerelease.#ModuleRelease & {
 	metadata: {
 		name:      "multi-tier-release"
 		namespace: "default"

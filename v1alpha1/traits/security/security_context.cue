@@ -1,7 +1,8 @@
 package security
 
 import (
-	core "opmodel.dev/core@v1"
+	prim "opmodel.dev/core/primitives@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 )
@@ -10,7 +11,7 @@ import (
 //// SecurityContext Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#SecurityContextTrait: core.#Trait & {
+#SecurityContextTrait: prim.#Trait & {
 	metadata: {
 		modulePath:  "opmodel.dev/traits/security"
 		version:     "v1"
@@ -28,7 +29,7 @@ import (
 	spec: close({securityContext: schemas.#SecurityContextSchema})
 }
 
-#SecurityContext: core.#Component & {
+#SecurityContext: component.#Component & {
 	#traits: {(#SecurityContextTrait.metadata.fqn): #SecurityContextTrait}
 }
 

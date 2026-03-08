@@ -3,7 +3,7 @@ package transformers
 import (
 	"list"
 	k8sappsv1 "opmodel.dev/schemas/kubernetes/apps/v1@v1"
-	core "opmodel.dev/core@v1"
+	transformer "opmodel.dev/core/transformer@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 	workload_traits "opmodel.dev/traits/workload@v1"
 	security_traits "opmodel.dev/traits/security@v1"
@@ -11,7 +11,7 @@ import (
 )
 
 // DeploymentTransformer converts stateless workload components to Kubernetes Deployments
-#DeploymentTransformer: core.#Transformer & {
+#DeploymentTransformer: transformer.#Transformer & {
 	metadata: {
 		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
 		version:     "v1"
@@ -57,7 +57,7 @@ import (
 	// Transform function
 	#transform: {
 		#component: _ // Unconstrained; validated by matching, not by transform signature
-		#context:   core.#TransformerContext
+		#context:   transformer.#TransformerContext
 
 		// Extract required Container resource
 		_container: #component.spec.container
@@ -87,7 +87,7 @@ import (
 		}
 
 		// Build main container: base conversion via helper, unified with trait fields
-		_mainContainer: (#ToK8sContainer & {"in": _container}).out
+		_mainContainer: (#ToK8sContainer & {"in": _container, #releasePrefix: #context.#moduleReleaseMetadata.name}).out
 
 		// Build container list (main container + optional sidecars)
 		_sidecarContainers: *optionalTraits["opmodel.dev/traits/workload/sidecar-containers@v1"].#defaults | [...]
@@ -106,8 +106,8 @@ import (
 			apiVersion: "apps/v1"
 			kind:       "Deployment"
 			metadata: {
-				name:      #component.metadata.name
-				namespace: #context.namespace
+				name:      "\(#context.#moduleReleaseMetadata.name)-\(#component.metadata.name)"
+				namespace: #context.#moduleReleaseMetadata.namespace
 				labels:    #context.labels
 				// Include component annotations if present
 				if len(#context.componentAnnotations) > 0 {
@@ -120,11 +120,11 @@ import (
 				template: {
 					metadata: labels: #context.componentLabels
 					spec: {
-						_convertedSidecars: (#ToK8sContainers & {"in": _sidecarContainers}).out
+						_convertedSidecars: (#ToK8sContainers & {"in": _sidecarContainers, #releasePrefix: #context.#moduleReleaseMetadata.name}).out
 						containers: list.Concat([[_mainContainer], _convertedSidecars])
 
 						if len(_initContainers) > 0 {
-							initContainers: (#ToK8sContainers & {"in": _initContainers}).out
+							initContainers: (#ToK8sContainers & {"in": _initContainers, #releasePrefix: #context.#moduleReleaseMetadata.name}).out
 						}
 
 						restartPolicy: _restartPolicy
@@ -154,7 +154,7 @@ import (
 
 						// Volumes: convert OPM volume specs to Kubernetes volume specs
 						if #component.spec.volumes != _|_ {
-							volumes: (#ToK8sVolumes & {"in": #component.spec.volumes}).out
+							volumes: (#ToK8sVolumes & {"in": #component.spec.volumes, #releasePrefix: #context.#moduleReleaseMetadata.name}).out
 						}
 					}
 				}

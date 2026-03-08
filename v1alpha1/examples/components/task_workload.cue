@@ -1,7 +1,7 @@
 package components
 
 import (
-	core "opmodel.dev/core@v1"
+	component "opmodel.dev/core/component@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 	workload_traits "opmodel.dev/traits/workload@v1"
 )
@@ -10,7 +10,7 @@ import (
 //// Task Workload Example
 /////////////////////////////////////////////////////////////////
 
-taskWorkload: core.#Component & {
+taskWorkload: component.#Component & {
 	metadata: {
 		name: "task-workload"
 		labels: {

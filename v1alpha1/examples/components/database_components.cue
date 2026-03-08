@@ -1,7 +1,7 @@
 package components
 
 import (
-	core "opmodel.dev/core@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 	storage_resources "opmodel.dev/resources/storage@v1"
@@ -12,7 +12,7 @@ import (
 //// Database Components
 /////////////////////////////////////////////////////////////////
 
-mongodbComponent: core.#Component & {
+mongodbComponent: component.#Component & {
 	metadata: {
 		name: "mongodb-component"
 		labels: {
@@ -70,7 +70,7 @@ mongodbComponent: core.#Component & {
 	}
 }
 
-postgresComponent: core.#Component & {
+postgresComponent: component.#Component & {
 	metadata: {
 		name: "postgres-component"
 		labels: {
@@ -127,7 +127,7 @@ postgresComponent: core.#Component & {
 	}
 }
 
-redisComponent: core.#Component & {
+redisComponent: component.#Component & {
 	metadata: {
 		name: "redis-component"
 		labels: {

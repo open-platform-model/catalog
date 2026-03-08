@@ -1,4 +1,4 @@
-package core
+package types
 
 import (
 	"strings"
@@ -20,6 +20,10 @@ import (
 // ModuleFQNType: container-style FQN for #Module — path/name:semver
 // Example: "opmodel.dev/modules/my-app:1.2.3"
 #ModuleFQNType: string & =~"^[a-z0-9.-]+(/[a-z0-9.-]+)*/[a-z0-9]([a-z0-9-]*[a-z0-9])?:\\d+\\.\\d+\\.\\d+.*$"
+
+// BundleFQNType: FQN for #Bundle — path/name:vN (major version)
+// Example: "opmodel.dev/bundles/game-stack:v1"
+#BundleFQNType: string & =~"^[a-z0-9.-]+(/[a-z0-9.-]+)*/[a-z0-9]([a-z0-9-]*[a-z0-9])?:v[0-9]+$"
 
 // Semver 2.0
 #VersionType: string & =~"^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"

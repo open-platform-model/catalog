@@ -3,7 +3,7 @@ package transformers
 import (
 	"list"
 	k8sbatchv1 "opmodel.dev/schemas/kubernetes/batch/v1@v1"
-	core "opmodel.dev/core@v1"
+	transformer "opmodel.dev/core/transformer@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 	workload_traits "opmodel.dev/traits/workload@v1"
 	security_traits "opmodel.dev/traits/security@v1"
@@ -11,7 +11,7 @@ import (
 )
 
 // CronJobTransformer converts scheduled task components to Kubernetes CronJobs
-#CronJobTransformer: core.#Transformer & {
+#CronJobTransformer: transformer.#Transformer & {
 	metadata: {
 		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
 		version:     "v1"
@@ -55,7 +55,7 @@ import (
 
 	#transform: {
 		#component: _ // Unconstrained; validated by matching, not by transform signature
-		#context:   core.#TransformerContext
+		#context:   transformer.#TransformerContext
 
 		// Extract required Container resource
 		_container: #component.spec.container
@@ -70,7 +70,7 @@ import (
 		}
 
 		// Build main container: base conversion via helper, unified with trait fields
-		_mainContainer: (#ToK8sContainer & {"in": _container}).out
+		_mainContainer: (#ToK8sContainer & {"in": _container, #releasePrefix: #context.#moduleReleaseMetadata.name}).out
 
 		// Extract optional sidecar and init containers with defaults
 		_sidecarContainers: [...]
@@ -87,8 +87,8 @@ import (
 			apiVersion: "batch/v1"
 			kind:       "CronJob"
 			metadata: {
-				name:      #component.metadata.name
-				namespace: #context.namespace | *"default"
+				name:      "\(#context.#moduleReleaseMetadata.name)-\(#component.metadata.name)"
+				namespace: #context.#moduleReleaseMetadata.namespace
 				labels:    #context.labels
 				// Include component annotations if present
 				if len(#context.componentAnnotations) > 0 {
@@ -122,11 +122,11 @@ import (
 						template: {
 							metadata: labels: #context.componentLabels
 							spec: {
-								_convertedSidecars: (#ToK8sContainers & {"in": _sidecarContainers}).out
+								_convertedSidecars: (#ToK8sContainers & {"in": _sidecarContainers, #releasePrefix: #context.#moduleReleaseMetadata.name}).out
 								containers: list.Concat([[_mainContainer], _convertedSidecars])
 
 								if len(_initContainers) > 0 {
-									initContainers: (#ToK8sContainers & {"in": _initContainers}).out
+									initContainers: (#ToK8sContainers & {"in": _initContainers, #releasePrefix: #context.#moduleReleaseMetadata.name}).out
 								}
 
 								restartPolicy: _restartPolicy

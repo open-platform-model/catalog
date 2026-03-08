@@ -1,4 +1,9 @@
-package core
+package component
+
+import (
+	t "opmodel.dev/core/types@v1"
+	prim "opmodel.dev/core/primitives@v1"
+)
 
 // Workload type label key
 #LabelWorkloadType: "core.opmodel.dev/workload-type"
@@ -8,25 +13,25 @@ package core
 	kind:       "Component"
 
 	metadata: {
-		name!: #NameType
+		name!: t.#NameType
 
 		// Component labels - unified from all attached resources, traits, and blueprints
 		// If definitions have conflicting labels, CUE unification will fail (automatic validation).
-		labels?: #LabelsAnnotationsType
+		labels?: t.#LabelsAnnotationsType
 
 		// Component annotations - unified from all attached resources, traits, and blueprints
 		// If definitions have conflicting annotations, CUE unification will fail (automatic validation).
-		annotations?: #LabelsAnnotationsType
+		annotations?: t.#LabelsAnnotationsType
 	}
 
 	// Resources applied for this component
-	#resources: #ResourceMap
+	#resources: prim.#ResourceMap
 
 	// Traits applied to this component
-	#traits?: #TraitMap
+	#traits?: prim.#TraitMap
 
 	// Blueprints applied to this component
-	#blueprints?: #BlueprintMap
+	#blueprints?: prim.#BlueprintMap
 
 	_allFields: {
 		for _, resource in #resources {
@@ -55,51 +60,3 @@ package core
 }
 
 #ComponentMap: [string]: #Component
-
-_testComponent: #Component & {
-	metadata: name: "test-component"
-	metadata: labels: {
-		"core.opmodel.dev/workload-type": "stateless"
-	}
-
-	_testContainer
-
-	spec: {
-		container: {
-			name: "test-container"
-			image: {
-				repository: "nginx"
-				tag:        "latest"
-				digest:     ""
-			}
-			// This is intentionally incorrect
-			resources: {
-				requests: {
-					cpu:    "250m"
-					memory: "128Mi"
-				}
-				limits: {
-					cpu:    "500m"
-					memory: "256Mi"
-				}
-			}
-		}
-	}
-}
-
-_testComponent2: #Component & _testStatelessWorkload & {
-	metadata: name: "test-component-2"
-
-	spec: {
-		statelessWorkload: {
-			container: {
-				image: {
-					repository: "nginx"
-					tag:        "1.28"
-					digest:     ""
-				}
-			}
-			scaling: count: 6
-		}
-	}
-}

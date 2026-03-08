@@ -1,7 +1,7 @@
 package components
 
 import (
-	core "opmodel.dev/core@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 	storage_resources "opmodel.dev/resources/storage@v1"
@@ -12,7 +12,7 @@ import (
 //// Stateful Workload Example
 /////////////////////////////////////////////////////////////////
 
-statefulWorkload: core.#Component & {
+statefulWorkload: component.#Component & {
 	metadata: {
 		name: "stateful-workload"
 		labels: {

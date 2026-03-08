@@ -1,7 +1,8 @@
 package extension
 
 import (
-	core "opmodel.dev/core@v1"
+	prim "opmodel.dev/core/primitives@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 )
 
@@ -9,7 +10,7 @@ import (
 //// CRDs Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#CRDsResource: core.#Resource & {
+#CRDsResource: prim.#Resource & {
 	metadata: {
 		modulePath:  "opmodel.dev/resources/extension"
 		version:     "v1"
@@ -27,7 +28,7 @@ import (
 	spec: close({crds: [name=string]: schemas.#CRDSchema})
 }
 
-#CRDs: core.#Component & {
+#CRDs: component.#Component & {
 	metadata: annotations: {
 		"transformer.opmodel.dev/list-output": true
 	}

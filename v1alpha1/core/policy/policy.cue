@@ -1,4 +1,10 @@
-package core
+package policy
+
+import (
+	t "opmodel.dev/core/types@v1"
+	prim "opmodel.dev/core/primitives@v1"
+	component "opmodel.dev/core/component@v1"
+)
 
 // #Policy: Groups PolicyRules and targets them to a set of
 // components via label matching or explicit references.
@@ -9,14 +15,14 @@ package core
 	kind:       "Policy"
 
 	metadata: {
-		name!: #NameType
+		name!: t.#NameType
 
-		labels?:      #LabelsAnnotationsType
-		annotations?: #LabelsAnnotationsType
+		labels?:      t.#LabelsAnnotationsType
+		annotations?: t.#LabelsAnnotationsType
 	}
 
 	// PolicyRules grouped by this policy
-	#rules: [RuleFQN=string]: #PolicyRule & {
+	#rules: [RuleFQN=string]: prim.#PolicyRule & {
 		metadata: {
 			name: string | *RuleFQN
 		}
@@ -26,10 +32,10 @@ package core
 	// At least one of matchLabels or components must be specified
 	appliesTo: {
 		// Label-based matching — select components whose labels are a superset
-		matchLabels?: #LabelsAnnotationsType
+		matchLabels?: t.#LabelsAnnotationsType
 
 		// Explicit component references
-		components?: [...#Component]
+		components?: [...component.#Component]
 	}
 
 	_allFields: {

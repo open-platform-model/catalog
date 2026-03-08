@@ -1,7 +1,7 @@
 package transformers
 
 import (
-	core "opmodel.dev/core@v1"
+	transformer "opmodel.dev/core/transformer@v1"
 	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v1"
 )
 
@@ -18,14 +18,14 @@ import (
 		name!:           string
 		automountToken?: bool
 	}
-	context: core.#TransformerContext
+	context: transformer.#TransformerContext
 
 	out: k8scorev1.#ServiceAccount & {
 		apiVersion: "v1"
 		kind:       "ServiceAccount"
 		metadata: {
 			name:      X.name
-			namespace: context.namespace
+			namespace: context.#moduleReleaseMetadata.namespace
 			labels:    context.labels
 			if len(context.componentAnnotations) > 0 {
 				annotations: context.componentAnnotations

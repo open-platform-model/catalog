@@ -1,7 +1,8 @@
 package config
 
 import (
-	core "opmodel.dev/core@v1"
+	prim "opmodel.dev/core/primitives@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 )
 
@@ -9,7 +10,7 @@ import (
 //// ConfigMaps Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#ConfigMapsResource: core.#Resource & {
+#ConfigMapsResource: prim.#Resource & {
 	metadata: {
 		modulePath:  "opmodel.dev/resources/config"
 		version:     "v1"
@@ -27,7 +28,7 @@ import (
 	spec: close({configMaps: [cmName=string]: schemas.#ConfigMapSchema & {name: string | *cmName}})
 }
 
-#ConfigMaps: core.#Component & {
+#ConfigMaps: component.#Component & {
 	metadata: annotations: {
 		"transformer.opmodel.dev/list-output": true
 	}

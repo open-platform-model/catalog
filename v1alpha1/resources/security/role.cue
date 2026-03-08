@@ -1,7 +1,8 @@
 package security
 
 import (
-	core "opmodel.dev/core@v1"
+	prim "opmodel.dev/core/primitives@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 )
 
@@ -9,7 +10,7 @@ import (
 //// Role Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#RoleResource: core.#Resource & {
+#RoleResource: prim.#Resource & {
 	metadata: {
 		modulePath:  "opmodel.dev/resources/security"
 		version:     "v1"
@@ -27,7 +28,7 @@ import (
 	spec: close({role: schemas.#RoleSchema})
 }
 
-#Role: core.#Component & {
+#Role: component.#Component & {
 	metadata: annotations: {
 		"transformer.opmodel.dev/list-output": true
 	}

@@ -1,7 +1,7 @@
 package transformers
 
 import (
-	core "opmodel.dev/core@v1"
+	transformer "opmodel.dev/core/transformer@v1"
 	schemas "opmodel.dev/schemas@v1"
 	config_resources "opmodel.dev/resources/config@v1"
 	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v1"
@@ -9,7 +9,7 @@ import (
 
 // ConfigMapTransformer converts ConfigMaps resources to Kubernetes ConfigMaps.
 // Supports immutable ConfigMaps with content-hash naming.
-#ConfigMapTransformer: core.#Transformer & {
+#ConfigMapTransformer: transformer.#Transformer & {
 	metadata: {
 		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
 		version:     "v1"
@@ -35,7 +35,7 @@ import (
 
 	#transform: {
 		#component: _
-		#context:   core.#TransformerContext
+		#context:   transformer.#TransformerContext
 
 		_configMaps: #component.spec.configMaps
 
@@ -54,7 +54,7 @@ import (
 					kind:       "ConfigMap"
 					metadata: {
 						name:      _k8sName
-						namespace: #context.namespace
+						namespace: #context.#moduleReleaseMetadata.namespace
 						labels:    #context.labels
 						if len(#context.componentAnnotations) > 0 {
 							annotations: #context.componentAnnotations

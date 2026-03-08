@@ -1,7 +1,8 @@
 package workload
 
 import (
-	core "opmodel.dev/core@v1"
+	prim "opmodel.dev/core/primitives@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 )
@@ -10,7 +11,7 @@ import (
 //// GracefulShutdown Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#GracefulShutdownTrait: core.#Trait & {
+#GracefulShutdownTrait: prim.#Trait & {
 	metadata: {
 		modulePath:  "opmodel.dev/traits/workload"
 		version:     "v1"
@@ -28,7 +29,7 @@ import (
 	spec: close({gracefulShutdown: schemas.#GracefulShutdownSchema})
 }
 
-#GracefulShutdown: core.#Component & {
+#GracefulShutdown: component.#Component & {
 	#traits: {(#GracefulShutdownTrait.metadata.fqn): #GracefulShutdownTrait}
 }
 

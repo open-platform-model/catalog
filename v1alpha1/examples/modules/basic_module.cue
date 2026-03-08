@@ -1,7 +1,8 @@
 package modules
 
 import (
-	core "opmodel.dev/core@v1"
+	module "opmodel.dev/core/module@v1"
+	modulerelease "opmodel.dev/core/modulerelease@v1"
 	schemas "opmodel.dev/schemas@v1"
 	components "opmodel.dev/examples/components@v1"
 )
@@ -14,7 +15,7 @@ import (
 ////   - env var wiring via from: (no manual spec.secrets bridging)
 /////////////////////////////////////////////////////////////////
 
-basicModule: core.#Module & {
+basicModule: module.#Module & {
 	metadata: {
 		modulePath: "opmodel.dev"
 		name:       "basic-module"
@@ -112,7 +113,7 @@ basicModule: core.#Module & {
 	}
 }
 
-basicModuleRelease: core.#ModuleRelease & {
+basicModuleRelease: modulerelease.#ModuleRelease & {
 	metadata: {
 		name:      "basic-module-release"
 		namespace: "production"

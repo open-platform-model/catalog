@@ -1,7 +1,8 @@
 package storage
 
 import (
-	core "opmodel.dev/core@v1"
+	prim "opmodel.dev/core/primitives@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 )
 
@@ -9,7 +10,7 @@ import (
 //// Volume Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#VolumesResource: core.#Resource & {
+#VolumesResource: prim.#Resource & {
 	metadata: {
 		modulePath:  "opmodel.dev/resources/storage"
 		version:     "v1"
@@ -27,7 +28,7 @@ import (
 	spec: close({volumes: [volumeName=string]: schemas.#VolumeSchema & {name: string | *volumeName}})
 }
 
-#Volumes: core.#Component & {
+#Volumes: component.#Component & {
 	metadata: annotations: {
 		"transformer.opmodel.dev/list-output": true
 	}

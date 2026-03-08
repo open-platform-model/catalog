@@ -1,7 +1,7 @@
 package components
 
 import (
-	core "opmodel.dev/core@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 	storage_resources "opmodel.dev/resources/storage@v1"
@@ -13,7 +13,7 @@ import (
 //// Demonstrates simple component composition with resources and traits
 /////////////////////////////////////////////////////////////////
 
-basicComponent: core.#Component & {
+basicComponent: component.#Component & {
 	metadata: {
 		name: "basic-component"
 		labels: {

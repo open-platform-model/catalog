@@ -1,7 +1,8 @@
 package network
 
 import (
-	core "opmodel.dev/core@v1"
+	prim "opmodel.dev/core/primitives@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 )
@@ -10,7 +11,7 @@ import (
 //// Expose Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#ExposeTrait: core.#Trait & {
+#ExposeTrait: prim.#Trait & {
 	metadata: {
 		modulePath:  "opmodel.dev/traits/network"
 		version:     "v1"
@@ -29,7 +30,7 @@ import (
 	spec: close({expose: schemas.#ExposeSchema})
 }
 
-#Expose: core.#Component & {
+#Expose: component.#Component & {
 	#traits: {(#ExposeTrait.metadata.fqn): #ExposeTrait}
 }
 

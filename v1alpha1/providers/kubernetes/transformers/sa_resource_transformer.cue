@@ -1,14 +1,14 @@
 package transformers
 
 import (
-	core "opmodel.dev/core@v1"
+	transformer "opmodel.dev/core/transformer@v1"
 	security_resources "opmodel.dev/resources/security@v1"
 )
 
 // ServiceAccountResourceTransformer converts standalone ServiceAccount resources
 // to Kubernetes ServiceAccounts. Separate from the WorkloadIdentity-based
 // #ServiceAccountTransformer which handles trait-attached identities.
-#ServiceAccountResourceTransformer: core.#Transformer & {
+#ServiceAccountResourceTransformer: transformer.#Transformer & {
 	metadata: {
 		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
 		version:     "v1"
@@ -34,7 +34,7 @@ import (
 
 	#transform: {
 		#component: _
-		#context:   core.#TransformerContext
+		#context:   transformer.#TransformerContext
 
 		_serviceAccount: #component.spec.serviceAccount
 
@@ -59,8 +59,16 @@ _testSAResourceComponent: security_resources.#ServiceAccount & {
 _testSAResourceTransformer: (#ServiceAccountResourceTransformer.#transform & {
 	#component: _testSAResourceComponent
 	#context: {
-		namespace: "ci"
-		labels: app: "ci-bot"
+		#moduleReleaseMetadata: {
+			name:      "test-release"
+			namespace: "ci"
+			fqn:       "opmodel.dev/test-release:0.1.0"
+			version:   "0.1.0"
+			uuid:      "00000000-0000-0000-0000-000000000000"
+		}
+		#componentMetadata: {
+			name: "ci-bot"
+		}
 		componentAnnotations: {}
 	}
 }).output

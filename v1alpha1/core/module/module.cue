@@ -1,7 +1,10 @@
-package core
+package module
 
 import (
 	cue_uuid "uuid"
+	t "opmodel.dev/core/types@v1"
+	component "opmodel.dev/core/component@v1"
+	policy "opmodel.dev/core/policy@v1"
 )
 
 // #Module: The portable application blueprint created by developers and/or platform teams
@@ -10,19 +13,19 @@ import (
 	kind:       "Module"
 
 	metadata: {
-		modulePath!: #ModulePathType                                     // Example: "example.com/modules"
-		name!:       #NameType                                           // Example: "example-module"
-		version!:    #VersionType                                        // Example: "0.1.0"
-		fqn:         #ModuleFQNType & "\(modulePath)/\(name):\(version)" // Example: "example.com/modules/example-module:0.1.0"
+		modulePath!: t.#ModulePathType                                     // Example: "example.com/modules"
+		name!:       t.#NameType                                           // Example: "example-module"
+		version!:    t.#VersionType                                        // Example: "0.1.0"
+		fqn:         t.#ModuleFQNType & "\(modulePath)/\(name):\(version)" // Example: "example.com/modules/example-module:0.1.0"
 
 		// Unique identifier for the module, computed as a UUID v5 (SHA1) of the FQN using the OPM namespace UUID.
-		uuid: #UUIDType & cue_uuid.SHA1(OPMNamespace, fqn)
-		#definitionName: (#KebabToPascal & {"in": name}).out
+		uuid: t.#UUIDType & cue_uuid.SHA1(t.OPMNamespace, fqn)
+		#definitionName: (t.#KebabToPascal & {"in": name}).out
 
 		defaultNamespace?: string
 		description?:      string
-		labels?:           #LabelsAnnotationsType
-		annotations?:      #LabelsAnnotationsType
+		labels?:           t.#LabelsAnnotationsType
+		annotations?:      t.#LabelsAnnotationsType
 
 		labels: {
 			// Standard labels for module identification
@@ -33,7 +36,7 @@ import (
 	}
 
 	// Components defined in this module (developer-defined, required. May be added to by the platform-team)
-	#components: [Id=string]: #Component & {
+	#components: [Id=string]: component.#Component & {
 		metadata: {
 			name: string | *Id
 			labels: "component.opmodel.dev/name": name
@@ -45,7 +48,7 @@ import (
 	// #allComponents: [for _, c in #components {c}]
 
 	// Module-level policies (developer-defined, optional. May be added to by the platform-team)
-	#policies?: [Id=string]: #Policy
+	#policies?: [Id=string]: policy.#Policy
 
 	// Value schema - constraints and defaults.
 	// Developers define the configuration contract and reference it in their components.
@@ -58,19 +61,3 @@ import (
 }
 
 #ModuleMap: [string]: #Module
-
-_testModule: #Module & {
-	metadata: {
-		modulePath:  "opmodel.dev/modules"
-		name:        "test-module"
-		version:     "0.1.0"
-		description: "A test module for demonstration purposes"
-		labels: {
-			"module.opmodel.dev/category": "test"
-		}
-	}
-	#components: {
-		testComponent: _testComponent
-	}
-
-}

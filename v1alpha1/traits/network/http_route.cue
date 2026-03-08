@@ -1,7 +1,8 @@
 package network
 
 import (
-	core "opmodel.dev/core@v1"
+	prim "opmodel.dev/core/primitives@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 )
@@ -10,7 +11,7 @@ import (
 //// HttpRoute Trait Definition
 /////////////////////////////////////////////////////////////////
 
-#HttpRouteTrait: core.#Trait & {
+#HttpRouteTrait: prim.#Trait & {
 	metadata: {
 		modulePath:  "opmodel.dev/traits/network"
 		version:     "v1"
@@ -28,7 +29,7 @@ import (
 	spec: close({httpRoute: schemas.#HttpRouteSchema})
 }
 
-#HttpRoute: core.#Component & {
+#HttpRoute: component.#Component & {
 	#traits: {(#HttpRouteTrait.metadata.fqn): #HttpRouteTrait}
 }
 

@@ -1,14 +1,17 @@
-package core
+package transformer
 
-import "strings"
+import (
+	"strings"
+	t "opmodel.dev/core/types@v1"
+)
 
 // #Transformer: Declares how to convert OPM components into platform-specific resources.
 //
 // Transformers use label-based matching to determine which components they can handle.
 // A transformer matches a component when ALL of the following are true:
-//   1. ALL requiredLabels are present on the component with matching values
-//   2. ALL requiredResources FQNs exist in component.#resources
-//   3. ALL requiredTraits FQNs exist in component.#traits
+//  1. ALL requiredLabels are present on the component with matching values
+//  2. ALL requiredResources FQNs exist in component.#resources
+//  3. ALL requiredTraits FQNs exist in component.#traits
 //
 // Component labels are inherited from the union of labels from all attached
 // #resources, #traits, and #policies definitions.
@@ -17,20 +20,20 @@ import "strings"
 	kind:       "Transformer"
 
 	metadata: {
-		modulePath!: #ModulePathType   // Example: "opmodel.dev/transformers/kubernetes"
-		version!:    #MajorVersionType // Example: "v0"
-		name!:       #NameType         // Example: "deployment-transformer"
-		#definitionName: (#KebabToPascal & {"in": name}).out
+		modulePath!: t.#ModulePathType   // Example: "opmodel.dev/transformers/kubernetes"
+		version!:    t.#MajorVersionType // Example: "v0"
+		name!:       t.#NameType         // Example: "deployment-transformer"
+		#definitionName: (t.#KebabToPascal & {"in": name}).out
 
-		fqn: #FQNType & "\(modulePath)/\(name)@\(version)" // Example: "opmodel.dev/transformers/kubernetes/deployment-transformer@v0"
+		fqn: t.#FQNType & "\(modulePath)/\(name)@\(version)" // Example: "opmodel.dev/transformers/kubernetes/deployment-transformer@v0"
 
 		description!: string // A brief description of what this transformer produces
 
 		// Labels for categorizing this transformer (not used for matching)
-		labels?: #LabelsAnnotationsType
+		labels?: t.#LabelsAnnotationsType
 
 		// Annotations for additional transformer metadata
-		annotations?: #LabelsAnnotationsType
+		annotations?: t.#LabelsAnnotationsType
 	}
 
 	// Labels that a component MUST have to match this transformer.
@@ -42,11 +45,11 @@ import "strings"
 	//
 	// The Container resource defines this label, so components with Container
 	// will have it. Transformers requiring "stateful" won't match.
-	requiredLabels?: #LabelsAnnotationsType
+	requiredLabels?: t.#LabelsAnnotationsType
 
 	// Labels optionally used by this transformer - component MAY include these
 	// If not provided, defaults from the definition can be used
-	optionalLabels?: #LabelsAnnotationsType
+	optionalLabels?: t.#LabelsAnnotationsType
 
 	// Resources required by this transformer - component MUST include these
 	// Map key is the FQN, value is the Resource definition (provides access to #defaults)
@@ -75,30 +78,28 @@ import "strings"
 }
 
 // Map of transformers by fully qualified name
-#TransformerMap: [#FQNType]: #Transformer
+#TransformerMap: [t.#FQNType]: #Transformer
 
 // Provider context passed to transformers
 #TransformerContext: {
 	#moduleReleaseMetadata: {
-		name!:        #NameType
-		namespace!:   #NameType // Required for releases (target environment)
+		name!:        t.#NameType
+		namespace!:   t.#NameType // Required for releases (target environment)
 		fqn:          string
 		version:      string
-		uuid:         #UUIDType
-		labels?:      #LabelsAnnotationsType
-		annotations?: #LabelsAnnotationsType
+		uuid:         t.#UUIDType
+		labels?:      t.#LabelsAnnotationsType
+		annotations?: t.#LabelsAnnotationsType
 	}
 
 	#componentMetadata: {
-		name!:        #NameType
-		labels?:      #LabelsAnnotationsType
-		annotations?: #LabelsAnnotationsType
+		name!:        t.#NameType
+		labels?:      t.#LabelsAnnotationsType
+		annotations?: t.#LabelsAnnotationsType
 	}
 
-	name:      string // Injected during rendering (release name)
-	namespace: string // Injected during rendering (target namespace)
-
-	// Labels and annotations inheritance logic:
+	// Labels and annotations. These are inherited from the component and module metadata.
+	// 
 	// - moduleLabels: labels from #moduleReleaseMetadata.labels (if defined)
 	// - moduleAnnotations: annotations from #moduleReleaseMetadata.annotations (if defined)
 	// - componentLabels: labels from #componentMetadata.labels (if defined) + "app.kubernetes.io/name" = component name
@@ -121,7 +122,8 @@ import "strings"
 	}
 
 	componentLabels: {
-		"app.kubernetes.io/name": #componentMetadata.name
+		"app.kubernetes.io/name":          #componentMetadata.name
+		"module-release.opmodel.dev/name": #moduleReleaseMetadata.name
 		if #componentMetadata.labels != _|_ {
 			for k, v in #componentMetadata.labels {
 				if !strings.HasPrefix(k, "transformer.opmodel.dev/") {

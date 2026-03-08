@@ -1,7 +1,8 @@
 package data
 
 import (
-	core "opmodel.dev/core@v1"
+	prim "opmodel.dev/core/primitives@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 	storage_resources "opmodel.dev/resources/storage@v1"
@@ -12,7 +13,7 @@ import (
 //// SimpleDatabase Blueprint Definition
 /////////////////////////////////////////////////////////////////
 
-#SimpleDatabaseBlueprint: core.#Blueprint & {
+#SimpleDatabaseBlueprint: prim.#Blueprint & {
 	metadata: {
 		modulePath:  "opmodel.dev/blueprints/data"
 		version:     "v1"
@@ -33,7 +34,7 @@ import (
 	spec: simpleDatabase: schemas.#SimpleDatabaseSchema
 }
 
-#SimpleDatabase: core.#Component & {
+#SimpleDatabase: component.#Component & {
 	metadata: labels: {
 		"core.opmodel.dev/workload-type": "stateful"
 	}

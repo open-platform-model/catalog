@@ -55,9 +55,10 @@ tasks:
   # ============================================================================
 
   vet:
-    desc: Validate CUE files
+    desc: Validate CUE files (excludes examples — use vet:examples for those)
     summary: |
-      Validate CUE files in the v1alpha1 module.
+      Validate CUE files in the v1alpha1 module, excluding the examples/ directory.
+      Use 'task vet:examples' to validate examples separately.
 
       Usage:
         task vet
@@ -67,8 +68,28 @@ tasks:
       VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
     cmds:
       - |
-        echo "Validating {{.V1ALPHA1_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
-        cd "{{.V1ALPHA1_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "Validating {{.V1ALPHA1_DIR}} (excluding examples){{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.V1ALPHA1_DIR}}" && cue vet {{.VET_FLAGS}} \
+          ./core/... ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...
+        echo "Done"
+
+  vet:examples:
+    desc: Validate CUE files in the examples/ directory
+    summary: |
+      Validate CUE files in v1alpha1/examples/ separately.
+      Examples include alternative value files that conflict when evaluated together;
+      this task surfaces those errors in isolation.
+
+      Usage:
+        task vet:examples
+        task vet:examples CONCRETE=true
+    vars:
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
+    cmds:
+      - |
+        echo "Validating {{.V1ALPHA1_DIR}}/examples{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.V1ALPHA1_DIR}}" && cue vet {{.VET_FLAGS}} ./examples/...
         echo "Done"
 
   eval:
@@ -248,7 +269,7 @@ tasks:
         echo "Watching {{.V1ALPHA1_DIR}} for changes..."
         echo "Press Ctrl+C to stop"
         watchexec -w "{{.V1ALPHA1_DIR}}" -e cue -- bash -c '
-          if cd "{{.V1ALPHA1_DIR}}" && cue vet ./... 2>&1; then
+          if cd "{{.V1ALPHA1_DIR}}" && cue vet ./core/... ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/... 2>&1; then
             echo "Valid"
           else
             echo "Validation failed"

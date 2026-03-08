@@ -1,12 +1,12 @@
 package kubernetes
 
 import (
-	core "opmodel.dev/core@v1"
+	provider "opmodel.dev/core/provider@v1"
 	k8s_transformers "opmodel.dev/providers/kubernetes/transformers"
 )
 
 // KubernetesProvider transforms OPM components to Kubernetes native resources
-#Provider: core.#Provider & {
+#Provider: provider.#Provider & {
 	metadata: {
 		name:        "kubernetes"
 		description: "Transforms OPM components to Kubernetes native resources"

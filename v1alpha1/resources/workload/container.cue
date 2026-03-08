@@ -1,7 +1,8 @@
 package workload
 
 import (
-	core "opmodel.dev/core@v1"
+	prim "opmodel.dev/core/primitives@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 )
 
@@ -9,7 +10,7 @@ import (
 //// Container Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#ContainerResource: core.#Resource & {
+#ContainerResource: prim.#Resource & {
 	metadata: {
 		modulePath:  "opmodel.dev/resources/workload"
 		version:     "v1"
@@ -27,7 +28,7 @@ import (
 	spec: close({container: schemas.#ContainerSchema})
 }
 
-#Container: core.#Component & {
+#Container: component.#Component & {
 	metadata: labels: {
 		"core.opmodel.dev/workload-type"!: "stateless" | "stateful" | "daemon" | "task" | "scheduled-task"
 	}

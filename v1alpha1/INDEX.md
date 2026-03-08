@@ -9,6 +9,16 @@ CUE module: `opmodel.dev/core@v1alpha1`
 ```text
 v1alpha1/
 ├── core/                        # Core OPM definition types
+│   ├── types/                   # Shared primitive types and regex constraints
+│   ├── primitives/              # Resource, Trait, Blueprint, PolicyRule base types
+│   ├── component/               # #Component — deployable unit
+│   ├── transformer/             # #Transformer, #TransformerContext
+│   ├── policy/                  # #Policy
+│   ├── module/                  # #Module
+│   ├── modulerelease/           # #ModuleRelease
+│   ├── bundle/                  # #Bundle
+│   ├── provider/                # #Provider
+│   └── helpers/                 # Internal helpers (e.g. auto-secrets wiring)
 ├── schemas/                     # Shared field schemas (reused across definitions)
 │   └── kubernetes/              # Mirrored Kubernetes API types (transformer targets)
 ├── resources/                   # Resource implementations
@@ -33,22 +43,72 @@ v1alpha1/
 
 ## Core
 
-Base definition types that form the OPM type system.
+Base definition types that form the OPM type system. Each construct lives in its own subpackage under `core/`.
+
+### `core/types/`
+
+| Definition | Description |
+|---|---|
+| `#LabelsAnnotationsType`, `#NameType`, `#FQNType`, `#VersionType`, ... | Shared primitive types and regex constraints used across all definitions |
+
+### `core/primitives/`
+
+| Definition | Description |
+|---|---|
+| `#Resource` | Deployable resource definition with FQN, metadata, and OpenAPIv3-compatible spec |
+| `#Trait` | Additional behavior attachable to components, with `appliesTo` constraints |
+| `#Blueprint` | Reusable composition of resources and traits into a higher-level abstraction |
+| `#PolicyRule` | Governance rule encoding security, compliance, or operational guardrails |
+
+### `core/component/`
+
+| Definition | Description |
+|---|---|
+| `#Component` | Deployable unit composing resources, traits, and blueprints into a closed spec |
+
+### `core/transformer/`
+
+| Definition | Description |
+|---|---|
+| `#Transformer` | Converts OPM components to platform-specific resources via label/resource/trait matching |
+| `#TransformerContext` | Provider context injected into each transformer at render time |
+
+### `core/policy/`
+
+| Definition | Description |
+|---|---|
+| `#Policy` | Groups policy rules and targets them to components via label matching or explicit refs |
+
+### `core/module/`
 
 | Definition | Description |
 |---|---|
 | `#Module` | Portable application blueprint containing components, policies, and a config schema |
+
+### `core/modulerelease/`
+
+| Definition | Description |
+|---|---|
 | `#ModuleRelease` | Concrete deployment instance binding a module to values and a target namespace |
+
+### `core/bundle/`
+
+| Definition | Description |
+|---|---|
 | `#Bundle` | Collection of modules grouped for distribution |
-| `#Component` | Deployable unit composing resources, traits, and blueprints into a closed spec |
-| `#Resource` | Deployable resource definition with FQN, metadata, and OpenAPIv3-compatible spec |
-| `#Trait` | Additional behavior attachable to components, with `appliesTo` constraints |
-| `#Blueprint` | Reusable composition of resources and traits into a higher-level abstraction |
-| `#Policy` | Groups policy rules and targets them to components via label matching or explicit refs |
-| `#PolicyRule` | Governance rule encoding security, compliance, or operational guardrails |
+
+### `core/provider/`
+
+| Definition | Description |
+|---|---|
 | `#Provider` | Provider definition with a transformer registry for converting OPM components to platform resources |
-| `#Transformer` / `#TransformerContext` | Converts OPM components to platform-specific resources via label/resource/trait matching |
-| `#LabelsAnnotationsType`, `#NameType`, `#FQNType`, `#VersionType`, ... | Shared primitive types and regex constraints used across all definitions |
+
+### `core/helpers/`
+
+| Definition | Description |
+|---|---|
+| `#OpmSecretsComponent` | Builds the auto-generated `opm-secrets` component from discovered `#Secret` fields |
+| `#SecretsResourceFQN` | Canonical FQN for the secrets resource (must stay in sync with `resources/config/secret.cue`) |
 
 ---
 

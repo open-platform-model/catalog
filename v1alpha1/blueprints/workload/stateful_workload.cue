@@ -1,7 +1,8 @@
 package workload
 
 import (
-	core "opmodel.dev/core@v1"
+	prim "opmodel.dev/core/primitives@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 	workload_traits "opmodel.dev/traits/workload@v1"
@@ -12,7 +13,7 @@ import (
 //// StatefulWorkload Blueprint Definition
 /////////////////////////////////////////////////////////////////
 
-#StatefulWorkloadBlueprint: core.#Blueprint & {
+#StatefulWorkloadBlueprint: prim.#Blueprint & {
 	metadata: {
 		modulePath:  "opmodel.dev/blueprints/workload"
 		version:     "v1"
@@ -36,7 +37,7 @@ import (
 	spec: statefulWorkload: schemas.#StatefulWorkloadSchema
 }
 
-#StatefulWorkload: core.#Component & {
+#StatefulWorkload: component.#Component & {
 	metadata: labels: {
 		"core.opmodel.dev/workload-type": "stateful"
 	}

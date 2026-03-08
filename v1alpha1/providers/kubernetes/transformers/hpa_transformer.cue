@@ -1,13 +1,13 @@
 package transformers
 
 import (
-	core "opmodel.dev/core@v1"
+	transformer "opmodel.dev/core/transformer@v1"
 	workload_traits "opmodel.dev/traits/workload@v1"
 	k8sasv2 "opmodel.dev/schemas/kubernetes/autoscaling/v2@v1"
 )
 
 // HPATransformer converts Scaling auto config to Kubernetes HorizontalPodAutoscalers
-#HPATransformer: core.#Transformer & {
+#HPATransformer: transformer.#Transformer & {
 	metadata: {
 		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
 		version:     "v1"
@@ -34,7 +34,7 @@ import (
 
 	#transform: {
 		#component: _
-		#context:   core.#TransformerContext
+		#context:   transformer.#TransformerContext
 
 		// Map workload-type label to K8s kind
 		_workloadType: #component.metadata.labels["core.opmodel.dev/workload-type"]
@@ -53,8 +53,8 @@ import (
 					apiVersion: "autoscaling/v2"
 					kind:       "HorizontalPodAutoscaler"
 					metadata: {
-						name:      #component.metadata.name
-						namespace: #context.namespace
+						name:      "\(#context.#moduleReleaseMetadata.name)-\(#component.metadata.name)"
+						namespace: #context.#moduleReleaseMetadata.namespace
 						labels:    #context.labels
 						// Include component annotations if present
 						if len(#context.componentAnnotations) > 0 {
@@ -65,7 +65,7 @@ import (
 						scaleTargetRef: {
 							apiVersion: "apps/v1"
 							kind:       _targetKind
-							name:       #component.metadata.name
+							name:       "\(#context.#moduleReleaseMetadata.name)-\(#component.metadata.name)"
 						}
 						minReplicas: _auto.min
 						maxReplicas: _auto.max

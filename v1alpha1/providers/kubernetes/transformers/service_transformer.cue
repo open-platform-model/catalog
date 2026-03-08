@@ -1,14 +1,14 @@
 package transformers
 
 import (
-	core "opmodel.dev/core@v1"
+	transformer "opmodel.dev/core/transformer@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 	network_traits "opmodel.dev/traits/network@v1"
 	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v1"
 )
 
 // ServiceTransformer creates Kubernetes Services from components with Expose trait
-#ServiceTransformer: core.#Transformer & {
+#ServiceTransformer: transformer.#Transformer & {
 	metadata: {
 		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
 		version:     "v1"
@@ -41,7 +41,7 @@ import (
 
 	#transform: {
 		#component: _ // Unconstrained; validated by matching, not by transform signature
-		#context:   core.#TransformerContext
+		#context:   transformer.#TransformerContext
 
 		// Extract required Container resource (will be bottom if not present)
 		_container: #component.spec.container
@@ -72,8 +72,8 @@ import (
 			apiVersion: "v1"
 			kind:       "Service"
 			metadata: {
-				name:      #component.metadata.name
-				namespace: #context.namespace | *"default"
+				name:      "\(#context.#moduleReleaseMetadata.name)-\(#component.metadata.name)"
+				namespace: #context.#moduleReleaseMetadata.namespace
 				labels:    #context.labels
 				// Include component annotations if present
 				if len(#context.componentAnnotations) > 0 {

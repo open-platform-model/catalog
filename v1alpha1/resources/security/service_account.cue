@@ -1,7 +1,8 @@
 package security
 
 import (
-	core "opmodel.dev/core@v1"
+	prim "opmodel.dev/core/primitives@v1"
+	component "opmodel.dev/core/component@v1"
 	schemas "opmodel.dev/schemas@v1"
 )
 
@@ -9,7 +10,7 @@ import (
 //// ServiceAccount Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#ServiceAccountResource: core.#Resource & {
+#ServiceAccountResource: prim.#Resource & {
 	metadata: {
 		modulePath:  "opmodel.dev/resources/security"
 		version:     "v1"
@@ -27,7 +28,7 @@ import (
 	spec: close({serviceAccount: schemas.#ServiceAccountSchema})
 }
 
-#ServiceAccount: core.#Component & {
+#ServiceAccount: component.#Component & {
 	#resources: {(#ServiceAccountResource.metadata.fqn): #ServiceAccountResource}
 }
 

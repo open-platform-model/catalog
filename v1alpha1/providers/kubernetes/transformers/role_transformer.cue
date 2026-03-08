@@ -1,7 +1,7 @@
 package transformers
 
 import (
-	core "opmodel.dev/core@v1"
+	transformer "opmodel.dev/core/transformer@v1"
 	security_resources "opmodel.dev/resources/security@v1"
 )
 
@@ -9,7 +9,7 @@ import (
 // Generates both the role and its binding from a single OPM resource:
 //   scope: "namespace" → k8s Role + RoleBinding
 //   scope: "cluster"   → k8s ClusterRole + ClusterRoleBinding
-#RoleTransformer: core.#Transformer & {
+#RoleTransformer: transformer.#Transformer & {
 	metadata: {
 		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
 		version:     "v1"
@@ -35,7 +35,7 @@ import (
 
 	#transform: {
 		#component: _
-		#context:   core.#TransformerContext
+		#context:   transformer.#TransformerContext
 
 		_role: #component.spec.role
 
@@ -50,7 +50,7 @@ import (
 		_k8sSubjects: [for s in _role.subjects {
 			kind:      "ServiceAccount"
 			name:      s.name
-			namespace: #context.namespace
+			namespace: #context.#moduleReleaseMetadata.namespace
 		}]
 
 		// Common metadata for both objects
@@ -68,7 +68,7 @@ import (
 					kind:       "Role"
 					metadata: {
 						name:      _role.name
-						namespace: #context.namespace
+						namespace: #context.#moduleReleaseMetadata.namespace
 						labels:    _commonLabels
 						if len(_commonAnnotations) > 0 {
 							annotations: _commonAnnotations
@@ -81,7 +81,7 @@ import (
 					kind:       "RoleBinding"
 					metadata: {
 						name:      _role.name
-						namespace: #context.namespace
+						namespace: #context.#moduleReleaseMetadata.namespace
 						labels:    _commonLabels
 						if len(_commonAnnotations) > 0 {
 							annotations: _commonAnnotations

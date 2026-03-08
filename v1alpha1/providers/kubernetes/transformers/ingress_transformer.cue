@@ -1,13 +1,13 @@
 package transformers
 
 import (
-	core "opmodel.dev/core@v1"
+	transformer "opmodel.dev/core/transformer@v1"
 	network_traits "opmodel.dev/traits/network@v1"
 	k8snetv1 "opmodel.dev/schemas/kubernetes/networking/v1@v1"
 )
 
 // IngressTransformer converts HttpRoute trait to Kubernetes Ingress
-#IngressTransformer: core.#Transformer & {
+#IngressTransformer: transformer.#Transformer & {
 	metadata: {
 		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
 		version:     "v1"
@@ -34,10 +34,10 @@ import (
 
 	#transform: {
 		#component: _
-		#context:   core.#TransformerContext
+		#context:   transformer.#TransformerContext
 
 		_httpRoute:   #component.spec.httpRoute
-		_serviceName: #component.metadata.name
+		_serviceName: "\(#context.#moduleReleaseMetadata.name)-\(#component.metadata.name)"
 
 		// Build paths from all rules
 		_allPaths: [
@@ -73,8 +73,8 @@ import (
 			apiVersion: "networking.k8s.io/v1"
 			kind:       "Ingress"
 			metadata: {
-				name:      #component.metadata.name
-				namespace: #context.namespace
+				name:      "\(#context.#moduleReleaseMetadata.name)-\(#component.metadata.name)"
+				namespace: #context.#moduleReleaseMetadata.namespace
 				labels:    #context.labels
 				// Include component annotations if present
 				if len(#context.componentAnnotations) > 0 {

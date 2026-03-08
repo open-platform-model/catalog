@@ -1,12 +1,12 @@
 package transformers
 
 import (
-	core "opmodel.dev/core@v1"
+	transformer "opmodel.dev/core/transformer@v1"
 	security_traits "opmodel.dev/traits/security@v1"
 )
 
 // ServiceAccountTransformer converts WorkloadIdentity traits to Kubernetes ServiceAccounts
-#ServiceAccountTransformer: core.#Transformer & {
+#ServiceAccountTransformer: transformer.#Transformer & {
 	metadata: {
 		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
 		version:     "v1"
@@ -32,7 +32,7 @@ import (
 
 	#transform: {
 		#component: _
-		#context:   core.#TransformerContext
+		#context:   transformer.#TransformerContext
 
 		_workloadIdentity: #component.spec.workloadIdentity
 

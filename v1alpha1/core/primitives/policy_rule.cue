@@ -1,7 +1,8 @@
-package core
+package primitives
 
 import (
 	"strings"
+	t "opmodel.dev/core/types@v1"
 )
 
 // #PolicyRule: Encodes governance rules, security requirements,
@@ -12,17 +13,17 @@ import (
 	kind:       "PolicyRule"
 
 	metadata: {
-		modulePath!: #ModulePathType   // Example: "opmodel.dev/policies/security"
-		version!:    #MajorVersionType // Example: "v1"
-		name!:       #NameType         // Example: "encryption"
-		#definitionName: (#KebabToPascal & {"in": name}).out
+		modulePath!: t.#ModulePathType   // Example: "opmodel.dev/policies/security"
+		version!:    t.#MajorVersionType // Example: "v1"
+		name!:       t.#NameType         // Example: "encryption"
+		#definitionName: (t.#KebabToPascal & {"in": name}).out
 
-		fqn: #FQNType & "\(modulePath)/\(name)@\(version)" // Example: "opmodel.dev/policies/security/encryption@v1"
+		fqn: t.#FQNType & "\(modulePath)/\(name)@\(version)" // Example: "opmodel.dev/policies/security/encryption@v1"
 
 		description?: string
 
-		labels?:      #LabelsAnnotationsType
-		annotations?: #LabelsAnnotationsType
+		labels?:      t.#LabelsAnnotationsType
+		annotations?: t.#LabelsAnnotationsType
 	}
 
 	// Policy enforcement configuration
