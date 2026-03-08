@@ -29,9 +29,6 @@ import (
 }
 
 #Volumes: component.#Component & {
-	metadata: annotations: {
-		"transformer.opmodel.dev/list-output": true
-	}
 
 	#resources: {(#VolumesResource.metadata.fqn): #VolumesResource}
 }

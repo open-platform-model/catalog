@@ -28,9 +28,6 @@ import (
 }
 
 #ConfigMaps: core.#Component & {
-	metadata: annotations: {
-		"transformer.opmodel.dev/list-output": true
-	}
 
 	#resources: {(#ConfigMapsResource.metadata.fqn): #ConfigMapsResource}
 }
