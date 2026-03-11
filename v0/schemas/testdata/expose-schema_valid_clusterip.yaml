@@ -1,5 +1,0 @@
-ports:
-  http:
-    name: "http"
-    targetPort: 80
-type: "ClusterIP"

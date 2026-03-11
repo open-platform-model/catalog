@@ -1,6 +1,0 @@
-# count must be >= 1
-metadata:
-  name: "bad"
-spec:
-  scaling:
-    count: -1

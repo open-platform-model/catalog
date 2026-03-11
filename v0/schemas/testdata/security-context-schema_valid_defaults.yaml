@@ -1,3 +1,0 @@
-runAsNonRoot: true
-readOnlyRootFilesystem: false
-allowPrivilegeEscalation: false

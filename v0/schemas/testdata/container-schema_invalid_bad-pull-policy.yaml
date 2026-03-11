@@ -1,3 +1,0 @@
-name: "web"
-image: "nginx:latest"
-imagePullPolicy: "Sometimes"

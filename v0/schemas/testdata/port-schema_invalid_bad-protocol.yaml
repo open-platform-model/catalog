@@ -1,4 +1,0 @@
-# protocol must be TCP, UDP, or SCTP
-name: "http"
-targetPort: 8080
-protocol: "HTTP"

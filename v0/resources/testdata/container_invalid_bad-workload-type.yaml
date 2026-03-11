@@ -1,9 +1,0 @@
-# Invalid workload-type label value
-metadata:
-  name: "bad-type"
-  labels:
-    "core.opmodel.dev/workload-type": "invalid"
-spec:
-  container:
-    name: "test"
-    image: "nginx"

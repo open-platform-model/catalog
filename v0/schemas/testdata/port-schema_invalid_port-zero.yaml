@@ -1,4 +1,0 @@
-# targetPort must be >= 1
-name: "http"
-targetPort: 0
-protocol: "TCP"

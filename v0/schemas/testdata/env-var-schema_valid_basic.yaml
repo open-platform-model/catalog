@@ -1,2 +1,0 @@
-name: DATABASE_URL
-value: "postgres://localhost:5432/mydb"

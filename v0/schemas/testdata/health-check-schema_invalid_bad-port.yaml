@@ -1,5 +1,0 @@
-# port must be > 0 and < 65536
-livenessProbe:
-  httpGet:
-    path: "/healthz"
-    port: 0

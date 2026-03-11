@@ -1,5 +1,0 @@
-# Missing required field: name
-metadata:
-  apiVersion: "test.dev/resources@v0"
-"#spec":
-  test: {}

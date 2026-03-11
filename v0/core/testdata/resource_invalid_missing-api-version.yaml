@@ -1,5 +1,0 @@
-# Missing required field: apiVersion
-metadata:
-  name: "test"
-"#spec":
-  test: {}

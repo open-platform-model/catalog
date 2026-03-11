@@ -1,2 +1,0 @@
-# type must be RollingUpdate, Recreate, or OnDelete
-type: "InvalidStrategy"

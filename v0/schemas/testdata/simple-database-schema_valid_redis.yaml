@@ -1,5 +1,0 @@
-engine: "redis"
-version: "7"
-dbName: "cache"
-username: "default"
-password: "redis-pass"

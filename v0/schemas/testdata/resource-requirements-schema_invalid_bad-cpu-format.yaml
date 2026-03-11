@@ -1,4 +1,0 @@
-# CPU must be a number or string with 'm' suffix
-cpu:
-  request: "2cores"
-  limit: "500m"

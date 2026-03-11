@@ -1,6 +1,0 @@
-# UpdateStrategy type must be RollingUpdate, Recreate, or OnDelete
-metadata:
-  name: "bad-update"
-spec:
-  updateStrategy:
-    type: "InvalidType"

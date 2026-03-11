@@ -1,4 +1,0 @@
-# ScheduledTask requires cronJobConfig
-container:
-  name: "backup"
-  image: "backup:latest"

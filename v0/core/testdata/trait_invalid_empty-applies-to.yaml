@@ -1,7 +1,0 @@
-# Empty appliesTo
-metadata:
-  apiVersion: "test.dev/traits@v0"
-  name: "bad-trait"
-"#spec":
-  badTrait: {}
-appliesTo: []

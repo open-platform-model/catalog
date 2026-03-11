@@ -1,4 +1,0 @@
-# Memory must be a number or string with Mi/Gi suffix
-memory:
-  request: "256Mi"
-  limit: "4GB"

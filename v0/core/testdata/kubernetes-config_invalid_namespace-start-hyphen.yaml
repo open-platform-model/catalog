@@ -1,2 +1,0 @@
-# namespace cannot start with hyphen
-namespace: "-invalid"

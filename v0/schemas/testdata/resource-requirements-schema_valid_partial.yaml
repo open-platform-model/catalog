@@ -1,5 +1,0 @@
-# Request only, no limit — valid in K8s
-cpu:
-  request: "500m"
-memory:
-  request: "256Mi"
