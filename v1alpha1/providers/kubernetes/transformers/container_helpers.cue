@@ -203,18 +203,37 @@ import (
 			persistentVolumeClaim: claimName: "\(_prefix)-\(vol.name | *vName)"
 		}
 		if vol.configMap != _|_ {
-			configMap: name: (schemas.#ImmutableName & {
-				baseName:  vol.configMap.name
-				data:      vol.configMap.data
-				immutable: vol.configMap.immutable
-			}).out
+			configMap: name: vol.configMap.name
 		}
 		if vol.secret != _|_ {
-			secret: secretName: (schemas.#SecretImmutableName & {
-				baseName:  vol.secret.name
-				data:      vol.secret.data
-				immutable: vol.secret.immutable
-			}).out
+			secret: {
+				if vol.secret.from.secretName != _|_ {
+					secretName: vol.secret.from.secretName
+				}
+				if vol.secret.from.secretName == _|_ {
+					if _prefix != _|_ {
+						secretName: "\(_prefix)-\(vol.secret.from.$secretName)"
+					}
+					if _prefix == _|_ {
+						secretName: vol.secret.from.$secretName
+					}
+				}
+				if vol.secret.items != _|_ {
+					items: [for item in vol.secret.items {
+						key:  item.key
+						path: item.path
+						if item.mode != _|_ {
+							mode: item.mode
+						}
+					}]
+				}
+				if vol.secret.defaultMode != _|_ {
+					defaultMode: vol.secret.defaultMode
+				}
+				if vol.secret.optional != _|_ {
+					optional: vol.secret.optional
+				}
+			}
 		}
 		if vol.hostPath != _|_ {
 			hostPath: {
@@ -223,6 +242,75 @@ import (
 					type: vol.hostPath.type
 				}
 			}
+		}
+	}]
+}
+
+_testToK8sVolumesSecretGenerated: {
+	in: {
+		auth: {
+			name: "auth"
+			secret: {
+				from: {
+					$opm:        "secret"
+					$secretName: "zot-htpasswd"
+					$dataKey:    "htpasswd"
+					value:       "admin:hashed"
+				}
+				items: [{
+					key:  "htpasswd"
+					path: "auth/htpasswd"
+					mode: 256
+				}]
+				defaultMode: 420
+			}
+		}
+	}
+
+	out: (#ToK8sVolumes & {
+		"in":           in
+		#releasePrefix: "registry"
+	}).out
+
+	out: [{
+		name: "auth"
+		secret: {
+			secretName:  "registry-zot-htpasswd"
+			defaultMode: 420
+			items: [{
+				key:  "htpasswd"
+				path: "auth/htpasswd"
+				mode: 256
+			}]
+		}
+	}]
+}
+
+_testToK8sVolumesSecretK8sRef: {
+	in: {
+		auth: {
+			name: "auth"
+			secret: {
+				from: {
+					$opm:       "secret"
+					secretName: "existing-secret"
+					remoteKey:  "htpasswd"
+				}
+				optional: true
+			}
+		}
+	}
+
+	out: (#ToK8sVolumes & {
+		"in":           in
+		#releasePrefix: "registry"
+	}).out
+
+	out: [{
+		name: "auth"
+		secret: {
+			secretName: "existing-secret"
+			optional:   true
 		}
 	}]
 }

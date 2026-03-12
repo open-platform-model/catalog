@@ -6,11 +6,26 @@ package schemas
 
 // Volume mount specification - defines container mount point
 #VolumeMountSchema: {
-	#VolumeSchema
+	name!: string
 
 	mountPath!: string
 	subPath?:   string
-	readOnly!:  bool
+	readOnly:   bool | *false
+}
+
+#FileMode: int & >=0 & <=511
+
+#SecretVolumeItemSchema: {
+	key!:  string
+	path!: string
+	mode?: #FileMode
+}
+
+#SecretVolumeSourceSchema: {
+	from!: #Secret
+	items?: [...#SecretVolumeItemSchema]
+	defaultMode?: #FileMode
+	optional?:    bool | *false
 }
 
 // Volume specification - defines storage source
@@ -21,7 +36,7 @@ package schemas
 	emptyDir?:        #EmptyDirSchema
 	persistentClaim?: #PersistentClaimSchema
 	configMap?:       #ConfigMapSchema
-	secret?:          #SecretSchema
+	secret?:          #SecretVolumeSourceSchema
 	hostPath?:        #HostPathSchema
 
 	// Exactly one volume source must be set
@@ -32,11 +47,6 @@ package schemas
 		{secret!: _},
 		{hostPath!: _},
 	])
-
-	// Optional fields for volume mounts. But only applicable when the volume is used as a mount
-	mountPath?: string
-	subPath?:   string
-	readOnly?:  bool
 }
 
 // EmptyDir specification
