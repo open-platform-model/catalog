@@ -10,7 +10,7 @@ package schemas
 
 	mountPath!: string
 	subPath?:   string
-	readOnly:   bool | *false
+	readOnly!:   bool
 }
 
 // Volume specification - defines storage source
@@ -33,10 +33,10 @@ package schemas
 		{hostPath!: _},
 	])
 
-	// // Optional fields for volume mounts. But only applicable when the volume is used as a mount
-	// mountPath?: string
-	// subPath?:   string
-	// readOnly?:  bool
+	// Optional fields for volume mounts. But only applicable when the volume is used as a mount
+	mountPath?: string
+	subPath?:   string
+	readOnly?:  bool
 }
 
 // EmptyDir specification
