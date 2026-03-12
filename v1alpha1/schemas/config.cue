@@ -22,7 +22,7 @@ import (
 //
 // These are set by the author in the schema declaration.
 // Users never need to set them — CUE unification propagates them.
-#Secret: #SecretLiteral | #SecretK8sRef | #SecretEsoRef
+#Secret: #SecretLiteral | #SecretK8sRef
 
 // #SecretLiteral: user provides the actual value.
 // The transformer creates a K8s Secret with this data entry.
@@ -44,17 +44,6 @@ import (
 	$description?: string
 	secretName!:   string // pre-existing K8s Secret name
 	remoteKey!:    string // key within that K8s Secret
-}
-
-// #SecretEsoRef: points to an external secret store via ESO.
-// OPM emits an ExternalSecret CR that creates a K8s Secret at deploy time.
-#SecretEsoRef: {
-	$opm:          "secret"
-	$secretName!:  #NameType
-	$dataKey!:     string
-	$description?: string
-	externalPath:  string // path in the external secret store
-	remoteKey:     string // key within the external secret
 }
 
 /////////////////////////////////////////////////////////////////
@@ -109,7 +98,6 @@ import (
 // to #ContentHash. The normalization is variant-aware:
 //   #SecretLiteral  -> key=<value>
 //   #SecretK8sRef   -> key=k8sref:<secretName>:<remoteKey>
-//   #SecretEsoRef   -> key=esoref:<externalPath>:<remoteKey>
 #SecretContentHash: {
 	data: [string]: #Secret
 
@@ -121,9 +109,6 @@ import (
 			}
 			if (v & #SecretK8sRef) != _|_ {
 				"\(k)": "k8sref:\(v.secretName):\(v.remoteKey)"
-			}
-			if (v & #SecretEsoRef) != _|_ {
-				"\(k)": "esoref:\(v.externalPath):\(v.remoteKey)"
 			}
 		}
 	}

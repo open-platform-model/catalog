@@ -15,7 +15,7 @@ import (
 //   resourceFieldRef? -> { name, valueFrom: { resourceFieldRef: ... } }
 //
 // When #releasePrefix is set, it is prepended to the secretKeyRef name for
-// auto-generated secrets (#SecretLiteral / #SecretEsoRef). Pre-existing K8s
+// auto-generated secrets (#SecretLiteral). Pre-existing K8s
 // Secret references (#SecretK8sRef) are never prefixed.
 //
 // Usage:
@@ -64,7 +64,7 @@ import (
 						}
 					}
 
-					// #SecretLiteral / #SecretEsoRef: use $secretName / $dataKey.
+					// #SecretLiteral: use $secretName / $dataKey.
 					// When #releasePrefix is set, prepend it to the secret name so
 					// that multiple releases of the same module can coexist in one
 					// namespace without their auto-generated secrets colliding.

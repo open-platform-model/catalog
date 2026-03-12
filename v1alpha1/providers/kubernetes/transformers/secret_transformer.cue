@@ -7,21 +7,20 @@ import (
 	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v1"
 )
 
-// SecretTransformer converts Secrets resources to Kubernetes Secrets and ExternalSecrets.
+// SecretTransformer converts Secrets resources to Kubernetes Secrets.
 //
 // Variant dispatch per data entry:
 //   #SecretLiteral -> include in K8s Secret stringData
 //   #SecretK8sRef  -> skip (resource already exists in cluster)
-//   #SecretEsoRef  -> emit ExternalSecret CR
 //
 // Mixed variants within a single secret group are supported: literal entries
-// create a K8s Secret, ESO entries create ExternalSecret CRs, K8s refs are skipped.
+// create a K8s Secret, K8s refs are skipped.
 #SecretTransformer: transformer.#Transformer & {
 	metadata: {
 		modulePath:  "opmodel.dev/providers/kubernetes/transformers"
 		version:     "v1"
 		name:        "secret-transformer"
-		description: "Converts Secrets resources to Kubernetes Secrets and ExternalSecrets"
+		description: "Converts Secrets resources to Kubernetes Secrets"
 
 		labels: {
 			"core.opmodel.dev/resource-category": "config"
@@ -61,8 +60,7 @@ import (
 				let _literals = {
 					for _dk, _entry in secret.data
 					if _entry.value != _|_
-					if _entry.secretName == _|_
-					if _entry.externalPath == _|_ {
+					if _entry.secretName == _|_ {
 						(_dk): _entry.value
 					}
 				}
@@ -85,33 +83,6 @@ import (
 							immutable: true
 						}
 						stringData: _literals
-					}
-				}
-
-				// Emit ExternalSecret CRs for #SecretEsoRef entries
-				for _dk, _entry in secret.data
-				if _entry.externalPath != _|_ {
-					"ExternalSecret/\(_k8sName)": {
-						apiVersion: "external-secrets.io/v1beta1"
-						kind:       "ExternalSecret"
-						metadata: {
-							name:      _k8sName
-							namespace: #context.#moduleReleaseMetadata.namespace
-							labels:    #context.labels
-							if len(#context.componentAnnotations) > 0 {
-								annotations: #context.componentAnnotations
-							}
-						}
-						spec: {
-							target: name: _k8sName
-							data: [{
-								secretKey: _dk
-								remoteRef: {
-									key:      _entry.externalPath
-									property: _entry.remoteKey
-								}
-							}]
-						}
 					}
 				}
 

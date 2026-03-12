@@ -126,7 +126,7 @@ Reusable field schemas shared across resource and trait definitions.
 
 | Definition | Description |
 |---|---|
-| `#Secret` / `#SecretLiteral` / `#SecretK8sRef` / `#SecretEsoRef` | Discriminated union for secret sources (literal, K8s ref, ESO ref) |
+| `#Secret` / `#SecretLiteral` / `#SecretK8sRef` | Discriminated union for secret sources (literal, K8s ref) |
 | `#SecretSchema` / `#ConfigMapSchema` | Field schemas for Secret and ConfigMap resources |
 | `#ContentHash` / `#SecretContentHash` | Content-hash based immutable naming helpers |
 | `#DiscoverSecrets` / `#GroupSecrets` / `#AutoSecrets` | Auto-discovery pipeline for extracting secrets from component specs |
@@ -315,7 +315,7 @@ Provider and transformer definitions for converting OPM components to platform r
 | `#IngressTransformer` | `transformers/ingress_transformer.cue` | Converts HttpRoute trait to Kubernetes Ingress |
 | `#HPATransformer` | `transformers/hpa_transformer.cue` | Converts Scaling autoscaling config to Kubernetes HorizontalPodAutoscalers |
 | `#ConfigMapTransformer` | `transformers/configmap_transformer.cue` | Converts ConfigMaps resources to Kubernetes ConfigMaps (with content-hash naming) |
-| `#SecretTransformer` | `transformers/secret_transformer.cue` | Converts Secrets resources to Kubernetes Secrets and ExternalSecrets (ESO) |
+| `#SecretTransformer` | `transformers/secret_transformer.cue` | Converts Secrets resources to Kubernetes Secrets |
 | `#PVCTransformer` | `transformers/pvc_transformer.cue` | Creates PersistentVolumeClaims from Volume resources |
 | `#CRDTransformer` | `transformers/crd_transformer.cue` | Converts CRDs resources to Kubernetes CustomResourceDefinitions |
 | `#ServiceAccountTransformer` | `transformers/serviceaccount_transformer.cue` | Converts WorkloadIdentity traits to Kubernetes ServiceAccounts |
