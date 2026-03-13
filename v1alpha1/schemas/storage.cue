@@ -6,7 +6,7 @@ package schemas
 
 // Volume mount specification - defines container mount point
 #VolumeMountSchema: {
-	name!: string
+	#VolumeSchema
 
 	mountPath!: string
 	subPath?:   string
@@ -47,6 +47,10 @@ package schemas
 		{secret!: _},
 		{hostPath!: _},
 	])
+
+	mountPath?: string
+	subPath?:   string
+	readOnly:   bool | *false
 }
 
 // EmptyDir specification
