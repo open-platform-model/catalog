@@ -63,6 +63,16 @@ context: |
   The CUE evaluation graph IS the dependency graph. This is not a convenience—it is
   the architectural foundation for why OPM is built on CUE.
 
+  ### IX. Small Batch Sizes (Iterative & Incremental Delivery)
+  All changes MUST be kept TINY. Small, incremental, independently verifiable steps are required.
+  - **WARNING & BLOCK**: If a user requests a change that is too large (e.g., implementing an entire controller, refactoring multiple packages at once, or designing + implementing + testing a major feature in one go), the Agent MUST warn the user, block the execution, and suggest a way to split the request into smaller, sequential tasks.
+  - **Commit Quality**: Tiny changes lead to focused, atomic commits. A single commit should ideally touch one specific concern (e.g., scaffolding an API, adding one reconcile phase, or writing tests for one package).
+
+  ## Execution Gate (Agent Directive)
+  Before beginning ANY implementation, the Agent MUST evaluate the scope of the request against the "Small Batch Sizes" principle.
+  If the request is too large, the Agent MUST reply with:
+  "🛑 **Scope Warning**: This request is too large for a single safe iteration. I suggest we split it into the following smaller steps: [list 2-3 logical, tiny steps]. Should we start with step 1?"
+
   ## Technology Standards
 
   ### CUE Tooling
@@ -142,7 +152,8 @@ rules:
   tasks:
     - "Focus: STEPS to take for implementation"
     - "Updates when: Tasks complete, new tasks discovered, blockers identified"
-    - Break tasks into chunks of max 2 hours
+    - "CRITICAL: Break tasks into TINY chunks (max 1-2 hours)."
+    - "CRITICAL: If the task list grows too long (>10 items) or spans multiple distinct features, suggest splitting into a new OpenSpec change."
     - Each task should be independently testable
     - Include validation gates as final tasks (task fmt, task vet)
     - Group by logical phases (schema changes, implementation, validation)
