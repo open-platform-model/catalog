@@ -185,7 +185,7 @@ import (
 			(k1): v1
 		}
 
-		// Level 2: one level of nesting
+		// Level 2
 		for k1, v1 in X
 		if (v1.$opm == _|_)
 		if ((v1 & {...}) != _|_) {
@@ -195,7 +195,7 @@ import (
 			}
 		}
 
-		// Level 3: two levels of nesting
+		// Level 3
 		for k1, v1 in X
 		if (v1.$opm == _|_)
 		if ((v1 & {...}) != _|_) {
@@ -205,6 +205,216 @@ import (
 				for k3, v3 in v2
 				if (v3.$opm != _|_) {
 					("\(k1)/\(k2)/\(k3)"): v3
+				}
+			}
+		}
+
+		// Level 4
+		for k1, v1 in X
+		if (v1.$opm == _|_)
+		if ((v1 & {...}) != _|_) {
+			for k2, v2 in v1
+			if (v2.$opm == _|_)
+			if ((v2 & {...}) != _|_) {
+				for k3, v3 in v2
+				if (v3.$opm == _|_)
+				if ((v3 & {...}) != _|_) {
+					for k4, v4 in v3
+					if (v4.$opm != _|_) {
+						("\(k1)/\(k2)/\(k3)/\(k4)"): v4
+					}
+				}
+			}
+		}
+
+		// Level 5
+		for k1, v1 in X
+		if (v1.$opm == _|_)
+		if ((v1 & {...}) != _|_) {
+			for k2, v2 in v1
+			if (v2.$opm == _|_)
+			if ((v2 & {...}) != _|_) {
+				for k3, v3 in v2
+				if (v3.$opm == _|_)
+				if ((v3 & {...}) != _|_) {
+					for k4, v4 in v3
+					if (v4.$opm == _|_)
+					if ((v4 & {...}) != _|_) {
+						for k5, v5 in v4
+						if (v5.$opm != _|_) {
+							("\(k1)/\(k2)/\(k3)/\(k4)/\(k5)"): v5
+						}
+					}
+				}
+			}
+		}
+
+		// Level 6
+		for k1, v1 in X
+		if (v1.$opm == _|_)
+		if ((v1 & {...}) != _|_) {
+			for k2, v2 in v1
+			if (v2.$opm == _|_)
+			if ((v2 & {...}) != _|_) {
+				for k3, v3 in v2
+				if (v3.$opm == _|_)
+				if ((v3 & {...}) != _|_) {
+					for k4, v4 in v3
+					if (v4.$opm == _|_)
+					if ((v4 & {...}) != _|_) {
+						for k5, v5 in v4
+						if (v5.$opm == _|_)
+						if ((v5 & {...}) != _|_) {
+							for k6, v6 in v5
+							if (v6.$opm != _|_) {
+								("\(k1)/\(k2)/\(k3)/\(k4)/\(k5)/\(k6)"): v6
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Level 7
+		for k1, v1 in X
+		if (v1.$opm == _|_)
+		if ((v1 & {...}) != _|_) {
+			for k2, v2 in v1
+			if (v2.$opm == _|_)
+			if ((v2 & {...}) != _|_) {
+				for k3, v3 in v2
+				if (v3.$opm == _|_)
+				if ((v3 & {...}) != _|_) {
+					for k4, v4 in v3
+					if (v4.$opm == _|_)
+					if ((v4 & {...}) != _|_) {
+						for k5, v5 in v4
+						if (v5.$opm == _|_)
+						if ((v5 & {...}) != _|_) {
+							for k6, v6 in v5
+							if (v6.$opm == _|_)
+							if ((v6 & {...}) != _|_) {
+								for k7, v7 in v6
+								if (v7.$opm != _|_) {
+									("\(k1)/\(k2)/\(k3)/\(k4)/\(k5)/\(k6)/\(k7)"): v7
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Level 8
+		for k1, v1 in X
+		if (v1.$opm == _|_)
+		if ((v1 & {...}) != _|_) {
+			for k2, v2 in v1
+			if (v2.$opm == _|_)
+			if ((v2 & {...}) != _|_) {
+				for k3, v3 in v2
+				if (v3.$opm == _|_)
+				if ((v3 & {...}) != _|_) {
+					for k4, v4 in v3
+					if (v4.$opm == _|_)
+					if ((v4 & {...}) != _|_) {
+						for k5, v5 in v4
+						if (v5.$opm == _|_)
+						if ((v5 & {...}) != _|_) {
+							for k6, v6 in v5
+							if (v6.$opm == _|_)
+							if ((v6 & {...}) != _|_) {
+								for k7, v7 in v6
+								if (v7.$opm == _|_)
+								if ((v7 & {...}) != _|_) {
+									for k8, v8 in v7
+									if (v8.$opm != _|_) {
+										("\(k1)/\(k2)/\(k3)/\(k4)/\(k5)/\(k6)/\(k7)/\(k8)"): v8
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Level 9
+		for k1, v1 in X
+		if (v1.$opm == _|_)
+		if ((v1 & {...}) != _|_) {
+			for k2, v2 in v1
+			if (v2.$opm == _|_)
+			if ((v2 & {...}) != _|_) {
+				for k3, v3 in v2
+				if (v3.$opm == _|_)
+				if ((v3 & {...}) != _|_) {
+					for k4, v4 in v3
+					if (v4.$opm == _|_)
+					if ((v4 & {...}) != _|_) {
+						for k5, v5 in v4
+						if (v5.$opm == _|_)
+						if ((v5 & {...}) != _|_) {
+							for k6, v6 in v5
+							if (v6.$opm == _|_)
+							if ((v6 & {...}) != _|_) {
+								for k7, v7 in v6
+								if (v7.$opm == _|_)
+								if ((v7 & {...}) != _|_) {
+									for k8, v8 in v7
+									if (v8.$opm == _|_)
+									if ((v8 & {...}) != _|_) {
+										for k9, v9 in v8
+										if (v9.$opm != _|_) {
+											("\(k1)/\(k2)/\(k3)/\(k4)/\(k5)/\(k6)/\(k7)/\(k8)/\(k9)"): v9
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Level 10
+		for k1, v1 in X
+		if (v1.$opm == _|_)
+		if ((v1 & {...}) != _|_) {
+			for k2, v2 in v1
+			if (v2.$opm == _|_)
+			if ((v2 & {...}) != _|_) {
+				for k3, v3 in v2
+				if (v3.$opm == _|_)
+				if ((v3 & {...}) != _|_) {
+					for k4, v4 in v3
+					if (v4.$opm == _|_)
+					if ((v4 & {...}) != _|_) {
+						for k5, v5 in v4
+						if (v5.$opm == _|_)
+						if ((v5 & {...}) != _|_) {
+							for k6, v6 in v5
+							if (v6.$opm == _|_)
+							if ((v6 & {...}) != _|_) {
+								for k7, v7 in v6
+								if (v7.$opm == _|_)
+								if ((v7 & {...}) != _|_) {
+									for k8, v8 in v7
+									if (v8.$opm == _|_)
+									if ((v8 & {...}) != _|_) {
+										for k9, v9 in v8
+										if (v9.$opm == _|_)
+										if ((v9 & {...}) != _|_) {
+											for k10, v10 in v9
+											if (v10.$opm != _|_) {
+												("\(k1)/\(k2)/\(k3)/\(k4)/\(k5)/\(k6)/\(k7)/\(k8)/\(k9)/\(k10)"): v10
+											}
+										}
+									}
+								}
+							}
+						}
+					}
 				}
 			}
 		}
