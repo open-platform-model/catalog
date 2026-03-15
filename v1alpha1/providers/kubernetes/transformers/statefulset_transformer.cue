@@ -152,7 +152,7 @@ import (
 
 						// Volumes: convert OPM volume specs to Kubernetes volume specs
 						if #component.spec.volumes != _|_ {
-							volumes: (#ToK8sVolumes & {"in": #component.spec.volumes, #releasePrefix: #context.#moduleReleaseMetadata.name}).out
+							volumes: (#ToK8sVolumes & {"in": #component.spec.volumes, #releasePrefix: "\(#context.#moduleReleaseMetadata.name)-\(#context.#componentMetadata.name)"}).out
 						}
 					}
 				}

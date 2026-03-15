@@ -200,7 +200,7 @@ import (
 			}
 		}
 		if vol.persistentClaim != _|_ {
-			persistentVolumeClaim: claimName: "\(_prefix)-\(vol.name | *vName)"
+			persistentVolumeClaim: claimName: "\(_prefix)-\(vName)"
 		}
 		if vol.configMap != _|_ {
 			configMap: name: vol.configMap.name
