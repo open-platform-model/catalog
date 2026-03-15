@@ -7,6 +7,7 @@ import (
 	workload_resources "opmodel.dev/resources/workload@v1"
 	workload_traits "opmodel.dev/traits/workload@v1"
 	security_traits "opmodel.dev/traits/security@v1"
+	network_traits "opmodel.dev/traits/network@v1"
 	storage_resources "opmodel.dev/resources/storage@v1"
 )
 
@@ -51,6 +52,7 @@ import (
 		"opmodel.dev/traits/workload/init-containers@v1":    workload_traits.#InitContainersTrait
 		"opmodel.dev/traits/security/security-context@v1":   security_traits.#SecurityContextTrait
 		"opmodel.dev/traits/security/workload-identity@v1":  security_traits.#WorkloadIdentityTrait
+		"opmodel.dev/traits/network/host-network@v1":        network_traits.#HostNetworkTrait
 	}
 
 	#transform: {
@@ -118,6 +120,10 @@ import (
 
 						restartPolicy: _restartPolicy
 
+						if #component.spec.hostNetwork != _|_ {
+							hostNetwork: #component.spec.hostNetwork
+						}
+
 						if #component.spec.securityContext != _|_ {
 							let _sc = #component.spec.securityContext
 							if _sc.runAsNonRoot != _|_ || _sc.runAsUser != _|_ || _sc.runAsGroup != _|_ {
@@ -141,7 +147,7 @@ import (
 
 						// Volumes: convert OPM volume specs to Kubernetes volume specs
 						if #component.spec.volumes != _|_ {
-							volumes: (#ToK8sVolumes & {"in": #component.spec.volumes, #releasePrefix: #context.#moduleReleaseMetadata.name}).out
+							volumes: (#ToK8sVolumes & {"in": #component.spec.volumes, #releasePrefix: "\(#context.#moduleReleaseMetadata.name)-\(#context.#componentMetadata.name)"}).out
 						}
 					}
 				}
