@@ -308,6 +308,7 @@ import (
 	sidecarContainers?: [...#SidecarContainersSchema]
 	initContainers?: [...#InitContainersSchema]
 	securityContext?: #SecurityContextSchema
+	hostNetwork?:     bool
 }
 
 //////////////////////////////////////////////////////////////////
