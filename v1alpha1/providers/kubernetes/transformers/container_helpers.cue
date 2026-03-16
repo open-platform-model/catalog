@@ -243,6 +243,23 @@ import (
 				}
 			}
 		}
+		if vol.nfs != _|_ {
+			nfs: {
+				server: vol.nfs.server
+				path:   vol.nfs.path
+				if vol.nfs.readOnly != _|_ {
+					readOnly: vol.nfs.readOnly
+				}
+			}
+		}
+		if vol.cifs != _|_ {
+			csi: {
+				driver:   "smb.csi.k8s.io"
+				readOnly: vol.cifs.readOnly | *false
+				volumeAttributes: source:   vol.cifs.source
+				nodePublishSecretRef: name: vol.cifs.secretRef
+			}
+		}
 	}]
 }
 

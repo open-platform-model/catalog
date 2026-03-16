@@ -38,6 +38,8 @@ package schemas
 	configMap?:       #ConfigMapSchema
 	secret?:          #SecretVolumeSourceSchema
 	hostPath?:        #HostPathSchema
+	nfs?:             #NFSVolumeSourceSchema
+	cifs?:            #CIFSVolumeSourceSchema
 
 	// Exactly one volume source must be set
 	matchN(1, [
@@ -46,6 +48,8 @@ package schemas
 		{configMap!: _},
 		{secret!: _},
 		{hostPath!: _},
+		{nfs!: _},
+		{cifs!: _},
 	])
 
 	mountPath?: string
@@ -63,6 +67,22 @@ package schemas
 #HostPathSchema: {
 	path!: string
 	type?: *"" | "DirectoryOrCreate" | "Directory" | "FileOrCreate" | "File" | "Socket" | "CharDevice" | "BlockDevice"
+}
+
+// NFS volume source - mounts a directory from an NFS server
+#NFSVolumeSourceSchema: {
+	server!:   string // NFS server hostname or IP (e.g. "10.10.0.2")
+	path!:     string // Exported NFS path (e.g. "/mnt/data/minecraft")
+	readOnly?: bool
+}
+
+// CIFS/SMB volume source - mounts a share via the SMB CSI driver (smb.csi.k8s.io)
+// Requires the SMB CSI driver to be installed on the cluster.
+// Credentials are read from a K8s Secret with keys "username" and "password".
+#CIFSVolumeSourceSchema: {
+	source!:    string // UNC path to the SMB share (e.g. "//10.10.0.2/minecraft")
+	secretRef!: string // Name of the K8s Secret containing cifs username + password
+	readOnly?:  bool
 }
 
 // Persistent claim specification
