@@ -172,7 +172,7 @@ import (
 //////////////////////////////////////////////////////////////////
 
 #ScalingSchema: {
-	count: int & >=1 & <=1000 | *1
+	count: int & >=0 & <=1000 | *1
 	auto?: #AutoscalingSpec
 }
 
