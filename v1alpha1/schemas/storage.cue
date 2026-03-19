@@ -22,7 +22,7 @@ package schemas
 }
 
 #SecretVolumeSourceSchema: {
-	from!: #Secret
+	from!: #SecretSchema
 	items?: [...#SecretVolumeItemSchema]
 	defaultMode?: #FileMode
 	optional?:    bool | *false

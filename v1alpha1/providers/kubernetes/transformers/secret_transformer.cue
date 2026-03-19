@@ -48,20 +48,54 @@ import (
 		output: {
 			for _secretName, secret in _secrets {
 				// Compute the deterministic K8s resource name.
-				// Prefix with the release name so multiple releases of the same
-				// module can coexist in one namespace without secret name collisions.
+				//
+				// Two naming schemes based on whether this is the synthetic opm-secrets
+				// component (which holds auto-discovered cross-component #Secret fields)
+				// or a regular component that defines its own spec.secrets locally.
+				//
+				// opm-secrets: {releaseName}-{secretName}
+				//   Auto-discovered secrets are referenced by env vars in OTHER components
+				//   via {$secretName}. #ToK8sContainer resolves secretKeyRef as
+				//   {releaseName}-{$secretName}, so the K8s name must match that scheme.
+				//
+				// other components: {releaseName}-{componentName}-{secretName}
+				//   Component-local secrets are only mounted as volumes within the same
+				//   component. #ToK8sVolumes resolves secretName as
+				//   {releaseName}-{componentName}-{from.name}, so the K8s name must match.
+				let _relName = #context.#moduleReleaseMetadata.name
+				let _compName = #context.#componentMetadata.name
+
+				// opm-secrets: {releaseName}-{secretName} (cross-component env var refs)
+				// other:        {releaseName}-{componentName}-{secretName} (local volume refs)
+				let _baseName = {
+					if _compName == "opm-secrets" {out: "\(_relName)-\(secret.name)"}
+					if _compName != "opm-secrets" {out: "\(_relName)-\(_compName)-\(secret.name)"}
+				}.out
+
 				let _k8sName = (schemas.#SecretImmutableName & {
-					baseName:  "\(#context.#moduleReleaseMetadata.name)-\(secret.name)"
+					baseName:  _baseName
 					data:      secret.data
 					immutable: secret.immutable
 				}).out
 
-				// Collect #SecretLiteral entries for K8s Secret stringData
+				// Collect literal entries for K8s Secret stringData.
+				// Handles three cases:
+				//   plain string    -> include directly
+				//   #SecretLiteral  -> include via .value
+				//   #SecretK8sRef   -> skip (resource pre-exists in cluster)
 				let _literals = {
-					for _dk, _entry in secret.data
-					if _entry.value != _|_
-					if _entry.secretName == _|_ {
-						(_dk): _entry.value
+					for _dk, _entry in secret.data {
+						// Plain string (manually defined secret, e.g. computed config)
+						if (_entry & string) != _|_ {
+							(_dk): _entry
+						}
+
+						// #SecretLiteral
+						if (_entry & string) == _|_
+						if _entry.value != _|_
+						if _entry.secretName == _|_ {
+							(_dk): _entry.value
+						}
 					}
 				}
 

@@ -51,13 +51,14 @@ import (
 /////////////////////////////////////////////////////////////////
 
 // Secret specification for K8s Secret resources.
-// data holds #Secret entries (not plain strings).
+// data holds either #Secret entries (auto-discovered via #AutoSecrets) or plain
+// strings (manually defined secrets, e.g. computed config files).
 // name is auto-populated from the map key in resources/config/secret.cue.
 #SecretSchema: {
 	name!:     string
 	type:      *"Opaque" | "kubernetes.io/service-account-token" | "kubernetes.io/dockercfg" | "kubernetes.io/dockerconfigjson" | "kubernetes.io/basic-auth" | "kubernetes.io/ssh-auth" | "kubernetes.io/tls" | "bootstrap.kubernetes.io/token"
 	immutable: bool | *false
-	data: [string]: #Secret
+	data: [string]: #Secret | string
 }
 
 // ConfigMap specification.
@@ -94,20 +95,24 @@ import (
 	out: hex.Encode(sha256.Sum256(_concat)[:5])
 }
 
-// #SecretContentHash normalizes #Secret entries to strings, then delegates
-// to #ContentHash. The normalization is variant-aware:
+// #SecretContentHash normalizes #Secret entries and plain strings to a string
+// map, then delegates to #ContentHash. The normalization is variant-aware:
+//   string          -> key=<value>  (plain string, e.g. manually defined secrets)
 //   #SecretLiteral  -> key=<value>
 //   #SecretK8sRef   -> key=k8sref:<secretName>:<remoteKey>
 #SecretContentHash: {
-	data: [string]: #Secret
+	data: [string]: #Secret | string
 
-	// Normalize each #Secret entry to a string for hashing
+	// Normalize each entry to a string for hashing
 	let _normalized = {
 		for k, v in data {
-			if (v & #SecretLiteral) != _|_ {
+			if (v & string) != _|_ {
+				"\(k)": v
+			}
+			if (v & string) == _|_ if (v & #SecretLiteral) != _|_ {
 				"\(k)": v.value
 			}
-			if (v & #SecretK8sRef) != _|_ {
+			if (v & string) == _|_ if (v & #SecretK8sRef) != _|_ {
 				"\(k)": "k8sref:\(v.secretName):\(v.remoteKey)"
 			}
 		}
@@ -140,9 +145,10 @@ import (
 
 // #SecretImmutableName computes the K8s resource name for a Secret.
 // Appends a content-hash suffix when immutable.
+// Accepts both #Secret entries (auto-discovered) and plain strings (manually defined).
 #SecretImmutableName: {
 	baseName: string
-	data: [string]: #Secret
+	data: [string]: #Secret | string
 	immutable: bool | *false
 
 	let _d = data

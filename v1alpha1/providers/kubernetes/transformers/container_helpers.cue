@@ -131,26 +131,26 @@ import (
 					}
 				}
 
-			if X.resources.limits != _|_ {
-				limits: {
-					if X.resources.limits.cpu != _|_ {
-						cpu: (schemas.#NormalizeCPU & {in: X.resources.limits.cpu}).out
-					}
-					if X.resources.limits.memory != _|_ {
-						memory: (schemas.#NormalizeMemory & {in: X.resources.limits.memory}).out
+				if X.resources.limits != _|_ {
+					limits: {
+						if X.resources.limits.cpu != _|_ {
+							cpu: (schemas.#NormalizeCPU & {in: X.resources.limits.cpu}).out
+						}
+						if X.resources.limits.memory != _|_ {
+							memory: (schemas.#NormalizeMemory & {in: X.resources.limits.memory}).out
+						}
 					}
 				}
-			}
 
-			// GPU extended resource: emitted to both requests and limits.
-			// Kubernetes requires extended resource requests == limits (no overcommit).
-			if X.resources.gpu != _|_ {
-				let _gpuVal = strconv.FormatInt(X.resources.gpu.count, 10)
-				requests: {"\(X.resources.gpu.resource)": _gpuVal}
-				limits: {"\(X.resources.gpu.resource)": _gpuVal}
+				// GPU extended resource: emitted to both requests and limits.
+				// Kubernetes requires extended resource requests == limits (no overcommit).
+				if X.resources.gpu != _|_ {
+					let _gpuVal = strconv.FormatInt(X.resources.gpu.count, 10)
+					requests: {"\(X.resources.gpu.resource)": _gpuVal}
+					limits: {"\(X.resources.gpu.resource)": _gpuVal}
+				}
 			}
 		}
-	}
 
 		// Container-level security context
 		if X.securityContext != _|_ {
@@ -219,8 +219,11 @@ import (
 
 // #ToK8sVolumes converts OPM volumes map to Kubernetes volumes list.
 // Handles all volume source types: emptyDir, persistentClaim, configMap, secret.
-// For configMap and secret sources, computes the deterministic K8s resource name
-// using the immutable name helpers (same helpers used by ConfigMap/Secret transformers).
+//
+// For secret volumes, from is a #SecretSchema (carrying name, immutable, data).
+// The K8s secret name is computed via #SecretImmutableName — identical to the
+// name produced by #SecretTransformer — so mutable and immutable secrets both
+// resolve correctly without any extra wiring in the component.
 //
 // Usage:
 //   (#ToK8sVolumes & {"in": _component.spec.volumes, #releasePrefix: "my-release"}).out
@@ -248,17 +251,16 @@ import (
 		}
 		if vol.secret != _|_ {
 			secret: {
-				if vol.secret.from.secretName != _|_ {
-					secretName: vol.secret.from.secretName
-				}
-				if vol.secret.from.secretName == _|_ {
-					if _prefix != _|_ {
-						secretName: "\(_prefix)-\(vol.secret.from.$secretName)"
-					}
-					if _prefix == _|_ {
-						secretName: vol.secret.from.$secretName
-					}
-				}
+				// Compute the same K8s name the secret-transformer will generate:
+				//   {releasePrefix}-{secret.name}[-{contenthash}]
+				// #SecretImmutableName handles both mutable (stable name) and
+				// immutable (content-hash suffix) secrets transparently.
+				let _k8sName = (schemas.#SecretImmutableName & {
+					baseName:  "\(_prefix)-\(vol.secret.from.name)"
+					data:      vol.secret.from.data
+					immutable: vol.secret.from.immutable
+				}).out
+				secretName: _k8sName
 				if vol.secret.items != _|_ {
 					items: [for item in vol.secret.items {
 						key:  item.key
@@ -304,16 +306,18 @@ import (
 	}]
 }
 
-_testToK8sVolumesSecretGenerated: {
+// Non-immutable secret: K8s name = {prefix}-{secret.name}, no hash suffix.
+_testToK8sVolumesSecret: {
 	in: {
 		auth: {
 			name: "auth"
 			secret: {
 				from: {
-					$opm:        "secret"
-					$secretName: "zot-htpasswd"
-					$dataKey:    "htpasswd"
-					value:       "admin:hashed"
+					name:      "zot-htpasswd"
+					immutable: false
+					data: {
+						htpasswd: "admin:hashed"
+					}
 				}
 				items: [{
 					key:  "htpasswd"
@@ -344,31 +348,38 @@ _testToK8sVolumesSecretGenerated: {
 	}]
 }
 
-_testToK8sVolumesSecretK8sRef: {
+// Immutable secret: K8s name = {prefix}-{secret.name}-{contenthash}.
+_testToK8sVolumesSecretImmutable: {
 	in: {
-		auth: {
-			name: "auth"
+		config: {
+			name: "config"
 			secret: {
 				from: {
-					$opm:       "secret"
-					secretName: "existing-secret"
-					remoteKey:  "htpasswd"
+					name:      "my-config"
+					immutable: true
+					data: {
+						"config.json": "hello"
+					}
 				}
-				optional: true
+				items: [{key: "config.json", path: "config.json"}]
 			}
 		}
 	}
 
 	out: (#ToK8sVolumes & {
 		"in":           in
-		#releasePrefix: "registry"
+		#releasePrefix: "myapp-mycomponent"
 	}).out
 
 	out: [{
-		name: "auth"
+		name: "config"
 		secret: {
-			secretName: "existing-secret"
-			optional:   true
+			secretName: (schemas.#SecretImmutableName & {
+				baseName: "myapp-mycomponent-my-config"
+				data: {"config.json": "hello"}
+				immutable: true
+			}).out
+			items: [{key: "config.json", path: "config.json"}]
 		}
 	}]
 }
