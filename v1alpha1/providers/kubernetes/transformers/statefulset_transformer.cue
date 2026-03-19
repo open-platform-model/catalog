@@ -6,6 +6,7 @@ import (
 	transformer "opmodel.dev/core/transformer@v1"
 	workload_resources "opmodel.dev/resources/workload@v1"
 	workload_traits "opmodel.dev/traits/workload@v1"
+	network_traits "opmodel.dev/traits/network@v1"
 	security_traits "opmodel.dev/traits/security@v1"
 	storage_resources "opmodel.dev/resources/storage@v1"
 )
@@ -50,6 +51,7 @@ import (
 		"opmodel.dev/traits/workload/health-check@v1":       workload_traits.#HealthCheckTrait
 		"opmodel.dev/traits/workload/sidecar-containers@v1": workload_traits.#SidecarContainersTrait
 		"opmodel.dev/traits/workload/init-containers@v1":    workload_traits.#InitContainersTrait
+		"opmodel.dev/traits/network/host-network@v1":        network_traits.#HostNetworkTrait
 		"opmodel.dev/traits/security/security-context@v1":   security_traits.#SecurityContextTrait
 		"opmodel.dev/traits/security/workload-identity@v1":  security_traits.#WorkloadIdentityTrait
 	}
@@ -129,24 +131,28 @@ import (
 
 						restartPolicy: _restartPolicy
 
+						if #component.spec.hostNetwork != _|_ {
+							hostNetwork: #component.spec.hostNetwork
+						}
+
 						if #component.spec.securityContext != _|_ {
 							let _sc = #component.spec.securityContext
-						if _sc.runAsNonRoot != _|_ || _sc.runAsUser != _|_ || _sc.runAsGroup != _|_ || _sc.fsGroup != _|_ {
-							securityContext: {
-								if _sc.runAsNonRoot != _|_ {
-									runAsNonRoot: _sc.runAsNonRoot
-								}
-								if _sc.runAsUser != _|_ {
-									runAsUser: _sc.runAsUser
-								}
-								if _sc.runAsGroup != _|_ {
-									runAsGroup: _sc.runAsGroup
-								}
-								if _sc.fsGroup != _|_ {
-									fsGroup: _sc.fsGroup
+							if _sc.runAsNonRoot != _|_ || _sc.runAsUser != _|_ || _sc.runAsGroup != _|_ || _sc.fsGroup != _|_ {
+								securityContext: {
+									if _sc.runAsNonRoot != _|_ {
+										runAsNonRoot: _sc.runAsNonRoot
+									}
+									if _sc.runAsUser != _|_ {
+										runAsUser: _sc.runAsUser
+									}
+									if _sc.runAsGroup != _|_ {
+										runAsGroup: _sc.runAsGroup
+									}
+									if _sc.fsGroup != _|_ {
+										fsGroup: _sc.fsGroup
+									}
 								}
 							}
-						}
 						}
 
 						if #component.spec.workloadIdentity != _|_ {
