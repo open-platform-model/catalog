@@ -131,19 +131,22 @@ import (
 
 						if #component.spec.securityContext != _|_ {
 							let _sc = #component.spec.securityContext
-							if _sc.runAsNonRoot != _|_ || _sc.runAsUser != _|_ || _sc.runAsGroup != _|_ {
-								securityContext: {
-									if _sc.runAsNonRoot != _|_ {
-										runAsNonRoot: _sc.runAsNonRoot
-									}
-									if _sc.runAsUser != _|_ {
-										runAsUser: _sc.runAsUser
-									}
-									if _sc.runAsGroup != _|_ {
-										runAsGroup: _sc.runAsGroup
-									}
+						if _sc.runAsNonRoot != _|_ || _sc.runAsUser != _|_ || _sc.runAsGroup != _|_ || _sc.fsGroup != _|_ {
+							securityContext: {
+								if _sc.runAsNonRoot != _|_ {
+									runAsNonRoot: _sc.runAsNonRoot
+								}
+								if _sc.runAsUser != _|_ {
+									runAsUser: _sc.runAsUser
+								}
+								if _sc.runAsGroup != _|_ {
+									runAsGroup: _sc.runAsGroup
+								}
+								if _sc.fsGroup != _|_ {
+									fsGroup: _sc.fsGroup
 								}
 							}
+						}
 						}
 
 						if #component.spec.workloadIdentity != _|_ {

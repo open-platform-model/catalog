@@ -132,7 +132,7 @@ import (
 						// SecurityContext: pod-level fields
 						if #component.spec.securityContext != _|_ {
 							let _sc = #component.spec.securityContext
-							if _sc.runAsNonRoot != _|_ || _sc.runAsUser != _|_ || _sc.runAsGroup != _|_ {
+							if _sc.runAsNonRoot != _|_ || _sc.runAsUser != _|_ || _sc.runAsGroup != _|_ || _sc.fsGroup != _|_ {
 								securityContext: {
 									if _sc.runAsNonRoot != _|_ {
 										runAsNonRoot: _sc.runAsNonRoot
@@ -142,6 +142,9 @@ import (
 									}
 									if _sc.runAsGroup != _|_ {
 										runAsGroup: _sc.runAsGroup
+									}
+									if _sc.fsGroup != _|_ {
+										fsGroup: _sc.fsGroup
 									}
 								}
 							}
