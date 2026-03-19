@@ -1,6 +1,8 @@
 package transformers
 
 import (
+	"strconv"
+
 	k8scorev1 "opmodel.dev/schemas/kubernetes/core/v1@v1"
 	schemas "opmodel.dev/schemas@v1"
 )
@@ -129,18 +131,26 @@ import (
 					}
 				}
 
-				if X.resources.limits != _|_ {
-					limits: {
-						if X.resources.limits.cpu != _|_ {
-							cpu: (schemas.#NormalizeCPU & {in: X.resources.limits.cpu}).out
-						}
-						if X.resources.limits.memory != _|_ {
-							memory: (schemas.#NormalizeMemory & {in: X.resources.limits.memory}).out
-						}
+			if X.resources.limits != _|_ {
+				limits: {
+					if X.resources.limits.cpu != _|_ {
+						cpu: (schemas.#NormalizeCPU & {in: X.resources.limits.cpu}).out
+					}
+					if X.resources.limits.memory != _|_ {
+						memory: (schemas.#NormalizeMemory & {in: X.resources.limits.memory}).out
 					}
 				}
 			}
+
+			// GPU extended resource: emitted to both requests and limits.
+			// Kubernetes requires extended resource requests == limits (no overcommit).
+			if X.resources.gpu != _|_ {
+				let _gpuVal = strconv.FormatInt(X.resources.gpu.count, 10)
+				requests: {"\(X.resources.gpu.resource)": _gpuVal}
+				limits: {"\(X.resources.gpu.resource)": _gpuVal}
+			}
 		}
+	}
 
 		// Volume mounts: extract only K8s-valid fields (strip embedded volume source data)
 		if X.volumeMounts != _|_ {

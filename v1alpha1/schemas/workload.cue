@@ -133,15 +133,35 @@ import (
 	prefix?: string // optional prefix for injected keys
 }
 
+// #GpuResourceSchema specifies a GPU extended resource claim for a container.
+// The resource key must match the name reported by the device plugin on the node.
+// Kubernetes requires extended resource requests == limits, so a single
+// top-level field is used rather than splitting across requests/limits.
+#GpuResourceSchema: {
+	// Resource key as exposed by the device plugin on the node. Examples:
+	//   "nvidia.com/gpu"      — NVIDIA GPU Operator
+	//   "amd.com/gpu"         — AMD GPU device plugin
+	//   "gpu.intel.com/i915"  — Intel i915 device plugin
+	//   "gpu.intel.com/xe"    — Intel Xe device plugin
+	resource: string // required — no default
+
+	// Number of GPUs to allocate. Positive integer only (GPUs are non-divisible).
+	count: int & >=1
+}
+
 #ResourceRequirementsSchema: {
 	requests?: {
-		cpu?:    number | string & =~"^[0-9]+m$"
+		cpu?:    number | string & =~#"^([0-9]+(\.[0-9]+)?|[0-9]+m)$"#
 		memory?: number | string & =~"^[0-9]+[MG]i$"
 	}
 	limits?: {
-		cpu?:    number | string & =~"^[0-9]+m$"
+		cpu?:    number | string & =~#"^([0-9]+(\.[0-9]+)?|[0-9]+m)$"#
 		memory?: number | string & =~"^[0-9]+[MG]i$"
 	}
+	// GPU extended resource claim. Emitted to both requests and limits,
+	// satisfying the Kubernetes constraint that extended resources cannot
+	// be overcommitted (requests must equal limits).
+	gpu?: #GpuResourceSchema
 }
 
 // Probe specification used by liveness, readiness, and startup probes.
