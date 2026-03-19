@@ -152,6 +152,37 @@ import (
 		}
 	}
 
+		// Container-level security context
+		if X.securityContext != _|_ {
+			let _sc = X.securityContext
+			securityContext: {
+				if _sc.privileged != _|_ {
+					privileged: _sc.privileged
+				}
+				if _sc.runAsNonRoot != _|_ {
+					runAsNonRoot: _sc.runAsNonRoot
+				}
+				if _sc.runAsUser != _|_ {
+					runAsUser: _sc.runAsUser
+				}
+				if _sc.runAsGroup != _|_ {
+					runAsGroup: _sc.runAsGroup
+				}
+				if _sc.readOnlyRootFilesystem != _|_ {
+					readOnlyRootFilesystem: _sc.readOnlyRootFilesystem
+				}
+				if _sc.allowPrivilegeEscalation != _|_ {
+					allowPrivilegeEscalation: _sc.allowPrivilegeEscalation
+				}
+				if _sc.capabilities != _|_ {
+					capabilities: {
+						if _sc.capabilities.add != _|_ {add: _sc.capabilities.add}
+						if _sc.capabilities.drop != _|_ {drop: _sc.capabilities.drop}
+					}
+				}
+			}
+		}
+
 		// Volume mounts: extract only K8s-valid fields (strip embedded volume source data)
 		if X.volumeMounts != _|_ {
 			volumeMounts: [for _, vm in X.volumeMounts {

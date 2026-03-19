@@ -46,6 +46,12 @@ import (
 	livenessProbe?:  #ProbeSchema
 	readinessProbe?: #ProbeSchema
 	startupProbe?:   #ProbeSchema
+
+	// Container-level security context.
+	// Applies per-container constraints: privileged, capabilities, runAsUser, etc.
+	// Pod-level constraints (fsGroup, supplementalGroups) belong on the component
+	// spec.securityContext field instead.
+	securityContext?: #SecurityContextSchema
 }
 
 // Image specification for container images, used in #ContainerSchema
