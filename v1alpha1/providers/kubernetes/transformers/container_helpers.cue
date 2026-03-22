@@ -247,7 +247,22 @@ import (
 			persistentVolumeClaim: claimName: "\(_prefix)-\(vName)"
 		}
 		if vol.configMap != _|_ {
-			configMap: name: vol.configMap.name
+			// Compute the same K8s name the configmap-transformer will generate:
+			//   {releasePrefix}-{configmap.name}[-{contenthash}]
+			// #ImmutableName handles both mutable (stable name) and
+			// immutable (content-hash suffix) ConfigMaps transparently.
+			//
+			// Note: `let _cmData` captures concrete field values before the
+			// definition boundary — same reason #ImmutableName uses `let _d = data`
+			// internally. Without this, CUE loses concrete entries through the
+			// open [string]: string pattern.
+			let _cmData = vol.configMap.data
+			let _k8sName = (schemas.#ImmutableName & {
+				baseName:  "\(_prefix)-\(vol.configMap.name)"
+				data:      _cmData
+				immutable: vol.configMap.immutable
+			}).out
+			configMap: name: _k8sName
 		}
 		if vol.secret != _|_ {
 			secret: {
@@ -293,14 +308,6 @@ import (
 				if vol.nfs.readOnly != _|_ {
 					readOnly: vol.nfs.readOnly
 				}
-			}
-		}
-		if vol.cifs != _|_ {
-			csi: {
-				driver:   "smb.csi.k8s.io"
-				readOnly: vol.cifs.readOnly | *false
-				volumeAttributes: source:   vol.cifs.source
-				nodePublishSecretRef: name: vol.cifs.secretRef
 			}
 		}
 	}]
@@ -381,6 +388,36 @@ _testToK8sVolumesSecretImmutable: {
 			}).out
 			items: [{key: "config.json", path: "config.json"}]
 		}
+	}]
+}
+
+// Immutable configMap: K8s name = {configmap.name}-{contenthash}.
+_testToK8sVolumesConfigMapImmutable: {
+	in: {
+		config: {
+			name: "config"
+			configMap: {
+				name:      "wolf-config-toml"
+				immutable: true
+				data: {
+					"wolf.toml": "[wolf]\nenabled = true"
+				}
+			}
+		}
+	}
+
+	out: (#ToK8sVolumes & {
+		"in":           in
+		#releasePrefix: "wolf-release-wolf"
+	}).out
+
+	out: [{
+		name: "config"
+		configMap: name: (schemas.#ImmutableName & {
+			baseName: "wolf-release-wolf-wolf-config-toml"
+			data: {"wolf.toml": "[wolf]\nenabled = true"}
+			immutable: true
+		}).out
 	}]
 }
 

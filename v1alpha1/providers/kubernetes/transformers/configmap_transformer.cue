@@ -39,12 +39,20 @@ import (
 
 		_configMaps: #component.spec.configMaps
 
+		// Build the release-scoped prefix: {releaseName}-{componentName}
+		// Mirrors the secret-transformer convention so all config resources
+		// share the same namespace-isolation guarantee across releases.
+		let _relName = #context.#moduleReleaseMetadata.name
+		let _compName = #context.#componentMetadata.name
+
 		// Generate a K8s ConfigMap for each entry in the map
 		output: {
 			for _cmName, cm in _configMaps {
-				// Compute the deterministic K8s resource name
+				// Compute the deterministic K8s resource name:
+				//   {releaseName}-{componentName}-{cm.name}[-{contenthash}]
+				let _baseName = "\(_relName)-\(_compName)-\(cm.name)"
 				let _k8sName = (schemas.#ImmutableName & {
-					baseName:  cm.name
+					baseName:  _baseName
 					data:      cm.data
 					immutable: cm.immutable
 				}).out

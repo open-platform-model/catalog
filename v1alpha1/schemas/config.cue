@@ -24,26 +24,29 @@ import (
 // Users never need to set them — CUE unification propagates them.
 #Secret: #SecretLiteral | #SecretK8sRef
 
-// #SecretLiteral: user provides the actual value.
-// The transformer creates a K8s Secret with this data entry.
-#SecretLiteral: {
+#SecretType: {
 	$opm:          "secret"
 	$secretName!:  #NameType
 	$dataKey!:     string
 	$description?: string
-	value!:        string
+}
+
+// #SecretLiteral: user provides the actual value.
+// The transformer creates a K8s Secret with this data entry.
+#SecretLiteral: {
+	#SecretType
+
+	value!: string
 }
 
 // #SecretK8sRef: points to a pre-existing K8s Secret in the cluster.
 // OPM emits no resource — the Secret already exists.
 // OPM only wires the secretKeyRef in env vars.
 #SecretK8sRef: {
-	$opm:          "secret"
-	$secretName!:  #NameType
-	$dataKey!:     string
-	$description?: string
-	secretName!:   string // pre-existing K8s Secret name
-	remoteKey!:    string // key within that K8s Secret
+	#SecretType
+
+	secretName!: string // pre-existing K8s Secret name
+	remoteKey!:  string // key within that K8s Secret
 }
 
 /////////////////////////////////////////////////////////////////
@@ -165,6 +168,29 @@ import (
 /////////////////////////////////////////////////////////////////
 //// Secret Discovery Pipeline
 /////////////////////////////////////////////////////////////////
+
+// #GroupSecrets takes a flat map of discovered secrets and groups
+// them by $secretName, keyed by $dataKey.
+// The result structure mirrors the K8s Secret resource layout:
+//   { "db-creds": { username: #Secret, password: #Secret }, ... }
+#GroupSecrets: {
+	X=#in: {...}
+	out: {
+		for _k, v in X {
+			(v.$secretName): (v.$dataKey): v
+		}
+	}
+}
+
+// #AutoSecrets discovers all #Secret instances from a resolved config
+// and groups them by $secretName/$dataKey in one step.
+// Output is ready to use as spec.secrets data entries.
+//
+#AutoSecrets: {
+	X=#in: {...}
+	let _discovered = (#DiscoverSecrets & {#in: X}).out
+	out: (#GroupSecrets & {#in: _discovered}).out
+}
 
 // #DiscoverSecrets walks a resolved config (up to 3 levels deep)
 // and collects all fields whose value is a #Secret.
@@ -425,27 +451,4 @@ import (
 			}
 		}
 	}
-}
-
-// #GroupSecrets takes a flat map of discovered secrets and groups
-// them by $secretName, keyed by $dataKey.
-// The result structure mirrors the K8s Secret resource layout:
-//   { "db-creds": { username: #Secret, password: #Secret }, ... }
-#GroupSecrets: {
-	X=#in: {...}
-	out: {
-		for _k, v in X {
-			(v.$secretName): (v.$dataKey): v
-		}
-	}
-}
-
-// #AutoSecrets discovers all #Secret instances from a resolved config
-// and groups them by $secretName/$dataKey in one step.
-// Output is ready to use as spec.secrets data entries.
-//
-#AutoSecrets: {
-	X=#in: {...}
-	let _discovered = (#DiscoverSecrets & {#in: X}).out
-	out: (#GroupSecrets & {#in: _discovered}).out
 }

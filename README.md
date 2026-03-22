@@ -32,7 +32,7 @@ For detailed definitions, see:
 - [Definition Types](docs/core/definition-types.md) — Primitives vs Constructs taxonomy
 - [Primitives](docs/core/primitives.md) — Resource, Trait, Blueprint, PolicyRule
 - [Constructs](docs/core/constructs.md) — Component, Module, ModuleRelease, Policy, Provider, Transformer
-- [Glossary](docs/glossary.md) — CUE-specific terms, personas, workflow terms
+- [Glossary](../opm/docs/glossary.md) — CUE-specific terms, personas, workflow terms
 
 ## How
 
@@ -76,5 +76,5 @@ See [docs/principles.md](docs/principles.md) for detailed explanations of all pr
 ## Further Reading
 
 - [docs/core/](docs/core/) — Complete definition type reference
-- [docs/glossary.md](docs/glossary.md) — Personas, CUE terms, workflow concepts
+- [docs/glossary.md](../opm/docs/glossary.md) — Personas, CUE terms, workflow concepts
 - [docs/principles.md](docs/principles.md) — Core design principles

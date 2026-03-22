@@ -18,7 +18,9 @@ v1alpha1/
 │   ├── modulerelease/           # #ModuleRelease
 │   ├── bundle/                  # #Bundle
 │   ├── provider/                # #Provider
-│   └── helpers/                 # Internal helpers (e.g. auto-secrets wiring)
+│   ├── helpers/                 # Internal helpers (e.g. auto-secrets wiring)
+│   ├── bundlerelease/           # #BundleRelease
+│   └── matcher/                 # #MatchResult, #MatchPlan
 ├── schemas/                     # Shared field schemas (reused across definitions)
 │   └── kubernetes/              # Mirrored Kubernetes API types (transformer targets)
 ├── resources/                   # Resource implementations
@@ -49,7 +51,17 @@ Base definition types that form the OPM type system. Each construct lives in its
 
 | Definition | Description |
 |---|---|
-| `#LabelsAnnotationsType`, `#NameType`, `#FQNType`, `#VersionType`, ... | Shared primitive types and regex constraints used across all definitions |
+| `#LabelsAnnotationsType` | Type for labels and annotations |
+| `#NameType` | RFC 1123 DNS label type |
+| `#FQNType` | Primitive definition FQN type |
+| `#VersionType` | Semantic version type |
+| `#ModulePathType` | Registry path type |
+| `#MajorVersionType` | Major version type |
+| `#ModuleFQNType` | Module FQN type |
+| `#BundleFQNType` | Bundle FQN type |
+| `#UUIDType` | RFC 4122 UUID type |
+| `OPMNamespace` | OPM namespace UUID constant |
+| `#KebabToPascal` | Kebab-to-PascalCase converter |
 
 ### `core/primitives/`
 
@@ -96,6 +108,15 @@ Base definition types that form the OPM type system. Each construct lives in its
 | Definition | Description |
 |---|---|
 | `#Bundle` | Collection of modules grouped for distribution |
+| `#BundleInstance` | Single module instance within a bundle |
+| `#BundleDefinitionMap` | Bundle map type |
+
+### `core/bundlerelease/`
+
+| Definition | Description |
+|---|---|
+| `#BundleRelease` | Concrete deployment instance binding a bundle to values and a target namespace |
+| `#BundleReleaseMap` | BundleRelease map type |
 
 ### `core/provider/`
 
@@ -109,6 +130,13 @@ Base definition types that form the OPM type system. Each construct lives in its
 |---|---|
 | `#OpmSecretsComponent` | Builds the auto-generated `opm-secrets` component from discovered `#Secret` fields |
 | `#SecretsResourceFQN` | Canonical FQN for the secrets resource (must stay in sync with `resources/config/secret.cue`) |
+
+### `core/matcher/`
+
+| Definition | Description |
+|---|---|
+| `#MatchResult` | Single (component, transformer) match result |
+| `#MatchPlan` | Full component × transformer matching plan |
 
 ---
 
@@ -179,7 +207,10 @@ Reusable field schemas shared across resource and trait definitions.
 |---|---|
 | `#VolumeSchema` | Volume definition supporting multiple source types |
 | `#VolumeMountSchema` | Mount path and options for attaching a volume to a container |
-| `#EmptyDirSchema` / `#HostPathSchema` / `#PersistentClaimSchema` | Concrete volume source schemas |
+| `#EmptyDirSchema` / `#HostPathSchema` / `#PersistentClaimSchema` / `#NFSVolumeSourceSchema` | Concrete volume source schemas; use `persistentClaim` with `storageClass: "smb"` and `accessMode: "ReadWriteMany"` for CIFS/SMB volumes |
+| `#FileMode` | File permission mode type |
+| `#SecretVolumeItemSchema` | Secret volume item schema |
+| `#SecretVolumeSourceSchema` | Secret volume source schema |
 
 ### `schemas/workload.cue`
 
@@ -236,6 +267,8 @@ Each follows the triple pattern: `#XxxTrait` (definition) · `#Xxx` (mixin) · `
 | `#HttpRouteTrait` | `traits/network/http_route.cue` | HTTP routing rules (Gateway API / Ingress) |
 | `#GrpcRouteTrait` | `traits/network/grpc_route.cue` | gRPC routing rules (Gateway API / Ingress) |
 | `#TcpRouteTrait` | `traits/network/tcp_route.cue` | TCP port-forwarding rules |
+| `#HostNetworkTrait` | `traits/network/host_network.cue` | Shares the node's network namespace with the pod |
+| `#HostNetwork` | `traits/network/host_network.cue` | HostNetwork component mixin |
 
 ### Security
 
@@ -306,20 +339,20 @@ Provider and transformer definitions for converting OPM components to platform r
 
 | Definition | File | Description |
 |---|---|---|
-| `#DeploymentTransformer` | `transformers/deployment_transformer.cue` | Converts stateless workload components to Kubernetes Deployments |
-| `#StatefulsetTransformer` | `transformers/statefulset_transformer.cue` | Converts stateful workload components to Kubernetes StatefulSets |
-| `#DaemonSetTransformer` | `transformers/daemonset_transformer.cue` | Converts daemon workload components to Kubernetes DaemonSets |
-| `#JobTransformer` | `transformers/job_transformer.cue` | Converts task workload components to Kubernetes Jobs |
-| `#CronJobTransformer` | `transformers/cronjob_transformer.cue` | Converts scheduled task components to Kubernetes CronJobs |
-| `#ServiceTransformer` | `transformers/service_transformer.cue` | Creates Kubernetes Services from components with the Expose trait |
-| `#IngressTransformer` | `transformers/ingress_transformer.cue` | Converts HttpRoute trait to Kubernetes Ingress |
-| `#HPATransformer` | `transformers/hpa_transformer.cue` | Converts Scaling autoscaling config to Kubernetes HorizontalPodAutoscalers |
-| `#ConfigMapTransformer` | `transformers/configmap_transformer.cue` | Converts ConfigMaps resources to Kubernetes ConfigMaps (with content-hash naming) |
-| `#SecretTransformer` | `transformers/secret_transformer.cue` | Converts Secrets resources to Kubernetes Secrets |
-| `#PVCTransformer` | `transformers/pvc_transformer.cue` | Creates PersistentVolumeClaims from Volume resources |
-| `#CRDTransformer` | `transformers/crd_transformer.cue` | Converts CRDs resources to Kubernetes CustomResourceDefinitions |
-| `#ServiceAccountTransformer` | `transformers/serviceaccount_transformer.cue` | Converts WorkloadIdentity traits to Kubernetes ServiceAccounts |
-| `#ServiceAccountResourceTransformer` | `transformers/sa_resource_transformer.cue` | Converts standalone ServiceAccount resources to Kubernetes ServiceAccounts |
-| `#RoleTransformer` | `transformers/role_transformer.cue` | Converts Role resources to k8s Role+RoleBinding or ClusterRole+ClusterRoleBinding |
-| `#ToK8sContainer` / `#ToK8sContainers` / `#ToK8sVolumes` | `transformers/container_helpers.cue` | Shared helpers converting OPM container/volume schemas to Kubernetes list format |
-| `#ToK8sServiceAccount` | `transformers/sa_helpers.cue` | Shared helper converting an OPM identity spec (WorkloadIdentity or ServiceAccount) to a Kubernetes ServiceAccount |
+| `#DeploymentTransformer` | `providers/kubernetes/transformers/deployment_transformer.cue` | Converts stateless workload components to Kubernetes Deployments |
+| `#StatefulsetTransformer` | `providers/kubernetes/transformers/statefulset_transformer.cue` | Converts stateful workload components to Kubernetes StatefulSets |
+| `#DaemonSetTransformer` | `providers/kubernetes/transformers/daemonset_transformer.cue` | Converts daemon workload components to Kubernetes DaemonSets |
+| `#JobTransformer` | `providers/kubernetes/transformers/job_transformer.cue` | Converts task workload components to Kubernetes Jobs |
+| `#CronJobTransformer` | `providers/kubernetes/transformers/cronjob_transformer.cue` | Converts scheduled task components to Kubernetes CronJobs |
+| `#ServiceTransformer` | `providers/kubernetes/transformers/service_transformer.cue` | Creates Kubernetes Services from components with the Expose trait |
+| `#IngressTransformer` | `providers/kubernetes/transformers/ingress_transformer.cue` | Converts HttpRoute trait to Kubernetes Ingress |
+| `#HPATransformer` | `providers/kubernetes/transformers/hpa_transformer.cue` | Converts Scaling autoscaling config to Kubernetes HorizontalPodAutoscalers |
+| `#ConfigMapTransformer` | `providers/kubernetes/transformers/configmap_transformer.cue` | Converts ConfigMaps resources to Kubernetes ConfigMaps (with content-hash naming) |
+| `#SecretTransformer` | `providers/kubernetes/transformers/secret_transformer.cue` | Converts Secrets resources to Kubernetes Secrets |
+| `#PVCTransformer` | `providers/kubernetes/transformers/pvc_transformer.cue` | Creates PersistentVolumeClaims from Volume resources |
+| `#CRDTransformer` | `providers/kubernetes/transformers/crd_transformer.cue` | Converts CRDs resources to Kubernetes CustomResourceDefinitions |
+| `#ServiceAccountTransformer` | `providers/kubernetes/transformers/serviceaccount_transformer.cue` | Converts WorkloadIdentity traits to Kubernetes ServiceAccounts |
+| `#ServiceAccountResourceTransformer` | `providers/kubernetes/transformers/sa_resource_transformer.cue` | Converts standalone ServiceAccount resources to Kubernetes ServiceAccounts |
+| `#RoleTransformer` | `providers/kubernetes/transformers/role_transformer.cue` | Converts Role resources to k8s Role+RoleBinding or ClusterRole+ClusterRoleBinding |
+| `#ToK8sContainer` / `#ToK8sContainers` / `#ToK8sVolumes` | `providers/kubernetes/transformers/container_helpers.cue` | Shared helpers converting OPM container/volume schemas to Kubernetes list format |
+| `#ToK8sServiceAccount` | `providers/kubernetes/transformers/sa_helpers.cue` | Shared helper converting an OPM identity spec (WorkloadIdentity or ServiceAccount) to a Kubernetes ServiceAccount |

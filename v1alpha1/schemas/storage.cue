@@ -39,7 +39,6 @@ package schemas
 	secret?:          #SecretVolumeSourceSchema
 	hostPath?:        #HostPathSchema
 	nfs?:             #NFSVolumeSourceSchema
-	cifs?:            #CIFSVolumeSourceSchema
 
 	// Exactly one volume source must be set
 	matchN(1, [
@@ -49,7 +48,6 @@ package schemas
 		{secret!: _},
 		{hostPath!: _},
 		{nfs!: _},
-		{cifs!: _},
 	])
 
 	mountPath?: string
@@ -76,16 +74,10 @@ package schemas
 	readOnly?: bool
 }
 
-// CIFS/SMB volume source - mounts a share via the SMB CSI driver (smb.csi.k8s.io)
-// Requires the SMB CSI driver to be installed on the cluster.
-// Credentials are read from a K8s Secret with keys "username" and "password".
-#CIFSVolumeSourceSchema: {
-	source!:    string // UNC path to the SMB share (e.g. "//10.10.0.2/minecraft")
-	secretRef!: string // Name of the K8s Secret containing cifs username + password
-	readOnly?:  bool
-}
-
-// Persistent claim specification
+// Persistent claim specification. To mount a CIFS/SMB share, use a storageClass
+// that matches a pre-installed SMB StorageClass (e.g. storageClass: "smb") and set
+// accessMode: "ReadWriteMany". The StorageClass and credentials Secret must be
+// pre-provisioned on the cluster (see the smb.csi.k8s.io CSI driver for setup).
 #PersistentClaimSchema: {
 	size:         string
 	accessMode:   "ReadWriteOnce" | "ReadOnlyMany" | "ReadWriteMany" | *"ReadWriteOnce"

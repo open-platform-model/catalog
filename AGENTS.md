@@ -1,151 +1,185 @@
-# AGENTS.md - Catalog Repository (CUE Definitions)
+# AGENTS.md - Catalog repository guide
 
-## Overview
+## Purpose
 
-Core OPM CUE definitions published as `opmodel.dev/core@v0`. Contains schemas for all definition types.
+This repository exists to define and publish the Open Platform Model catalog as versioned CUE modules.
+It is the source of truth for the catalog's reusable definitions and supporting artifacts, with most changes happening in `v1alpha1/`, documentation, and OpenSpec files.
 
-**⚠️ This project is under heavy development. APIs and schemas may change.**
+## Repository Rules
 
-## Constitution
+- Repo-specific guidance comes from this file, `CONSTITUTION.md`, and the Taskfiles.
+- Keep changes small; split broad requests into tiny steps.
 
-This project follows the **Open Platform Model Constitution**.
-All agents MUST read and adhere to `openspec/config.yaml`.
+## Entrypoint
 
-**Governance**: The constitution supersedes this file in case of conflict.
+Read these documents when entering this repository:
 
-## Build/Test Commands
+- Read `CONSTITUTION.md` before changing implementation.
+- Read `docs/STYLE.md` before writing or editing documentation.
+- Keep `v1alpha1/INDEX.md` updated when adding, removing, or renaming definitions.
+  When updating `v1alpha1/INDEX.md`:
+  1. Add a row to the correct section table for every new exported definition (`#Name`).
+  2. Remove or rename rows whenever a definition is deleted or renamed.
+  3. If a new `.cue` file doesn't fit an existing section, add a new `###` subsection in the correct `##` group.
+  4. Keep file paths relative to `v1alpha1/` (e.g. `core/bundle/bundle.cue`, not an absolute path).
+  5. Keep the Project Structure tree in sync with any new or removed directories.
 
-- Format: `task fmt` for all or `task fmt MODULE=<module name>` for one specific module
-- Validate: `task vet` for all or `task vet MODULE=<module name>` for one specific module
-- Download dependencies: `task tidy` for all or `task tidy MODULE=<module name>` for one specific module
-- Print evaluation result: `task eval` for all or `task eval MODULE=<module name>` for one specific module. use `OUTPUT=<file>` to output to a file.
-- Export schema: `cue export -e '#ModuleDefinition' v0/`
+## Repository Layout
 
-## Tone and style
+```text
+v1alpha1/
+  core/                Base constructs and primitives
+  schemas/             Shared schemas and Kubernetes schema mirrors
+  resources/           Resource definitions
+  traits/              Trait definitions
+  blueprints/          Blueprint definitions
+  providers/           Providers and transformers
+  examples/            Example definitions validated separately
+openspec/              Change proposals, designs, specs, tasks, constitution
+.tasks/                Shared Taskfile fragments
+versions.yml           Published module version + checksum
+```
 
-- Be extremely concise - only output essential information
-- No preamble or postamble
-- Skip explanations unless asked
-- Only show changed code, not entire files
+## Environment Notes
 
-## Code Style
-
-- **Definitions**: Use `#` prefix (e.g., `#ResourceDefinition`, `#TraitDefinition`)
-- **Hidden fields**: Use `_` prefix for internal/computed values
-- **Required fields**: Use `!` suffix (e.g., `name!: string`)
-- **Optional fields**: Use `?` suffix (e.g., `description?: string`)
-- **Defaults**: Use `*` syntax (e.g., `port: *8080 | int`)
-
-## OPM and CUE
-
-Use these environment variables during development and validation. Commands like "cue mod tidy" or "cue vet ./..."
+- `v1alpha1/cue.mod/module.cue` requires CUE `v0.15.0` or later.
+- Local environment currently has `cue v0.16.0`.
+- Task commands set `CUE_REGISTRY` automatically.
+- When running raw `cue` commands outside `task`, export:
 
 ```bash
 export OPM_REGISTRY='opmodel.dev=localhost:5000+insecure,registry.cue.works'
 export CUE_REGISTRY='opmodel.dev=localhost:5000+insecure,registry.cue.works'
 ```
 
-## Project Structure
+## Build And Dev Commands
 
-```text
-├── v0/                        # CUE module definitions
-│   ├── core/                  # Core definitions (module, component, resource, trait, etc.)
-│   ├── schemas/               # Shared schemas (common, network, workload, storage, etc.)
-│   ├── resources/             # Resource implementations
-│   │   ├── config/            # ConfigMap, Secret
-│   │   ├── security/          # WorkloadIdentity
-│   │   ├── storage/           # Volume
-│   │   └── workload/          # Container
-│   ├── traits/                # Trait implementations
-│   │   ├── network/           # Expose, HTTPRoute, GRPCRoute, TCPRoute
-│   │   ├── security/          # SecurityContext, Encryption
-│   │   └── workload/          # Replicas, HealthCheck, ResourceLimit, etc.
-│   ├── blueprints/            # Blueprint implementations
-│   │   ├── data/              # SimpleDatabase
-│   │   └── workload/          # Stateless, Stateful, Daemon, Task, ScheduledTask
-│   ├── policies/              # Policy implementations
-│   │   └── network/           # NetworkRules, SharedNetwork
-│   ├── providers/             # Provider implementations
-│   │   └── kubernetes/        # K8s provider + transformers
-│   └── examples/              # Usage examples
-├── openspec/                  # OpenSpec change management
-│   ├── config.yaml            # Project constitution
-│   └── changes/               # Active and archived changes
-├── docs/                      # Documentation
-└── README.md
+Primary workflows are implemented in `Taskfile.yml`.
+
+### Common Commands
+
+- `task fmt` - run `cue fmt ./...` in `v1alpha1/`
+- `task vet` - validate `core/`, `schemas/`, `resources/`, `traits/`, `blueprints/`, and `providers/`
+- `task vet CONCRETE=true` - same as above, with `cue vet -c`
+- `task vet:examples` - validate `v1alpha1/examples/` separately
+- `task vet:examples CONCRETE=true` - validate examples with concreteness checks
+- `task test` - run the repository test harness for CUE tests and fixtures
+- `task eval` - evaluate all CUE under `v1alpha1/`
+- `task eval OUTPUT=out.cue` - write evaluation output to a file
+- `task tidy` - run `cue mod tidy` in `v1alpha1/`
+- `task check` - run `task fmt` then `task vet`
+
+### Single-Test Workflows
+
+There is no dedicated single-test Task target yet. Use raw `cue` commands.
+
+- Run one positive CUE test package:
+
+```bash
+cd v1alpha1
+cue vet -c -t test ./resources/extension/...
 ```
 
-## Git & Commits
+- Run one specific `*_tests.cue` file with its package:
 
-Follow [Conventional Commits v1](https://www.conventionalcommits.org/en/v1.0.0/) and [Semantic Versioning v2.0.0](https://semver.org).
-
-Format: `type(scope): description`
-Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
-Scope: module name when applicable (e.g., `feat(core): add X`)
-
-No AI attribution in commit messages.
-
-### Change-related commits
-
-When a commit is related to an OpenSpec change, include the change name. Each phase CAN be a separate commit:
-
-- **Creating a change**: `chore(openspec): add <change-name> change`
-- **Implementing a change**: `feat(scope): implement <change-name> change`
-  - Implementation includes a verification step before committing
-- **Syncing & archiving a change**: `chore(openspec): archive <change-name> change`
-
-## Catalog Index
-
-Each versioned module directory contains an `INDEX.md` listing all definitions with brief descriptions and a project structure tree.
-
-- `v1alpha1/INDEX.md` — index for the `v1alpha1` module
-
-**Keep this updated**: when adding, removing, or renaming a definition, update the corresponding `INDEX.md`.
-
-## Glossary
-
-See [full glossary](docs/glossary.md) for detailed definitions.
-
-## Documentation Style
-
-### Box-Drawing Diagrams and ASCII Art
-
-**Symbols for Yes/No in Tables and Diagrams**
-
-When creating box-drawing tables or ASCII art diagrams in markdown code blocks, use **monospace-safe** symbols that render consistently across all terminals, editors, and GitHub.
-
-**DO NOT USE** Unicode checkmarks (`✓` U+2713, `✗` U+2717) — these are ambiguous-width characters that break alignment in monospace fonts.
-
-**Recommended Replacements:**
-
-| Context | Yes | No | Example |
-|---------|-----|-----|---------|
-| **Box-drawing table cells** | `[x]` | `[ ]` | `│ No CRDs req. │  [x]   │  [ ]   │` |
-| **Bullet-style property lists** | `[x]` | `[ ]` | `│    [x] Same resources → same digest` |
-| **Inline after text** | `OK` | `FAIL` | `Apply: SS/jellyfin-media OK, Svc/jellyfin-media FAIL` |
-| **Section headings** | `[x]` | `[ ]` | `### Scenario A: Normal Rename [x]` |
-| **Parenthetical notes** | `ok` | `fail` | `Label check: "opm" (3 ok), name (≤63 ok)` |
-
-**Rationale:**
-
-1. **`[x]` / `[ ]`** - Checkbox-style brackets are exactly 3 ASCII characters wide, easy to align in tables
-2. **`OK` / `FAIL`** - More readable mid-sentence than brackets
-3. **`ok` / `fail`** - Lowercase variant for lightweight inline use
-
-**Table Alignment Example:**
-
-```text
-┌──────────────┬────────┬────────┬────────┐
-│ Feature      │ Secret │ CRD    │ DB     │
-├──────────────┼────────┼────────┼────────┤
-│ No CRDs req. │  [x]   │  [ ]   │  [x]   │  ← 3 chars each, properly aligned
-│ Inventory    │  [x]   │  [x]   │  [x]   │
-└──────────────┴────────┴────────┴────────┘
+```bash
+cd v1alpha1
+cue vet -c -t test ./resources/extension/... ./resources/extension/crd_tests.cue
 ```
 
-**Why This Matters:**
+- Run one data fixture against one definition when `testdata/` fixtures exist:
 
-- Unicode `✓` renders as 1 cell in some fonts, 2 cells in others (especially CJK locales)
-- Broken alignment makes diagrams unreadable in terminals
-- GitHub code blocks don't always match terminal rendering
-- ASCII/bracket combinations are universally safe
+```bash
+cd v1alpha1
+cue vet -d '#DefinitionName' ./... path/to/testdata/example_valid_case.yaml
+```
+
+- Fixture naming conventions:
+  - `*_valid_*.yaml` or `*.json` must pass
+  - `*_invalid_*.yaml` or `*.json` must fail
+
+## Test Model Used Here
+
+- Layer 1: `*_tests.cue` files tagged with `@if(test)` run through `cue vet -c -t test ./...`
+- Layer 2: `testdata/*.yaml` and `testdata/*.json` run through `cue vet -d '#Definition'`
+- Hidden test fields like `_testSomething` are the normal assertion style
+- Exported test fields are avoided unless a test intentionally depends on concreteness
+
+## CUE Style Guidelines
+
+### Core Syntax
+
+- Use `#` prefixes for definitions: `#Module`, `#ContainerResource`, `#ScalingTrait`
+- Use `_` prefixes for hidden fields and scratch bindings: `_secrets`, `_allFields`, `let _k8sName = ...`
+- Use `!` for required fields and `?` for optional fields
+- Use `*` defaults for explicit defaults
+- Prefer `close({...})` for component, resource, and trait specs that should reject unknown fields
+- Keep definitions declarative; avoid imperative or runtime-oriented logic
+
+### Packages and File Organization
+
+- Package names are short, lowercase, and domain-scoped: `module`, `schemas`, `workload`, `transformers`
+- Group definitions by domain directory, not by file type alone
+- Follow existing filenames such as `container.cue`, `scaling.cue`, `secret_transformer.cue`
+- Keep tests near the definitions they exercise when using `*_tests.cue`
+
+### Imports
+
+- Use import blocks when the file already follows that style
+- Alias imports when it improves clarity or avoids collisions: `prim`, `schemas`, `k8scorev1`
+- Keep aliases short and semantic
+- Prefer stable package-level aliases for reused imported definitions when CUE import tracking needs it
+
+### Naming
+
+- Definition names use PascalCase with a `#` prefix
+- Resource and trait definition names often end in `Resource`, `Trait`, `Defaults`, or a transformer suffix
+- Metadata `name` values use kebab-case strings
+- Map keys are descriptive and often reused as defaults with `name: string | *key`
+- Hidden test names use `_test...`
+
+### Schema Design
+
+- Reuse shared schemas from `opmodel.dev/schemas@v1` instead of duplicating constraints
+- Compose via unification rather than copying fields
+- Keep module, resource, trait, and blueprint boundaries clear
+- Express intent as schemas and constraints, not procedural validation steps
+- Preserve runtime agnosticism except inside provider-specific transformers
+
+### Types and Constraints
+
+- Prefer precise schema types over `_`
+- Use regex, list, and string constraints for structural validation
+- Use comprehensions and `let` bindings to compute derived values clearly
+- Keep schemas OpenAPI-compatible where comments require OpenAPIv3 compatibility
+- Use deterministic computed fields for FQNs, UUIDs, and generated names
+
+### Error Handling and Validation
+
+- Prefer failing by constraint and unification rather than loose schemas
+- Use `cue vet -c` when checking that values are concrete, not just structurally valid
+- Use `error()` for custom validation messages when a plain conflict would be unclear
+- Reject invalid configuration at definition time; do not defer validation to runtime consumers
+
+### Comments and Documentation
+
+- Add comments when intent, dispatch logic, or naming is non-obvious
+- Keep comments technical and specific; avoid narrating trivial assignments
+- Preserve existing section-separator styles where present
+- In Markdown diagrams and tables, use ASCII-safe markers like `[x]`, `[ ]`, `OK`, `FAIL`; do not use Unicode checkmarks
+
+## Change Discipline
+
+- Validate with `task fmt` and `task vet` before considering work done
+- Use `task vet CONCRETE=true` when changing value-producing definitions or tests that depend on concreteness
+- Run `task vet:examples` if a change can affect examples or top-level composition
+- Update `versions.yml` only when intentionally doing version-management work
+- Do not introduce unrelated cleanup in touched files unless it directly helps the change
+
+## Commit Guidance
+
+- Follow Conventional Commits: `type(scope): description`
+- Allowed types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
+- Use the module or domain as scope when helpful: `feat(core): ...`, `fix(traits): ...`
+- For OpenSpec work, use change-related commit naming from the repository constitution
+- Never add AI attribution to commit messages

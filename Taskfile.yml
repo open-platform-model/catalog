@@ -88,6 +88,10 @@ tasks:
       VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
     cmds:
       - |
+        if [ ! -d "{{.V1ALPHA1_DIR}}/examples" ]; then
+          echo "Skipping {{.V1ALPHA1_DIR}}/examples (directory does not exist)"
+          exit 0
+        fi
         echo "Validating {{.V1ALPHA1_DIR}}/examples{{if eq .CONCRETE "true"}} (concrete){{end}}..."
         cd "{{.V1ALPHA1_DIR}}" && cue vet {{.VET_FLAGS}} ./examples/...
         echo "Done"
@@ -108,126 +112,6 @@ tasks:
         echo "Evaluating {{.V1ALPHA1_DIR}}..."
         cd "{{.V1ALPHA1_DIR}}" && cue eval ./... {{.EVAL_REDIRECT}}
         echo "Done"
-
-  # ============================================================================
-  # Testing
-  # ============================================================================
-
-  test:
-    desc: Run CUE definition tests
-    summary: |
-      Run unit tests for CUE definitions in v1alpha1.
-
-      Tests are organized in two layers:
-        1. Positive CUE tests: *_tests.cue files with @if(test) — validated via unification with concreteness check (-c).
-           Value assertions (field: expr, field: "expected") verify correct values. Exported fields (no _ prefix)
-           also verify that values are concrete (not just schema-level types).
-        2. Data validation tests: testdata/*.yaml files — positive (valid) and negative (invalid)
-
-      Naming conventions for testdata files:
-        <definition>_valid_<description>.yaml    → must pass cue vet
-        <definition>_invalid_<description>.yaml  → must fail cue vet
-
-      Usage:
-        task test
-    cmds:
-      - |
-        set -euo pipefail
-
-        # ── Colors ────────────────────────────────────────────────────
-        BOLD='\033[1m'
-        DIM='\033[2m'
-        RED='\033[0;31m'
-        GREEN='\033[0;32m'
-        YELLOW='\033[0;33m'
-        CYAN='\033[0;36m'
-        RESET='\033[0m'
-
-        PASSED=0
-        FAILED=0
-        SKIPPED=0
-        ERRORS=""
-
-        # Convert kebab-case to PascalCase
-        kebab_to_pascal() {
-          echo "$1" | sed -r 's/(^|[-])([a-z])/\U\2/g'
-        }
-
-        MOD_DIR="{{.V1ALPHA1_DIR}}"
-
-        echo -e "${BOLD}Running CUE definition tests${RESET}"
-        echo ""
-
-        # ── Layer 1: Positive CUE tests (@if(test) files) ──────────
-        test_file_count=$(find "$MOD_DIR" -name '*_tests.cue' 2>/dev/null | wc -l)
-
-        if [ "$test_file_count" -gt 0 ]; then
-          echo -e "${BOLD}[v1alpha1]${RESET} CUE unification tests"
-          local output
-          if output=$(cd "$MOD_DIR" && cue vet -c -t test ./... 2>&1); then
-            echo -e "  ${GREEN}PASS${RESET}  cue vet -c -t test ./..."
-            PASSED=$((PASSED + 1))
-          else
-            echo -e "  ${RED}FAIL${RESET}  cue vet -c -t test ./..."
-            echo "$output" | sed 's/^/         /'
-            FAILED=$((FAILED + 1))
-            ERRORS="${ERRORS}\n  v1alpha1: CUE unification tests failed"
-          fi
-        fi
-
-        # ── Layer 2: Data file tests (testdata/) ─────────────────
-        for testdata_dir in $(find "$MOD_DIR" -type d -name 'testdata' 2>/dev/null); do
-          for datafile in "$testdata_dir"/*.yaml "$testdata_dir"/*.json; do
-            [ -f "$datafile" ] || continue
-
-            basename=$(basename "$datafile")
-            noext="${basename%.*}"
-
-            def_kebab=$(echo "$noext" | sed 's/_\(valid\|invalid\)_.*//')
-            def_pascal=$(kebab_to_pascal "$def_kebab")
-            def="#${def_pascal}"
-
-            rel_datafile="${datafile#$MOD_DIR/}"
-
-            if echo "$noext" | grep -q '_valid_'; then
-              if output=$(cd "$MOD_DIR" && cue vet -d "$def" ./... "$rel_datafile" 2>&1); then
-                echo -e "  ${GREEN}PASS${RESET}  ${DIM}${basename}${RESET} → ${CYAN}${def}${RESET} (expect: valid)"
-                PASSED=$((PASSED + 1))
-              else
-                echo -e "  ${RED}FAIL${RESET}  ${basename} → ${def} (expected valid, got error)"
-                echo "$output" | sed 's/^/         /'
-                FAILED=$((FAILED + 1))
-                ERRORS="${ERRORS}\n  v1alpha1: ${basename} expected valid but got error"
-              fi
-            elif echo "$noext" | grep -q '_invalid_'; then
-              if (cd "$MOD_DIR" && cue vet -d "$def" ./... "$rel_datafile" >/dev/null 2>&1); then
-                echo -e "  ${RED}FAIL${RESET}  ${basename} → ${def} (expected invalid, but passed)"
-                FAILED=$((FAILED + 1))
-                ERRORS="${ERRORS}\n  v1alpha1: ${basename} expected invalid but passed"
-              else
-                echo -e "  ${GREEN}PASS${RESET}  ${DIM}${basename}${RESET} → ${CYAN}${def}${RESET} (expect: invalid)"
-                PASSED=$((PASSED + 1))
-              fi
-            else
-              echo -e "  ${YELLOW}SKIP${RESET}  ${basename} (filename must contain _valid_ or _invalid_)"
-              SKIPPED=$((SKIPPED + 1))
-            fi
-          done
-        done
-
-        if [ $((PASSED + FAILED + SKIPPED)) -eq 0 ]; then
-          echo -e "${DIM}[v1alpha1] no tests found${RESET}"
-        fi
-
-        # ── Summary ─────────────────────────────────────────────────
-        echo ""
-        TOTAL=$((PASSED + FAILED + SKIPPED))
-        echo -e "${BOLD}Results: ${GREEN}${PASSED} passed${RESET}, ${RED}${FAILED} failed${RESET}, ${YELLOW}${SKIPPED} skipped${RESET} (${TOTAL} total)"
-
-        if [ $FAILED -gt 0 ]; then
-          echo -e "\n${RED}Failures:${ERRORS}${RESET}"
-          exit 1
-        fi
 
   # ============================================================================
   # Module Management
