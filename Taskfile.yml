@@ -126,41 +126,6 @@ tasks:
         echo "Done"
 
   # ============================================================================
-  # Watch Mode
-  # ============================================================================
-
-  watch:fmt:
-    desc: Watch and auto-format on changes
-    preconditions:
-      - sh: command -v watchexec
-        msg: "watchexec is required. Install: brew install watchexec"
-    cmds:
-      - |
-        echo "Watching {{.V1ALPHA1_DIR}} for changes..."
-        echo "Press Ctrl+C to stop"
-        watchexec -w "{{.V1ALPHA1_DIR}}" -e cue -- bash -c '
-          cd "{{.V1ALPHA1_DIR}}" && cue fmt ./...
-          echo "Formatted"
-        '
-
-  watch:vet:
-    desc: Watch and auto-validate on changes
-    preconditions:
-      - sh: command -v watchexec
-        msg: "watchexec is required. Install: brew install watchexec"
-    cmds:
-      - |
-        echo "Watching {{.V1ALPHA1_DIR}} for changes..."
-        echo "Press Ctrl+C to stop"
-        watchexec -w "{{.V1ALPHA1_DIR}}" -e cue -- bash -c '
-          if cd "{{.V1ALPHA1_DIR}}" && cue vet ./core/... ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/... 2>&1; then
-            echo "Valid"
-          else
-            echo "Validation failed"
-          fi
-        '
-
-  # ============================================================================
   # Combined Operations
   # ============================================================================
 
@@ -169,6 +134,146 @@ tasks:
     cmds:
       - task fmt
       - task vet
+
+  # ============================================================================
+  # v1alpha2 Validation & Tests
+  # ============================================================================
+
+  vet:v1alpha2:
+    desc: Validate all v1alpha2 CUE modules (opm, gateway_api, cert_manager)
+    summary: |
+      Validates all three v1alpha2 modules in sequence.
+      Skips gateway_api and cert_manager if their cue.mod/ has not been initialized yet.
+
+      Usage:
+        task vet:v1alpha2
+    cmds:
+      - task: vet:v1alpha2:opm
+      - task: vet:v1alpha2:gateway
+      - task: vet:v1alpha2:cert-manager
+
+  vet:v1alpha2:opm:
+    desc: Validate v1alpha2/opm CUE module
+    cmds:
+      - |
+        cd "{{.TASKFILE_DIR}}/{{.V1ALPHA2_OPM_DIR}}" && cue vet \
+          ./core/... ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...
+
+  vet:v1alpha2:gateway:
+    desc: Validate v1alpha2/gateway_api CUE module
+    cmds:
+      - cd "{{.TASKFILE_DIR}}/{{.V1ALPHA2_GATEWAY_DIR}}" && cue vet ./...
+
+  vet:v1alpha2:cert-manager:
+    desc: Validate v1alpha2/cert_manager CUE module
+    cmds:
+      - cd "{{.TASKFILE_DIR}}/{{.V1ALPHA2_CERT_MANAGER_DIR}}" && cue vet ./...
+
+  test:v1alpha2:
+    desc: Run all v1alpha2 structural tests across opm, gateway_api, and cert_manager
+    summary: |
+      Aggregate task — runs all @if(test) tagged test files across all three v1alpha2 modules:
+        - opmodel.dev/opm@v1          (v1alpha2/opm)
+        - opmodel.dev/gateway_api@v1  (v1alpha2/gateway_api)
+        - opmodel.dev/cert-manager@v1 (v1alpha2/cert_manager)
+
+      Matrix tests (cert_manager) are included naturally via ./...
+
+      Usage:
+        task test:v1alpha2
+    cmds:
+      - task: test:v1alpha2:opm
+      - task: test:v1alpha2:gateway
+      - task: test:v1alpha2:cert-manager
+
+  test:v1alpha2:opm:
+    desc: Run v1alpha2/opm transformer structural tests (@if(test) files)
+    summary: |
+      Runs all *_tests.cue files tagged @if(test) in the v1alpha2/opm module.
+
+      Tests use CUE unification for assertions — a test fails when the computed
+      transformer output conflicts with the asserted expected value.
+
+      Runs WITHOUT -c (concreteness) because transformer outputs include intermediate
+      computed fields that depend on optional trait defaults. Use test:v1alpha2:strict
+      for fully-concrete subset tests.
+
+      Usage:
+        task test:v1alpha2:opm
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        echo "Testing opmodel.dev/opm@v1 (structural)..."
+        if cd "{{.TASKFILE_DIR}}/{{.V1ALPHA2_OPM_DIR}}" && cue vet -t test \
+          ./core/... ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...; then
+          echo -e "${GREEN}✔ opmodel.dev/opm@v1 — Successful${NC}"
+        else
+          echo -e "${RED}✗ opmodel.dev/opm@v1 — Failed${NC}"
+          exit 1
+        fi
+
+  test:v1alpha2:gateway:
+    desc: Run v1alpha2/gateway_api transformer structural tests (@if(test) files)
+    summary: |
+      Runs all *_tests.cue files tagged @if(test) in the v1alpha2/gateway_api module.
+
+      Tests use CUE unification for assertions — a test fails when the computed
+      transformer output conflicts with the asserted expected value.
+
+      Usage:
+        task test:v1alpha2:gateway
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        echo "Testing opmodel.dev/gateway_api@v1 (structural)..."
+        if cd "{{.TASKFILE_DIR}}/{{.V1ALPHA2_GATEWAY_DIR}}" && cue vet -t test ./...; then
+          echo -e "${GREEN}✔ opmodel.dev/gateway_api@v1 — Successful${NC}"
+        else
+          echo -e "${RED}✗ opmodel.dev/gateway_api@v1 — Failed${NC}"
+          exit 1
+        fi
+
+  test:v1alpha2:cert-manager:
+    desc: Run v1alpha2/cert_manager transformer and matrix tests (@if(test) files)
+    summary: |
+      Runs all *_tests.cue and *_matrix_tests.cue files tagged @if(test) in the
+      v1alpha2/cert_manager module. Matrix tests (certificate_matrix_tests.cue,
+      issuer_matrix_tests.cue) are included naturally via ./...
+
+      Usage:
+        task test:v1alpha2:cert-manager
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        echo "Testing opmodel.dev/cert-manager@v1 (structural + matrix)..."
+        if cd "{{.TASKFILE_DIR}}/{{.V1ALPHA2_CERT_MANAGER_DIR}}" && cue vet -t test ./...; then
+          echo -e "${GREEN}✔ opmodel.dev/cert-manager@v1 — Successful${NC}"
+        else
+          echo -e "${RED}✗ opmodel.dev/cert-manager@v1 — Failed${NC}"
+          exit 1
+        fi
+
+  test:v1alpha2:strict:
+    desc: Run v1alpha2/opm tests with full concreteness checks (-c flag)
+    summary: |
+      Like test:v1alpha2 but adds -c (concreteness check).
+      Only run this when all test values are fully concrete (no abstract type constraints
+      in the final evaluated value). Schema conformance tests (like crd_tests.cue) pass
+      with -c; transformer structural tests may not.
+
+      Usage:
+        task test:v1alpha2:strict
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        echo "Testing opmodel.dev/opm@v1 (structural, strict)..."
+        if cd "{{.TASKFILE_DIR}}/{{.V1ALPHA2_OPM_DIR}}" && cue vet -t test -c \
+          ./core/... ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...; then
+          echo -e "${GREEN}✔ opmodel.dev/opm@v1 strict — Successful${NC}"
+        else
+          echo -e "${RED}✗ opmodel.dev/opm@v1 strict — Failed${NC}"
+          exit 1
+        fi
 
   # ============================================================================
   # Version Management
@@ -391,3 +496,171 @@ tasks:
 
         echo ""
         echo -e "${BOLD}${GREEN}Done.${RESET} Published v1alpha1@${new_version}"
+
+  # ============================================================================
+  # Publishing — v1alpha2
+  # ============================================================================
+
+  publish:v1alpha2:
+    desc: Publish all v1alpha2 modules (opm, gateway_api, cert_manager) using versions from versions.yml
+    summary: |
+      Publish all three v1alpha2 CUE modules to the local registry at the versions
+      recorded in versions.yml. Does NOT detect changes — always publishes.
+
+      Usage:
+        task publish:v1alpha2
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+      - sh: command -v cue >/dev/null 2>&1
+        msg: "cue is required"
+    cmds:
+      - |
+        set -euo pipefail
+        BOLD='\033[1m'; GREEN='\033[0;32m'; RED='\033[0;31m'; RESET='\033[0m'
+
+        echo -e "${BOLD}Publishing v1alpha2 modules...${RESET}"
+
+        publish_module() {
+          local name="$1"
+          local dir="$2"
+          local key="$3"
+          local version
+          version=$(yq ".v1alpha2.${key}.version" "{{.VERSION_FILE}}")
+          echo -e "${BOLD}[${name}]${RESET} publishing @ ${version}..."
+          if (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod publish "${version}"); then
+            echo -e "  ${GREEN}✔ ${name}@${version}${RESET}"
+          else
+            echo -e "  ${RED}✗ Failed to publish ${name}${RESET}"
+            exit 1
+          fi
+        }
+
+        publish_module "opmodel.dev/opm@v1"          "{{.V1ALPHA2_OPM_DIR}}"          "opm"
+        publish_module "opmodel.dev/gateway_api@v1"  "{{.V1ALPHA2_GATEWAY_DIR}}"      "gateway_api"
+        publish_module "opmodel.dev/cert_manager@v1" "{{.V1ALPHA2_CERT_MANAGER_DIR}}"  "cert_manager"
+
+        echo ""
+        echo -e "${BOLD}${GREEN}Done.${RESET} All v1alpha2 modules published."
+
+  publish:v1alpha2:smart:
+    desc: Detect changes across v1alpha2 modules, bump versions independently, and publish changed modules
+    summary: |
+      For each v1alpha2 module (opm, gateway_api, cert_manager), computes a SHA-256
+      checksum of .cue files (excluding cue.mod/), compares with the stored checksum
+      in versions.yml, and publishes only modules that changed.
+
+      Each module is versioned independently. A patch bump is applied by default.
+
+      Usage:
+        task publish:v1alpha2:smart                  # Detect, bump patch, publish
+        task publish:v1alpha2:smart DRY_RUN=true     # Preview without executing
+        task publish:v1alpha2:smart TYPE=minor        # Minor bump instead of patch
+    vars:
+      DRY_RUN: '{{.DRY_RUN | default "false"}}'
+      TYPE: '{{.TYPE | default "patch"}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+      - sh: command -v cue >/dev/null 2>&1
+        msg: "cue is required"
+      - sh: command -v git >/dev/null 2>&1
+        msg: "git is required"
+    cmds:
+      - |
+        set -euo pipefail
+
+        VERSION_FILE="{{.VERSION_FILE}}"
+        DRY_RUN="{{.DRY_RUN}}"
+        BUMP_TYPE="{{.TYPE}}"
+
+        BOLD='\033[1m'; DIM='\033[2m'; RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; RESET='\033[0m'
+
+        compute_checksum() {
+          local dir="$1"
+          find "{{.TASKFILE_DIR}}/${dir}" -name '*.cue' -not -path '*/cue.mod/*' | sort | xargs sha256sum | sha256sum | awk '{print $1}'
+        }
+
+        bump_version() {
+          local ver="${1#v}"
+          IFS='.' read -r major minor patch <<< "$ver"
+          case "$2" in
+            major) major=$((major+1)); minor=0; patch=0 ;;
+            minor) minor=$((minor+1)); patch=0 ;;
+            patch) patch=$((patch+1)) ;;
+          esac
+          echo "v${major}.${minor}.${patch}"
+        }
+
+        echo -e "${BOLD}Phase 1: Detecting changes...${RESET}"
+
+        declare -a CHANGED_NAMES CHANGED_DIRS CHANGED_KEYS
+        declare -A NEW_VERSIONS
+
+        check_module() {
+          local name="$1" dir="$2" key="$3"
+          local stored current
+          stored=$(yq ".v1alpha2.${key}.checksum // \"\"" "$VERSION_FILE")
+          current=$(compute_checksum "$dir")
+          local version
+          version=$(yq ".v1alpha2.${key}.version" "$VERSION_FILE")
+          local new_version
+          new_version=$(bump_version "$version" "$BUMP_TYPE")
+          if [ -z "$stored" ]; then
+            echo -e "  ${YELLOW}${name}${RESET}: changed (no stored checksum) → ${version} → ${GREEN}${new_version}${RESET}"
+            CHANGED_NAMES+=("$name"); CHANGED_DIRS+=("$dir"); CHANGED_KEYS+=("$key")
+            NEW_VERSIONS["$key"]="$new_version"
+          elif [ "$stored" != "$current" ]; then
+            echo -e "  ${YELLOW}${name}${RESET}: changed → ${version} → ${GREEN}${new_version}${RESET}"
+            CHANGED_NAMES+=("$name"); CHANGED_DIRS+=("$dir"); CHANGED_KEYS+=("$key")
+            NEW_VERSIONS["$key"]="$new_version"
+          else
+            echo -e "  ${name}: unchanged"
+          fi
+        }
+
+        check_module "opmodel.dev/opm@v1"          "{{.V1ALPHA2_OPM_DIR}}"          "opm"
+        check_module "opmodel.dev/gateway_api@v1"  "{{.V1ALPHA2_GATEWAY_DIR}}"      "gateway_api"
+        check_module "opmodel.dev/cert_manager@v1" "{{.V1ALPHA2_CERT_MANAGER_DIR}}"  "cert_manager"
+
+        if [ ${#CHANGED_NAMES[@]} -eq 0 ]; then
+          echo ""
+          echo -e "${GREEN}No changes detected. Nothing to publish.${RESET}"
+          exit 0
+        fi
+
+        if [ "$DRY_RUN" = "true" ]; then
+          echo ""
+          echo -e "${BOLD}Dry run — no changes made.${RESET}"
+          exit 0
+        fi
+
+        echo ""
+        echo -e "${BOLD}Phase 2: Publishing...${RESET}"
+
+        for i in "${!CHANGED_NAMES[@]}"; do
+          name="${CHANGED_NAMES[$i]}"
+          dir="${CHANGED_DIRS[$i]}"
+          key="${CHANGED_KEYS[$i]}"
+          new_version="${NEW_VERSIONS[$key]}"
+
+          echo -e "${BOLD}${GREEN}[${name}]${RESET} → ${GREEN}${new_version}${RESET}"
+
+          yq -i ".v1alpha2.${key}.version = \"${new_version}\"" "$VERSION_FILE"
+
+          echo "  Publishing..."
+          if ! (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod publish "${new_version}"); then
+            echo -e "  ${RED}Failed to publish ${name}${RESET}"
+            exit 1
+          fi
+
+          git tag "catalog/v1alpha2/${key}/${new_version}"
+          echo "  Tagged catalog/v1alpha2/${key}/${new_version}"
+
+          new_checksum=$(compute_checksum "$dir")
+          yq -i ".v1alpha2.${key}.checksum = \"${new_checksum}\"" "$VERSION_FILE"
+          echo -e "  Checksum: ${DIM}${new_checksum:0:12}...${RESET}"
+        done
+
+        echo ""
+        echo -e "${BOLD}${GREEN}Done.${RESET} Published ${#CHANGED_NAMES[@]} v1alpha2 module(s)."

@@ -5,3 +5,14 @@
 v1alpha1:
   version: v1.2.24
   checksum: "2e3f4413b9790d8f970c2bb44c9d9f05c62a9e2c75ad0941b0c5d219930100c6"
+
+v1alpha2:
+  opm:
+    version: v1.0.0
+    checksum: ""
+  gateway_api:
+    version: v1.0.0
+    checksum: ""
+  cert_manager:
+    version: v1.0.0
+    checksum: ""
