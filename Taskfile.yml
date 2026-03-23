@@ -594,34 +594,59 @@ tasks:
 
         echo -e "${BOLD}Phase 1: Detecting changes...${RESET}"
 
-        declare -a CHANGED_NAMES CHANGED_DIRS CHANGED_KEYS
+        CHANGED_NAMES=(); CHANGED_DIRS=(); CHANGED_KEYS=()
         declare -A NEW_VERSIONS
 
-        check_module() {
-          local name="$1" dir="$2" key="$3"
-          local stored current
-          stored=$(yq ".v1alpha2.${key}.checksum // \"\"" "$VERSION_FILE")
-          current=$(compute_checksum "$dir")
-          local version
-          version=$(yq ".v1alpha2.${key}.version" "$VERSION_FILE")
-          local new_version
-          new_version=$(bump_version "$version" "$BUMP_TYPE")
-          if [ -z "$stored" ]; then
-            echo -e "  ${YELLOW}${name}${RESET}: changed (no stored checksum) → ${version} → ${GREEN}${new_version}${RESET}"
-            CHANGED_NAMES+=("$name"); CHANGED_DIRS+=("$dir"); CHANGED_KEYS+=("$key")
-            NEW_VERSIONS["$key"]="$new_version"
-          elif [ "$stored" != "$current" ]; then
-            echo -e "  ${YELLOW}${name}${RESET}: changed → ${version} → ${GREEN}${new_version}${RESET}"
-            CHANGED_NAMES+=("$name"); CHANGED_DIRS+=("$dir"); CHANGED_KEYS+=("$key")
-            NEW_VERSIONS["$key"]="$new_version"
-          else
-            echo -e "  ${name}: unchanged"
-          fi
-        }
+        # --- opmodel.dev/opm@v1 ---
+        _stored=$(yq ".v1alpha2.opm.checksum // \"\"" "$VERSION_FILE")
+        _current=$(compute_checksum "{{.V1ALPHA2_OPM_DIR}}")
+        _version=$(yq ".v1alpha2.opm.version" "$VERSION_FILE")
+        _new_version=$(bump_version "$_version" "$BUMP_TYPE")
+        if [ -z "$_stored" ]; then
+          echo -e "  ${YELLOW}opmodel.dev/opm@v1${RESET}: changed (no stored checksum) → ${_version} → ${GREEN}${_new_version}${RESET}"
+          CHANGED_NAMES+=("opmodel.dev/opm@v1"); CHANGED_DIRS+=("{{.V1ALPHA2_OPM_DIR}}"); CHANGED_KEYS+=("opm")
+          NEW_VERSIONS["opm"]="$_new_version"
+        elif [ "$_stored" != "$_current" ]; then
+          echo -e "  ${YELLOW}opmodel.dev/opm@v1${RESET}: changed → ${_version} → ${GREEN}${_new_version}${RESET}"
+          CHANGED_NAMES+=("opmodel.dev/opm@v1"); CHANGED_DIRS+=("{{.V1ALPHA2_OPM_DIR}}"); CHANGED_KEYS+=("opm")
+          NEW_VERSIONS["opm"]="$_new_version"
+        else
+          echo -e "  opmodel.dev/opm@v1: unchanged"
+        fi
 
-        check_module "opmodel.dev/opm@v1"          "{{.V1ALPHA2_OPM_DIR}}"          "opm"
-        check_module "opmodel.dev/gateway_api@v1"  "{{.V1ALPHA2_GATEWAY_DIR}}"      "gateway_api"
-        check_module "opmodel.dev/cert_manager@v1" "{{.V1ALPHA2_CERT_MANAGER_DIR}}"  "cert_manager"
+        # --- opmodel.dev/gateway_api@v1 ---
+        _stored=$(yq ".v1alpha2.gateway_api.checksum // \"\"" "$VERSION_FILE")
+        _current=$(compute_checksum "{{.V1ALPHA2_GATEWAY_DIR}}")
+        _version=$(yq ".v1alpha2.gateway_api.version" "$VERSION_FILE")
+        _new_version=$(bump_version "$_version" "$BUMP_TYPE")
+        if [ -z "$_stored" ]; then
+          echo -e "  ${YELLOW}opmodel.dev/gateway_api@v1${RESET}: changed (no stored checksum) → ${_version} → ${GREEN}${_new_version}${RESET}"
+          CHANGED_NAMES+=("opmodel.dev/gateway_api@v1"); CHANGED_DIRS+=("{{.V1ALPHA2_GATEWAY_DIR}}"); CHANGED_KEYS+=("gateway_api")
+          NEW_VERSIONS["gateway_api"]="$_new_version"
+        elif [ "$_stored" != "$_current" ]; then
+          echo -e "  ${YELLOW}opmodel.dev/gateway_api@v1${RESET}: changed → ${_version} → ${GREEN}${_new_version}${RESET}"
+          CHANGED_NAMES+=("opmodel.dev/gateway_api@v1"); CHANGED_DIRS+=("{{.V1ALPHA2_GATEWAY_DIR}}"); CHANGED_KEYS+=("gateway_api")
+          NEW_VERSIONS["gateway_api"]="$_new_version"
+        else
+          echo -e "  opmodel.dev/gateway_api@v1: unchanged"
+        fi
+
+        # --- opmodel.dev/cert_manager@v1 ---
+        _stored=$(yq ".v1alpha2.cert_manager.checksum // \"\"" "$VERSION_FILE")
+        _current=$(compute_checksum "{{.V1ALPHA2_CERT_MANAGER_DIR}}")
+        _version=$(yq ".v1alpha2.cert_manager.version" "$VERSION_FILE")
+        _new_version=$(bump_version "$_version" "$BUMP_TYPE")
+        if [ -z "$_stored" ]; then
+          echo -e "  ${YELLOW}opmodel.dev/cert_manager@v1${RESET}: changed (no stored checksum) → ${_version} → ${GREEN}${_new_version}${RESET}"
+          CHANGED_NAMES+=("opmodel.dev/cert_manager@v1"); CHANGED_DIRS+=("{{.V1ALPHA2_CERT_MANAGER_DIR}}"); CHANGED_KEYS+=("cert_manager")
+          NEW_VERSIONS["cert_manager"]="$_new_version"
+        elif [ "$_stored" != "$_current" ]; then
+          echo -e "  ${YELLOW}opmodel.dev/cert_manager@v1${RESET}: changed → ${_version} → ${GREEN}${_new_version}${RESET}"
+          CHANGED_NAMES+=("opmodel.dev/cert_manager@v1"); CHANGED_DIRS+=("{{.V1ALPHA2_CERT_MANAGER_DIR}}"); CHANGED_KEYS+=("cert_manager")
+          NEW_VERSIONS["cert_manager"]="$_new_version"
+        else
+          echo -e "  opmodel.dev/cert_manager@v1: unchanged"
+        fi
 
         if [ ${#CHANGED_NAMES[@]} -eq 0 ]; then
           echo ""
