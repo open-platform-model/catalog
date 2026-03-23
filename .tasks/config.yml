@@ -25,3 +25,7 @@ vars:
 
   V1ALPHA1_DIR: v1alpha1
   VERSION_FILE: versions.yml
+
+  V1ALPHA2_OPM_DIR: v1alpha2/opm
+  V1ALPHA2_GATEWAY_DIR: v1alpha2/gateway_api
+  V1ALPHA2_CERT_MANAGER_DIR: v1alpha2/cert_manager
