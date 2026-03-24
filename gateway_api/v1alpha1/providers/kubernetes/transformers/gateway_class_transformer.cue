@@ -2,7 +2,7 @@ package transformers
 
 import (
 	transformer "opmodel.dev/core/v1alpha1/transformer@v1"
-	gwcV1 "gateway.networking.k8s.io/gatewayclass/v1"
+	gwcV1 "opmodel.dev/gateway_api/v1alpha1/schemas/gateway/gateway.networking.k8s.io/gatewayclass/v1@v1"
 )
 
 // GatewayClassTransformer creates Gateway API GatewayClasses from GatewayClassResource components.

@@ -2,8 +2,8 @@ package transformers
 
 import (
 	transformer "opmodel.dev/core/v1alpha1/transformer@v1"
-	network_traits "opmodel.dev/gateway_api/v1alpha1/traits/network@v1"
-	tlsRouteV1alpha2 "gateway.networking.k8s.io/tlsroute/v1alpha2"
+	network_resources "opmodel.dev/gateway_api/v1alpha1/resources/network@v1"
+	tlsRouteV1alpha2 "opmodel.dev/gateway_api/v1alpha1/schemas/gateway/gateway.networking.k8s.io/tlsroute/v1alpha2@v1"
 )
 
 // TlsRouteTransformer creates Gateway API TLSRoutes from components with TlsRoute trait
@@ -21,12 +21,12 @@ import (
 	}
 
 	requiredLabels: {}
-	requiredResources: {}
+	requiredResources: {
+		"opmodel.dev/gateway-api/resources/network/tls-route@v1": network_resources.#TlsRouteResource
+	}
 	optionalResources: {}
 
-	requiredTraits: {
-		"opmodel.dev/gateway-api/traits/network/tls-route@v1": network_traits.#TlsRouteTrait
-	}
+	requiredTraits: {}
 	optionalTraits: {}
 
 	#transform: {

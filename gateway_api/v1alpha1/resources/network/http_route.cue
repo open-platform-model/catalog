@@ -4,33 +4,30 @@ import (
 	prim "opmodel.dev/core/v1alpha1/primitives@v1"
 	component "opmodel.dev/core/v1alpha1/component@v1"
 	schemas "opmodel.dev/gateway_api/v1alpha1/schemas@v1"
-	workload_resources "opmodel.dev/opm/v1alpha1/resources/workload@v1"
 )
 
 /////////////////////////////////////////////////////////////////
-//// HttpRoute Trait Definition
+//// HttpRoute Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#HttpRouteTrait: prim.#Trait & {
+#HttpRouteResource: prim.#Resource & {
 	metadata: {
-		modulePath:  "opmodel.dev/gateway-api/traits/network"
+		modulePath:  "opmodel.dev/gateway-api/resources/network"
 		version:     "v1"
 		name:        "http-route"
 		description: "HTTP routing rules for a workload"
 		labels: {
-			"trait.opmodel.dev/category": "network"
+			"resource.opmodel.dev/category": "network"
 		}
 	}
-
-	appliesTo: [workload_resources.#ContainerResource]
 
 	#defaults: #HttpRouteDefaults
 
 	spec: close({httpRoute: schemas.#HttpRouteSchema})
 }
 
-#HttpRoute: component.#Component & {
-	#traits: {(#HttpRouteTrait.metadata.fqn): #HttpRouteTrait}
+#HttpRouteComponent: component.#Component & {
+	#resources: {(#HttpRouteResource.metadata.fqn): #HttpRouteResource}
 }
 
 #HttpRouteDefaults: schemas.#HttpRouteSchema

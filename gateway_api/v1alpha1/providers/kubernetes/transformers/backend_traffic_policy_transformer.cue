@@ -2,7 +2,7 @@ package transformers
 
 import (
 	transformer "opmodel.dev/core/v1alpha1/transformer@v1"
-	xbtpV1alpha1 "gateway.networking.x-k8s.io/xbackendtrafficpolicy/v1alpha1"
+	xbtpV1alpha1 "opmodel.dev/gateway_api/v1alpha1/schemas/gateway/gateway.networking.x-k8s.io/xbackendtrafficpolicy/v1alpha1@v1"
 )
 
 // BackendTrafficPolicyTransformer creates Gateway API BackendTrafficPolicies from

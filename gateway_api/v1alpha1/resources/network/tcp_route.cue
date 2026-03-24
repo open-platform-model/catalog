@@ -4,33 +4,30 @@ import (
 	prim "opmodel.dev/core/v1alpha1/primitives@v1"
 	component "opmodel.dev/core/v1alpha1/component@v1"
 	schemas "opmodel.dev/gateway_api/v1alpha1/schemas@v1"
-	workload_resources "opmodel.dev/opm/v1alpha1/resources/workload@v1"
 )
 
 /////////////////////////////////////////////////////////////////
-//// TcpRoute Trait Definition
+//// TcpRoute Resource Definition
 /////////////////////////////////////////////////////////////////
 
-#TcpRouteTrait: prim.#Trait & {
+#TcpRouteResource: prim.#Resource & {
 	metadata: {
-		modulePath:  "opmodel.dev/gateway-api/traits/network"
+		modulePath:  "opmodel.dev/gateway-api/resources/network"
 		version:     "v1"
 		name:        "tcp-route"
 		description: "TCP port-forwarding rules for a workload"
 		labels: {
-			"trait.opmodel.dev/category": "network"
+			"resource.opmodel.dev/category": "network"
 		}
 	}
-
-	appliesTo: [workload_resources.#ContainerResource]
 
 	#defaults: #TcpRouteDefaults
 
 	spec: close({tcpRoute: schemas.#TcpRouteSchema})
 }
 
-#TcpRoute: component.#Component & {
-	#traits: {(#TcpRouteTrait.metadata.fqn): #TcpRouteTrait}
+#TcpRouteComponent: component.#Component & {
+	#resources: {(#TcpRouteResource.metadata.fqn): #TcpRouteResource}
 }
 
 #TcpRouteDefaults: schemas.#TcpRouteSchema

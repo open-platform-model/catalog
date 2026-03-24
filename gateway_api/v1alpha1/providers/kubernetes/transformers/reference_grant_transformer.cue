@@ -2,7 +2,7 @@ package transformers
 
 import (
 	transformer "opmodel.dev/core/v1alpha1/transformer@v1"
-	refgV1 "gateway.networking.k8s.io/referencegrant/v1"
+	refgV1 "opmodel.dev/gateway_api/v1alpha1/schemas/gateway/gateway.networking.k8s.io/referencegrant/v1@v1"
 )
 
 // ReferenceGrantTransformer creates Gateway API ReferenceGrants from ReferenceGrantResource components.

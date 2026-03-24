@@ -2,8 +2,8 @@ package transformers
 
 import (
 	transformer "opmodel.dev/core/v1alpha1/transformer@v1"
-	network_traits "opmodel.dev/gateway_api/v1alpha1/traits/network@v1"
-	grpcRouteV1 "gateway.networking.k8s.io/grpcroute/v1"
+	network_resources "opmodel.dev/gateway_api/v1alpha1/resources/network@v1"
+	grpcRouteV1 "opmodel.dev/gateway_api/v1alpha1/schemas/gateway/gateway.networking.k8s.io/grpcroute/v1@v1"
 )
 
 // GrpcRouteTransformer creates Gateway API GRPCRoutes from components with GrpcRoute trait
@@ -21,12 +21,12 @@ import (
 	}
 
 	requiredLabels: {}
-	requiredResources: {}
+	requiredResources: {
+		"opmodel.dev/gateway-api/resources/network/grpc-route@v1": network_resources.#GrpcRouteResource
+	}
 	optionalResources: {}
 
-	requiredTraits: {
-		"opmodel.dev/gateway-api/traits/network/grpc-route@v1": network_traits.#GrpcRouteTrait
-	}
+	requiredTraits: {}
 	optionalTraits: {}
 
 	#transform: {

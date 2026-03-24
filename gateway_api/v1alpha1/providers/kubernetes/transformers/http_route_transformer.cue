@@ -2,8 +2,8 @@ package transformers
 
 import (
 	transformer "opmodel.dev/core/v1alpha1/transformer@v1"
-	network_traits "opmodel.dev/gateway_api/v1alpha1/traits/network@v1"
-	httpRouteV1 "gateway.networking.k8s.io/httproute/v1"
+	network_resources "opmodel.dev/gateway_api/v1alpha1/resources/network@v1"
+	httpRouteV1 "opmodel.dev/gateway_api/v1alpha1/schemas/gateway/gateway.networking.k8s.io/httproute/v1@v1"
 )
 
 // HttpRouteTransformer creates Gateway API HTTPRoutes from components with HttpRoute trait
@@ -21,12 +21,12 @@ import (
 	}
 
 	requiredLabels: {}
-	requiredResources: {}
+	requiredResources: {
+		"opmodel.dev/gateway-api/resources/network/http-route@v1": network_resources.#HttpRouteResource
+	}
 	optionalResources: {}
 
-	requiredTraits: {
-		"opmodel.dev/gateway-api/traits/network/http-route@v1": network_traits.#HttpRouteTrait
-	}
+	requiredTraits: {}
 	optionalTraits: {}
 
 	#transform: {
