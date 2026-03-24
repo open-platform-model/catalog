@@ -19,6 +19,12 @@ vars:
   # Local registry URL (for CUE_REGISTRY environment variable)
   LOCAL_REGISTRY: opmodel.dev=localhost:5000+insecure,registry.cue.works
 
+  # Plain HTTP URL for direct registry API calls (curl, health checks, etc.)
+  REGISTRY_HTTP_URL: localhost:{{.REGISTRY_PORT}}
+
+  # Plain HTTP URL for direct registry API calls (curl, health checks, etc.)
+  REGISTRY_HTTP_URL: localhost:{{.REGISTRY_PORT}}
+
   # ============================================================================
   # Module Configuration
   # ============================================================================

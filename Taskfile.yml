@@ -528,6 +528,8 @@ tasks:
           local version
           version=$(yq ".v1alpha2.${key}.version" "{{.VERSION_FILE}}")
           echo -e "${BOLD}[${name}]${RESET} publishing @ ${version}..."
+          cd "${dir}" && cue mod tidy
+          cd ../../
           if (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod publish "${version}"); then
             echo -e "  ${GREEN}✔ ${name}@${version}${RESET}"
           else

@@ -7,11 +7,11 @@ v1alpha1:
   checksum: "2e3f4413b9790d8f970c2bb44c9d9f05c62a9e2c75ad0941b0c5d219930100c6"
 v1alpha2:
   opm:
-    version: v1.0.1
-    checksum: "b3c0109014f339cff0a2d37c1f53058bb5750b03d06bff99f79149aaba3ecf7c"
+    version: v1.3.1
+    checksum: b3c0109014f339cff0a2d37c1f53058bb5750b03d06bff99f79149aaba3ecf7c
   gateway_api:
-    version: v1.0.1
-    checksum: "bb37ca81d39be2af10ff4809e1558278ae091ebc1e106e51b6ca8d17907ebdf0"
+    version: v1.2.1
+    checksum: bb37ca81d39be2af10ff4809e1558278ae091ebc1e106e51b6ca8d17907ebdf0
   cert_manager:
-    version: v1.0.1
-    checksum: "0b0e46cea4ed919bfe85e08eeea8f16d50b6a0e5a290a026bc41c2f527181f04"
+    version: v1.2.1
+    checksum: 0b0e46cea4ed919bfe85e08eeea8f16d50b6a0e5a290a026bc41c2f527181f04

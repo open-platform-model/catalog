@@ -91,10 +91,10 @@ tasks:
 
           echo "Published Modules:"
           if command -v jq >/dev/null 2>&1; then
-            REPOS=$(curl -s http://{{.LOCAL_REGISTRY}}/v2/_catalog | jq -r '.repositories[]' 2>/dev/null || echo "")
+            REPOS=$(curl -s http://{{.REGISTRY_HTTP_URL}}/v2/_catalog | jq -r '.repositories[]' 2>/dev/null || echo "")
             if [ -n "$REPOS" ]; then
               echo "$REPOS" | while read -r repo; do
-                TAGS=$(curl -s "http://{{.LOCAL_REGISTRY}}/v2/$repo/tags/list" | jq -r '.tags[]?' 2>/dev/null || echo "")
+                TAGS=$(curl -s "http://{{.REGISTRY_HTTP_URL}}/v2/$repo/tags/list" | jq -r '.tags[]?' 2>/dev/null || echo "")
                 if [ -n "$TAGS" ]; then
                   echo "  $repo"
                   echo "$TAGS" | while read -r tag; do
@@ -109,7 +109,7 @@ tasks:
             fi
           else
             echo "  (install 'jq' to see module list)"
-            curl -s http://{{.LOCAL_REGISTRY}}/v2/_catalog 2>/dev/null || echo "  (registry not accessible)"
+            curl -s http://{{.REGISTRY_HTTP_URL}}/v2/_catalog 2>/dev/null || echo "  (registry not accessible)"
           fi
         elif docker ps -a -f name={{.REGISTRY_CONTAINER}} | grep -q {{.REGISTRY_CONTAINER}}; then
           echo "  Status: Stopped"
@@ -146,14 +146,14 @@ tasks:
           exit 1
         fi
 
-        REPOS=$(curl -s http://{{.LOCAL_REGISTRY}}/v2/_catalog | jq -r '.repositories[]' 2>/dev/null || echo "")
+        REPOS=$(curl -s http://{{.REGISTRY_HTTP_URL}}/v2/_catalog | jq -r '.repositories[]' 2>/dev/null || echo "")
         if [ -z "$REPOS" ]; then
           echo "No modules published"
           exit 0
         fi
 
         echo "$REPOS" | while read -r repo; do
-          TAGS=$(curl -s "http://{{.LOCAL_REGISTRY}}/v2/$repo/tags/list" | jq -r '.tags[]?' 2>/dev/null | sort -V || echo "")
+          TAGS=$(curl -s "http://{{.REGISTRY_HTTP_URL}}/v2/$repo/tags/list" | jq -r '.tags[]?' 2>/dev/null | sort -V || echo "")
           if [ -n "$TAGS" ]; then
             echo "$TAGS" | while read -r tag; do
               echo "$repo@$tag"
@@ -178,13 +178,13 @@ tasks:
         fi
         echo "  Container is running"
 
-        if ! curl -sf http://{{.LOCAL_REGISTRY}}/v2/ >/dev/null; then
+        if ! curl -sf http://{{.REGISTRY_HTTP_URL}}/v2/ >/dev/null; then
           echo "  Registry API not accessible"
           exit 1
         fi
         echo "  Registry API accessible"
 
-        if ! curl -sf http://{{.LOCAL_REGISTRY}}/v2/_catalog >/dev/null; then
+        if ! curl -sf http://{{.REGISTRY_HTTP_URL}}/v2/_catalog >/dev/null; then
           echo "  Catalog endpoint not working"
           exit 1
         fi

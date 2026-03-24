@@ -1,6 +1,6 @@
 ---
-status: complete
-phase: 9
+status: in-progress
+phase: 10
 updated: 2026-03-23
 ---
 
@@ -32,6 +32,10 @@ Add Gateway API and cert-manager support to the OPM catalog as standalone CUE ex
 | cert-manager integrates with Gateway via annotations                | `cert-manager.io/cluster-issuer` on a Gateway triggers automatic Certificate creation per TLS listener                                                               | `https://cert-manager.io/docs/usage/gateway/`                                                |
 | `#RouteAttachmentSchema` already has `gatewayRef`                       | Existing route schemas are partially Gateway API-ready — only transformer replacement is needed, not schema changes                                                | `opm/schemas/network.cue:93–107`                                                             |
 | Include `GatewayClass` and `BackendTrafficPolicy` as full OPM resources | Both need type definitions in `gateway_api/` AND deployable OPM schemas/resources/transformers in `opm/` — not just types                                              | User directive (Option A confirmed)                                                        |
+| Rename `modules/gateway_api/` to `modules/gateway/`                    | Shorter, cleaner name; `gateway_api` is the catalog extension module name — the OPM module that deploys the Gateway resource should simply be called `gateway`          | User directive                                                                             |
+| Two-module pattern for cert-manager                                     | Separate operator deployment (`cert_manager`) from custom resource configuration (`cert_manager_config`); follows infrastructure/config separation principle             | User directive                                                                             |
+| cert-manager operator based on Helm chart v1.20.0                      | Latest stable release; 4 sub-components (controller, webhook, cainjector, startupapicheck); images from `quay.io/jetstack/`                                             | `https://github.com/cert-manager/cert-manager/tree/v1.20.0/deploy/charts/cert-manager`      |
+| No MetalLB integration in Gateway module                                | Gateway relies on MetalLB auto-assignment from existing L2 pool; no explicit IP pinning needed; MetalLB is a cluster prerequisite, not a module concern                 | User directive                                                                             |
 
 ---
 
@@ -39,35 +43,35 @@ Add Gateway API and cert-manager support to the OPM catalog as standalone CUE ex
 
 Set up `catalog/v1alpha2/gateway_api/` as a standalone CUE module with CRD-imported type definitions.
 
-- [ ] **1.1 Create `gateway_api/` directory structure**
+- [x] **1.1 Create `gateway_api/` directory structure**
   - `gateway_api/cue.mod/module.cue` — new CUE module (`opmodel.dev/gateway-api@v1`)
   - `gateway_api/crds/` — raw downloaded CRD YAML files (not imported into CUE, kept for reference)
   - `gateway_api/version.yml` — tracks Gateway API version and download date
   - `gateway_api/PLAN.md` — detailed research and implementation reference (see `gateway_api/PLAN.md`)
 
-- [ ] 1.2 Download Gateway API CRDs (experimental channel)
+- [x] 1.2 Download Gateway API CRDs (experimental channel)
   - URL: `https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.1/experimental-install.yaml`
   - Save to `gateway_api/crds/experimental-install.yaml`
   - Create `gateway_api/version.yml` — see `gateway_api/PLAN.md` for exact format
 
-- [ ] 1.3 Import CRDs using `timoni mod vendor crd`
+- [x] 1.3 Import CRDs using `timoni mod vendor crd`
   - Run `timoni mod vendor crd` against the downloaded experimental CRD YAML
   - Output organized into `gateway_api/v1/` (GA) and `gateway_api/v1alpha2/` (experimental)
 
-- [ ] 1.4 Validate Gateway API module
+- [x] 1.4 Validate Gateway API module
   - `cd catalog/v1alpha2/gateway_api && cue vet ./...`
 
 ## Phase 2: cert-manager Extension Module [PENDING]
 
 Set up `catalog/v1alpha2/cert_manager/` using the official CUE registry module.
 
-- [ ] 2.1 Create `cert_manager/` module structure
+- [x] 2.1 Create `cert_manager/` module structure
   - `cert_manager/cue.mod/module.cue` — new CUE module (`opmodel.dev/cert-manager@v1`)
   - Add dependency: `cue.dev/x/crd/cert-manager.io@v0`
   - `cert_manager/version.yml` — tracks cert-manager version and CUE module version
   - `cert_manager/PLAN.md` — detailed research and implementation reference (see `cert_manager/PLAN.md`)
 
-- [ ] 2.2 Create type re-exports from registry module
+- [x] 2.2 Create type re-exports from registry module
   - `cert_manager/v1/types.cue` — re-export from `cue.dev/x/crd/cert-manager.io/v1`:
     - `#Certificate`, `#CertificateSpec`, `#CertificateStatus`
     - `#Issuer`, `#IssuerSpec`, `#IssuerStatus`
@@ -75,7 +79,7 @@ Set up `catalog/v1alpha2/cert_manager/` using the official CUE registry module.
     - `#CertificateRequest` (auto-created by cert-manager, type available for reference)
   - Follow the re-export pattern from `opm/schemas/kubernetes/networking/v1/types.cue`
 
-- [ ] 2.3 Validate cert-manager module
+- [x] 2.3 Validate cert-manager module
   - `cd catalog/v1alpha2/cert_manager && cue vet ./...`
 
 ## Phase 3: OPM Schemas [COMPLETE]
@@ -272,15 +276,59 @@ Create transformers that emit cert-manager manifests. Import output types from `
   - `cue vet ./...` passes with zero errors in `gateway_api/` and `cert_manager/`
   - `catalog/Taskfile.yml` has `vet:v1alpha2` and `test:v1alpha2` task targets
 
-## Phase 10: Gateway API Module Implementation [PENDING]
+## Phase 10: Gateway Module Implementation [IN PROGRESS]
 
-Unblocked after Phase 9. Implements `modules/gateway_api/` per its existing PLAN.md.
+Unblocked after Phase 9. Implements `modules/gateway/` (renamed from `gateway_api`) per its existing PLAN.md.
 
-- [ ] 10.1 Scaffold: `cue.mod/module.cue`, `module.cue`, `components.cue`
-- [ ] 10.2 Define `#config` schema: gateway listeners, TLS, MetalLB integration
+- [ ] **10.1 Rename `modules/gateway_api/` to `modules/gateway/`** ← CURRENT
+  - Rename directory
+  - Update `cue.mod/module.cue`: module path `opmodel.dev/modules/gateway@v0`, language `v0.16.0`
+  - Update `module.cue`: fix `certificateRefs` → `certificateRef` (singular), add `"UDP"` to protocol enum, fix TLS mode default `*"Terminate" | "Passthrough"` (remove required marker)
+  - Update `components.cue`: verify import paths after dep pinning
+  - Update `PLAN.md`: reflect rename throughout
+- [ ] 10.2 Define `#config` schema: gateway listeners, TLS configuration
 - [ ] 10.3 Write `README.md` and `DEPLOYMENT_NOTES.md`
-- [ ] 10.4 Create release config: `releases/gon1-nas2/gateway_api/`
-- [ ] 10.5 Validate: `cue vet -c ./modules/gateway_api/...`
+- [ ] 10.4 Create release config: `releases/gon1_nas2/gateway/`
+- [ ] 10.5 Run `task update-deps` from workspace root to pin dependency versions
+- [ ] 10.6 Validate: `cue vet -c ./modules/gateway/...`
+
+## Phase 11: cert-manager Operator Module [PENDING]
+
+Create `modules/cert_manager/` — an OPM module that deploys the cert-manager controller application (controller, webhook, cainjector, CRDs) based on the Helm chart v1.20.0.
+
+- [ ] 11.1 Scaffold `modules/cert_manager/` directory
+  - `cue.mod/module.cue`: module path `opmodel.dev/modules/cert_manager@v0`, language `v0.16.0`, dep `opmodel.dev@v1`
+  - `module.cue`: metadata (name `"cert-manager"`, defaultNamespace `"cert-manager"`), `#config` schema
+- [ ] 11.2 Define `#config` schema based on Helm chart v1.20.0 → `https://github.com/cert-manager/cert-manager/tree/v1.20.0/deploy/charts/cert-manager`
+  - Controller: image tag, replicas, resources, log level
+  - Webhook: image tag, replicas, resources
+  - CA Injector: image tag, replicas, resources
+  - CRDs: install toggle (`*true | false`)
+  - Global: namespace, image pull policy, image registry override (`quay.io/jetstack/`)
+- [ ] 11.3 Write `components.cue` — 4 sub-components (controller, webhook, cainjector, startupapicheck)
+- [ ] 11.4 Write `debugValues` exercising the full `#config` surface → `modules/metallb/module.cue`
+- [ ] 11.5 Write `README.md` and `DEPLOYMENT_NOTES.md` → `modules/metallb/README.md`
+- [ ] 11.6 Create release config: `releases/gon1_nas2/cert_manager/release.cue` + `values.cue` → `releases/gon1_nas2/metallb/`
+- [ ] 11.7 Run `task update-deps` from workspace root
+- [ ] 11.8 Validate: `cue vet -c ./modules/cert_manager/...`
+
+## Phase 12: cert-manager Custom Resources Module [PENDING]
+
+Create `modules/cert_manager_config/` — a curated OPM module for deploying cert-manager custom resources (ClusterIssuer, Certificate, etc.) using the OPM resource types from `catalog/v1alpha2/opm/`.
+
+- [ ] 12.1 Scaffold `modules/cert_manager_config/` directory
+  - `cue.mod/module.cue`: module path `opmodel.dev/modules/cert_manager_config@v0`, language `v0.16.0`, dep `opmodel.dev@v1`
+  - `module.cue`: metadata (name `"cert-manager-config"`, defaultNamespace `"cert-manager"`), `#config` schema
+- [ ] 12.2 Define `#config` schema
+  - `clusterIssuers`: map of named ClusterIssuer configs (ACME, CA, selfSigned)
+  - `certificates`: map of named Certificate configs (secretName, dnsNames, issuerRef)
+  - `issuers?`: optional map of namespace-scoped Issuer configs
+- [ ] 12.3 Write `components.cue` — components using `resources_security.#ClusterIssuer`, `resources_security.#Certificate`, `resources_security.#Issuer`
+- [ ] 12.4 Write `debugValues` exercising the full `#config` surface
+- [ ] 12.5 Write `README.md` and `DEPLOYMENT_NOTES.md`
+- [ ] 12.6 Create release config: `releases/gon1_nas2/cert_manager_config/release.cue` + `values.cue`
+- [ ] 12.7 Run `task update-deps` from workspace root
+- [ ] 12.8 Validate: `cue vet -c ./modules/cert_manager_config/...`
 
 ---
 
@@ -298,3 +346,13 @@ Unblocked after Phase 9. Implements `modules/gateway_api/` per its existing PLAN
 - 2026-03-22: `security.cue` has `ingressClassName` on lines 113 and 212 — these are for cert-manager ACME HTTP01 solver, NOT Ingress controller references; do NOT remove them
 - 2026-03-22: `security.cue` contains duplicate schema definitions (lines 77–174 and 176–273) — noted for cleanup in Phase 9 or 10
 - 2026-03-23: timoni-generated type names confirmed (task 8.4). Each `types_gen.cue` exposes a top-level resource type and its spec: `#HTTPRoute`/`#HTTPRouteSpec` (httproute/v1, v1beta1), `#GRPCRoute`/`#GRPCRouteSpec` (grpcroute/v1), `#Gateway`/`#GatewaySpec` (gateway/v1, v1beta1), `#GatewayClass`/`#GatewayClassSpec` (gatewayclass/v1, v1beta1), `#ReferenceGrant`/`#ReferenceGrantSpec` (referencegrant/v1, v1beta1), `#TCPRoute`/`#TCPRouteSpec` (tcproute/v1alpha2), `#TLSRoute`/`#TLSRouteSpec` (tlsroute/v1, v1alpha2, v1alpha3), `#UDPRoute`/`#UDPRouteSpec` (udproute/v1alpha2), `#ListenerSet`/`#ListenerSetSpec` (listenerset/v1), `#BackendTLSPolicy`/`#BackendTLSPolicySpec` (backendtlspolicy/v1, v1alpha3), `#XBackendTrafficPolicy`/`#XBackendTrafficPolicySpec` (x-k8s.io/xbackendtrafficpolicy/v1alpha1), `#XMesh`/`#XMeshSpec` (x-k8s.io/xmesh/v1alpha1). Note: `BackendTrafficPolicy` is vendored as `#XBackendTrafficPolicy` under `gateway.networking.x-k8s.io/xbackendtrafficpolicy/v1alpha1`, NOT `gateway.networking.k8s.io/v1alpha2` — transformer in 8.18 must use the x-k8s.io import path.
+- 2026-03-23: Module `modules/gateway_api/` renamed to `modules/gateway/` — shorter name, avoids confusion with catalog extension module `catalog/v1alpha2/gateway_api/`; the catalog extension retains its name
+- 2026-03-23: `modules/gateway_api/module.cue` has schema mismatches vs catalog: `certificateRefs` (plural) should be singular `certificateRef` to match `#ListenerSchema`, missing `"UDP"` protocol value, TLS `mode!` is required but should default `*"Terminate" | "Passthrough"` — fix during Phase 10 rename
+- 2026-03-23: `modules/gateway_api/cue.mod/module.cue` has language `v0.15.0` (should be `v0.16.0`) and unpinned deps `v0.0.0` — fix during Phase 10 rename, then run `task update-deps`
+- 2026-03-23: cert-manager uses two-module pattern: `modules/cert_manager/` (operator — deploys controller application via Helm chart v1.20.0) and `modules/cert_manager_config/` (custom resources — ClusterIssuers, Certificates, Issuers)
+- 2026-03-23: Phase 10 MetalLB integration reference removed — Gateway module does not need explicit MetalLB configuration; MetalLB auto-assigns from existing pool and is treated as a cluster prerequisite
+- 2026-03-23: Module `modules/gateway_api/` renamed to `modules/gateway/` — shorter name, avoids confusion with catalog extension module `catalog/v1alpha2/gateway_api/`; the catalog extension retains its name
+- 2026-03-23: `modules/gateway_api/module.cue` has schema mismatches vs catalog: `certificateRefs` (plural) should be singular `certificateRef` to match `#ListenerSchema`, missing `"UDP"` protocol value, TLS `mode!` is required but should default `*"Terminate" | "Passthrough"` — fix during Phase 10 rename
+- 2026-03-23: `modules/gateway_api/cue.mod/module.cue` has language `v0.15.0` (should be `v0.16.0`) and unpinned deps `v0.0.0` — fix during Phase 10 rename, then run `task update-deps`
+- 2026-03-23: cert-manager uses two-module pattern: `modules/cert_manager/` (operator — deploys controller application via Helm chart v1.20.0) and `modules/cert_manager_config/` (custom resources — ClusterIssuers, Certificates, Issuers)
+- 2026-03-23: Phase 10 MetalLB integration reference removed — Gateway module does not need explicit MetalLB configuration; MetalLB auto-assigns from existing pool and is treated as a cluster prerequisite
