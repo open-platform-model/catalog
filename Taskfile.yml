@@ -1,11 +1,13 @@
 version: '3'
 
 # Catalog CUE Module Taskfile
-# Tasks for the v1alpha1/ module (opmodel.dev@v1).
+# Tasks for the domain-structured modules:
+#   core/v1alpha1, opm/v1alpha1, gateway_api/v1alpha1, cert_manager/v1alpha1
 #
 # Usage:
 #   task fmt
 #   task vet
+#   task test
 #   task publish:local
 #   task publish:smart
 
@@ -43,11 +45,13 @@ tasks:
   # ============================================================================
 
   fmt:
-    desc: Format CUE files
+    desc: Format CUE files across all domain modules
     cmds:
       - |
-        echo "Formatting {{.V1ALPHA1_DIR}}..."
-        cd "{{.V1ALPHA1_DIR}}" && cue fmt ./...
+        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}"; do
+          echo "Formatting ${dir}..."
+          (cd "{{.TASKFILE_DIR}}/${dir}" && cue fmt ./...)
+        done
         echo "Done"
 
   # ============================================================================
@@ -55,74 +59,228 @@ tasks:
   # ============================================================================
 
   vet:
-    desc: Validate CUE files (excludes examples — use vet:examples for those)
+    desc: Validate all four domain CUE modules in dependency order
     summary: |
-      Validate CUE files in the v1alpha1 module, excluding the examples/ directory.
-      Use 'task vet:examples' to validate examples separately.
+      Validates all four domain modules in dependency order:
+        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1
 
       Usage:
         task vet
         task vet CONCRETE=true    # Validate with concreteness checks
+    cmds:
+      - task: vet:core
+      - task: vet:opm
+      - task: vet:gateway_api
+      - task: vet:cert_manager
+
+  vet:core:
+    desc: Validate core/v1alpha1 CUE module
     vars:
       CONCRETE: '{{.CONCRETE | default "false"}}'
       VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
     cmds:
       - |
-        echo "Validating {{.V1ALPHA1_DIR}} (excluding examples){{if eq .CONCRETE "true"}} (concrete){{end}}..."
-        cd "{{.V1ALPHA1_DIR}}" && cue vet {{.VET_FLAGS}} \
-          ./core/... ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...
-        echo "Done"
+        echo "Validating {{.CORE_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.CORE_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "  ✔ core/v1alpha1"
 
-  vet:examples:
-    desc: Validate CUE files in the examples/ directory
+  vet:opm:
+    desc: Validate opm/v1alpha1 CUE module
+    vars:
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
+    cmds:
+      - |
+        echo "Validating {{.OPM_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.OPM_DIR}}" && cue vet {{.VET_FLAGS}} \
+          ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...
+        echo "  ✔ opm/v1alpha1"
+
+  vet:gateway_api:
+    desc: Validate gateway_api/v1alpha1 CUE module
+    vars:
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
+    cmds:
+      - |
+        echo "Validating {{.GATEWAY_API_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.GATEWAY_API_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "  ✔ gateway_api/v1alpha1"
+
+  vet:cert_manager:
+    desc: Validate cert_manager/v1alpha1 CUE module
+    vars:
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
+    cmds:
+      - |
+        echo "Validating {{.CERT_MANAGER_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.CERT_MANAGER_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "  ✔ cert_manager/v1alpha1"
+
+  # ============================================================================
+  # Testing
+  # ============================================================================
+
+  test:
+    desc: Run structural tests (@if(test) files) across all domain modules
     summary: |
-      Validate CUE files in v1alpha1/examples/ separately.
-      Examples include alternative value files that conflict when evaluated together;
-      this task surfaces those errors in isolation.
+      Runs all *_tests.cue files tagged @if(test) across all domain modules.
+      Tests use CUE unification for assertions — a test fails when the computed
+      output conflicts with the asserted expected value.
 
       Usage:
-        task vet:examples
-        task vet:examples CONCRETE=true
-    vars:
-      CONCRETE: '{{.CONCRETE | default "false"}}'
-      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
+        task test
+        task test:core
+        task test:opm
+        task test:gateway_api
+        task test:cert_manager
+    cmds:
+      - task: test:core
+      - task: test:opm
+      - task: test:gateway_api
+      - task: test:cert_manager
+
+  test:core:
+    desc: Run core/v1alpha1 structural tests (@if(test) files)
     cmds:
       - |
-        if [ ! -d "{{.V1ALPHA1_DIR}}/examples" ]; then
-          echo "Skipping {{.V1ALPHA1_DIR}}/examples (directory does not exist)"
-          exit 0
+        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        echo "Testing core/v1alpha1 (structural)..."
+        if cd "{{.TASKFILE_DIR}}/{{.CORE_DIR}}" && cue vet -t test ./...; then
+          echo -e "${GREEN}✔ core/v1alpha1 — Successful${NC}"
+        else
+          echo -e "${RED}✗ core/v1alpha1 — Failed${NC}"
+          exit 1
         fi
-        echo "Validating {{.V1ALPHA1_DIR}}/examples{{if eq .CONCRETE "true"}} (concrete){{end}}..."
-        cd "{{.V1ALPHA1_DIR}}" && cue vet {{.VET_FLAGS}} ./examples/...
-        echo "Done"
 
-  eval:
-    desc: Evaluate CUE files
+  test:opm:
+    desc: Run opm/v1alpha1 transformer structural tests (@if(test) files)
     summary: |
-      Evaluate CUE files in the v1alpha1 module.
+      Runs all *_tests.cue files tagged @if(test) in the opm/v1alpha1 module.
+
+      Tests use CUE unification for assertions — a test fails when the computed
+      transformer output conflicts with the asserted expected value.
+
+      Runs WITHOUT -c (concreteness) because transformer outputs include intermediate
+      computed fields that depend on optional trait defaults. Use test:strict
+      for fully-concrete subset tests.
 
       Usage:
-        task eval
-        task eval OUTPUT=out.cue    # Write output to file
-    vars:
-      OUTPUT: '{{.OUTPUT | default ""}}'
-      EVAL_REDIRECT: '{{if .OUTPUT}}> {{.OUTPUT}}{{end}}'
+        task test:opm
     cmds:
       - |
-        echo "Evaluating {{.V1ALPHA1_DIR}}..."
-        cd "{{.V1ALPHA1_DIR}}" && cue eval ./... {{.EVAL_REDIRECT}}
-        echo "Done"
+        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        echo "Testing opmodel.dev/opm/v1alpha1 (structural)..."
+        if cd "{{.TASKFILE_DIR}}/{{.OPM_DIR}}" && cue vet -t test \
+          ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...; then
+          echo -e "${GREEN}✔ opm/v1alpha1 — Successful${NC}"
+        else
+          echo -e "${RED}✗ opm/v1alpha1 — Failed${NC}"
+          exit 1
+        fi
+
+  test:gateway_api:
+    desc: Run gateway_api/v1alpha1 transformer structural tests (@if(test) files)
+    summary: |
+      Runs all *_tests.cue files tagged @if(test) in the gateway_api/v1alpha1 module.
+
+      Usage:
+        task test:gateway_api
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        echo "Testing opmodel.dev/gateway_api/v1alpha1 (structural)..."
+        if cd "{{.TASKFILE_DIR}}/{{.GATEWAY_API_DIR}}" && cue vet -t test ./...; then
+          echo -e "${GREEN}✔ gateway_api/v1alpha1 — Successful${NC}"
+        else
+          echo -e "${RED}✗ gateway_api/v1alpha1 — Failed${NC}"
+          exit 1
+        fi
+
+  test:cert_manager:
+    desc: Run cert_manager/v1alpha1 transformer and matrix tests (@if(test) files)
+    summary: |
+      Runs all *_tests.cue and *_matrix_tests.cue files tagged @if(test) in the
+      cert_manager/v1alpha1 module. Matrix tests are included naturally via ./...
+
+      Usage:
+        task test:cert_manager
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        echo "Testing opmodel.dev/cert_manager/v1alpha1 (structural + matrix)..."
+        if cd "{{.TASKFILE_DIR}}/{{.CERT_MANAGER_DIR}}" && cue vet -t test ./...; then
+          echo -e "${GREEN}✔ cert_manager/v1alpha1 — Successful${NC}"
+        else
+          echo -e "${RED}✗ cert_manager/v1alpha1 — Failed${NC}"
+          exit 1
+        fi
+
+  test:strict:
+    desc: Run opm/v1alpha1 tests with full concreteness checks (-c flag)
+    summary: |
+      Like test:opm but adds -c (concreteness check).
+      Only run this when all test values are fully concrete (no abstract type
+      constraints in the final evaluated value).
+
+      Usage:
+        task test:strict
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        echo "Testing opmodel.dev/opm/v1alpha1 (structural, strict)..."
+        if cd "{{.TASKFILE_DIR}}/{{.OPM_DIR}}" && cue vet -t test -c \
+          ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...; then
+          echo -e "${GREEN}✔ opm/v1alpha1 strict — Successful${NC}"
+        else
+          echo -e "${RED}✗ opm/v1alpha1 strict — Failed${NC}"
+          exit 1
+        fi
 
   # ============================================================================
   # Module Management
   # ============================================================================
 
   tidy:
-    desc: Tidy module dependencies
+    desc: Tidy dependencies across all domain modules
     cmds:
       - |
-        echo "Tidying {{.V1ALPHA1_DIR}} dependencies..."
-        cd "{{.V1ALPHA1_DIR}}" && cue mod tidy
+        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}"; do
+          echo "Tidying ${dir}..."
+          (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod tidy)
+        done
+        echo "Done"
+
+  eval:
+    desc: Evaluate CUE files in a specific module (DOMAIN=core|opm|gateway_api|cert_manager)
+    summary: |
+      Evaluate CUE files in a specific domain module.
+
+      Usage:
+        task eval DOMAIN=opm
+        task eval DOMAIN=core OUTPUT=out.cue    # Write output to file
+    vars:
+      DOMAIN: '{{.DOMAIN | default "opm"}}'
+      OUTPUT: '{{.OUTPUT | default ""}}'
+    cmds:
+      - |
+        case "{{.DOMAIN}}" in
+          core)         DIR="{{.CORE_DIR}}" ;;
+          opm)          DIR="{{.OPM_DIR}}" ;;
+          gateway_api)  DIR="{{.GATEWAY_API_DIR}}" ;;
+          cert_manager) DIR="{{.CERT_MANAGER_DIR}}" ;;
+          *)
+            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, gateway_api, or cert_manager."
+            exit 1
+            ;;
+        esac
+        echo "Evaluating ${DIR}..."
+        if [ -n "{{.OUTPUT}}" ]; then
+          cd "{{.TASKFILE_DIR}}/${DIR}" && cue eval ./... > "{{.OUTPUT}}"
+        else
+          cd "{{.TASKFILE_DIR}}/${DIR}" && cue eval ./...
+        fi
         echo "Done"
 
   # ============================================================================
@@ -130,199 +288,59 @@ tasks:
   # ============================================================================
 
   check:
-    desc: Run fmt and vet
+    desc: Run fmt and vet across all domain modules
     cmds:
-      - task fmt
-      - task vet
-
-  # ============================================================================
-  # v1alpha2 Validation & Tests
-  # ============================================================================
-
-  vet:v1alpha2:
-    desc: Validate all v1alpha2 CUE modules (opm, gateway_api, cert_manager)
-    summary: |
-      Validates all three v1alpha2 modules in sequence.
-      Skips gateway_api and cert_manager if their cue.mod/ has not been initialized yet.
-
-      Usage:
-        task vet:v1alpha2
-    cmds:
-      - task: vet:v1alpha2:opm
-      - task: vet:v1alpha2:gateway
-      - task: vet:v1alpha2:cert-manager
-
-  vet:v1alpha2:opm:
-    desc: Validate v1alpha2/opm CUE module
-    cmds:
-      - |
-        cd "{{.TASKFILE_DIR}}/{{.V1ALPHA2_OPM_DIR}}" && cue vet \
-          ./core/... ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...
-
-  vet:v1alpha2:gateway:
-    desc: Validate v1alpha2/gateway_api CUE module
-    cmds:
-      - cd "{{.TASKFILE_DIR}}/{{.V1ALPHA2_GATEWAY_DIR}}" && cue vet ./...
-
-  vet:v1alpha2:cert-manager:
-    desc: Validate v1alpha2/cert_manager CUE module
-    cmds:
-      - cd "{{.TASKFILE_DIR}}/{{.V1ALPHA2_CERT_MANAGER_DIR}}" && cue vet ./...
-
-  test:v1alpha2:
-    desc: Run all v1alpha2 structural tests across opm, gateway_api, and cert_manager
-    summary: |
-      Aggregate task — runs all @if(test) tagged test files across all three v1alpha2 modules:
-        - opmodel.dev/opm@v1          (v1alpha2/opm)
-        - opmodel.dev/gateway_api@v1  (v1alpha2/gateway_api)
-        - opmodel.dev/cert-manager@v1 (v1alpha2/cert_manager)
-
-      Matrix tests (cert_manager) are included naturally via ./...
-
-      Usage:
-        task test:v1alpha2
-    cmds:
-      - task: test:v1alpha2:opm
-      - task: test:v1alpha2:gateway
-      - task: test:v1alpha2:cert-manager
-
-  test:v1alpha2:opm:
-    desc: Run v1alpha2/opm transformer structural tests (@if(test) files)
-    summary: |
-      Runs all *_tests.cue files tagged @if(test) in the v1alpha2/opm module.
-
-      Tests use CUE unification for assertions — a test fails when the computed
-      transformer output conflicts with the asserted expected value.
-
-      Runs WITHOUT -c (concreteness) because transformer outputs include intermediate
-      computed fields that depend on optional trait defaults. Use test:v1alpha2:strict
-      for fully-concrete subset tests.
-
-      Usage:
-        task test:v1alpha2:opm
-    cmds:
-      - |
-        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
-        echo "Testing opmodel.dev/opm@v1 (structural)..."
-        if cd "{{.TASKFILE_DIR}}/{{.V1ALPHA2_OPM_DIR}}" && cue vet -t test \
-          ./core/... ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...; then
-          echo -e "${GREEN}✔ opmodel.dev/opm@v1 — Successful${NC}"
-        else
-          echo -e "${RED}✗ opmodel.dev/opm@v1 — Failed${NC}"
-          exit 1
-        fi
-
-  test:v1alpha2:gateway:
-    desc: Run v1alpha2/gateway_api transformer structural tests (@if(test) files)
-    summary: |
-      Runs all *_tests.cue files tagged @if(test) in the v1alpha2/gateway_api module.
-
-      Tests use CUE unification for assertions — a test fails when the computed
-      transformer output conflicts with the asserted expected value.
-
-      Usage:
-        task test:v1alpha2:gateway
-    cmds:
-      - |
-        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
-        echo "Testing opmodel.dev/gateway_api@v1 (structural)..."
-        if cd "{{.TASKFILE_DIR}}/{{.V1ALPHA2_GATEWAY_DIR}}" && cue vet -t test ./...; then
-          echo -e "${GREEN}✔ opmodel.dev/gateway_api@v1 — Successful${NC}"
-        else
-          echo -e "${RED}✗ opmodel.dev/gateway_api@v1 — Failed${NC}"
-          exit 1
-        fi
-
-  test:v1alpha2:cert-manager:
-    desc: Run v1alpha2/cert_manager transformer and matrix tests (@if(test) files)
-    summary: |
-      Runs all *_tests.cue and *_matrix_tests.cue files tagged @if(test) in the
-      v1alpha2/cert_manager module. Matrix tests (certificate_matrix_tests.cue,
-      issuer_matrix_tests.cue) are included naturally via ./...
-
-      Usage:
-        task test:v1alpha2:cert-manager
-    cmds:
-      - |
-        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
-        echo "Testing opmodel.dev/cert-manager@v1 (structural + matrix)..."
-        if cd "{{.TASKFILE_DIR}}/{{.V1ALPHA2_CERT_MANAGER_DIR}}" && cue vet -t test ./...; then
-          echo -e "${GREEN}✔ opmodel.dev/cert-manager@v1 — Successful${NC}"
-        else
-          echo -e "${RED}✗ opmodel.dev/cert-manager@v1 — Failed${NC}"
-          exit 1
-        fi
-
-  test:v1alpha2:strict:
-    desc: Run v1alpha2/opm tests with full concreteness checks (-c flag)
-    summary: |
-      Like test:v1alpha2 but adds -c (concreteness check).
-      Only run this when all test values are fully concrete (no abstract type constraints
-      in the final evaluated value). Schema conformance tests (like crd_tests.cue) pass
-      with -c; transformer structural tests may not.
-
-      Usage:
-        task test:v1alpha2:strict
-    cmds:
-      - |
-        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
-        echo "Testing opmodel.dev/opm@v1 (structural, strict)..."
-        if cd "{{.TASKFILE_DIR}}/{{.V1ALPHA2_OPM_DIR}}" && cue vet -t test -c \
-          ./core/... ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...; then
-          echo -e "${GREEN}✔ opmodel.dev/opm@v1 strict — Successful${NC}"
-        else
-          echo -e "${RED}✗ opmodel.dev/opm@v1 strict — Failed${NC}"
-          exit 1
-        fi
+      - task: fmt
+      - task: vet
 
   # ============================================================================
   # Version Management
   # ============================================================================
 
   version:
-    desc: Show current module version
+    desc: Show current versions for all domain modules
     preconditions:
       - sh: command -v yq >/dev/null 2>&1
         msg: "yq is required. Install: brew install yq"
     cmds:
       - |
-        VERSION=$(yq '.v1alpha1.version' {{.VERSION_FILE}})
-        echo "v1alpha1: $VERSION"
+        echo "core/v1alpha1:         $(yq '.core.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "opm/v1alpha1:          $(yq '.opm.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "gateway_api/v1alpha1:  $(yq '.gateway_api.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "cert_manager/v1alpha1: $(yq '.cert_manager.v1alpha1.version' {{.VERSION_FILE}})"
 
   version:bump:
-    desc: Bump module version (TYPE=patch/minor/major)
+    desc: Bump version for a domain module (DOMAIN=core|opm|gateway_api|cert_manager TYPE=patch/minor/major)
     summary: |
-      Bump the version for the v1alpha1 module following SemVer.
+      Bump the version for a specific domain module following SemVer.
 
       Usage:
-        task version:bump              # Bump patch (default)
-        task version:bump TYPE=patch   # v1.0.0 -> v1.0.1
-        task version:bump TYPE=minor   # v1.0.0 -> v1.1.0
-        task version:bump TYPE=major   # v1.0.0 -> v2.0.0
+        task version:bump DOMAIN=opm              # Bump opm patch (default)
+        task version:bump DOMAIN=core TYPE=minor  # v1.0.0 -> v1.1.0
+        task version:bump DOMAIN=opm TYPE=major   # v1.0.0 -> v2.0.0
     vars:
+      DOMAIN: '{{.DOMAIN | default "opm"}}'
       TYPE: '{{.TYPE | default "patch"}}'
     preconditions:
       - sh: command -v yq >/dev/null 2>&1
         msg: "yq is required. Install: brew install yq"
     cmds:
       - |
-        CURRENT=$(yq '.v1alpha1.version' {{.VERSION_FILE}} | sed 's/^v//')
+        case "{{.DOMAIN}}" in
+          core|opm|gateway_api|cert_manager) ;;
+          *)
+            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, gateway_api, or cert_manager."
+            exit 1
+            ;;
+        esac
 
+        CURRENT=$(yq '.{{.DOMAIN}}.v1alpha1.version' {{.VERSION_FILE}} | sed 's/^v//')
         IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
 
         case "{{.TYPE}}" in
-          major)
-            MAJOR=$((MAJOR + 1))
-            MINOR=0
-            PATCH=0
-            ;;
-          minor)
-            MINOR=$((MINOR + 1))
-            PATCH=0
-            ;;
-          patch)
-            PATCH=$((PATCH + 1))
-            ;;
+          major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+          minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+          patch) PATCH=$((PATCH + 1)) ;;
           *)
             echo "Invalid TYPE: {{.TYPE}}. Use patch, minor, or major."
             exit 1
@@ -330,21 +348,21 @@ tasks:
         esac
 
         NEW="v${MAJOR}.${MINOR}.${PATCH}"
-        yq -i '.v1alpha1.version = "'$NEW'"' {{.VERSION_FILE}}
-        echo "Bumped v1alpha1: v${CURRENT} -> ${NEW}"
+        yq -i '.{{.DOMAIN}}.v1alpha1.version = "'$NEW'"' {{.VERSION_FILE}}
+        echo "Bumped {{.DOMAIN}}/v1alpha1: v${CURRENT} -> ${NEW}"
 
   # ============================================================================
-  # Publishing
+  # Publishing — individual modules
   # ============================================================================
 
-  publish:local:
-    desc: Publish v1alpha1 to local registry
+  publish:core:
+    desc: Publish core/v1alpha1 to local registry
     summary: |
-      Publish the v1alpha1 module to the local OCI registry.
+      Publish the core/v1alpha1 module to the local OCI registry.
 
       Usage:
-        task publish:local              # Use version from versions.yml
-        task publish:local VERSION=v1.0.1  # Use explicit version
+        task publish:core                    # Use version from versions.yml
+        task publish:core VERSION=v1.0.1     # Use explicit version
     vars:
       VERSION: '{{.VERSION | default ""}}'
     preconditions:
@@ -353,162 +371,100 @@ tasks:
     cmds:
       - |
         if [ -z "{{.VERSION}}" ]; then
-          VERSION=$(yq '.v1alpha1.version' {{.VERSION_FILE}})
+          VERSION=$(yq '.core.v1alpha1.version' {{.VERSION_FILE}})
         else
           VERSION="{{.VERSION}}"
         fi
+        echo "Publishing core/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.CORE_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published core/v1alpha1@${VERSION}"
 
-        echo "Publishing v1alpha1@$VERSION to {{.LOCAL_REGISTRY}}..."
-        cd "{{.V1ALPHA1_DIR}}" && cue mod publish "$VERSION"
-        echo "Published v1alpha1@$VERSION"
-
-  publish:smart:
-    desc: Auto-detect changes, bump version, and publish
-    deps:
-      - fmt
-      - vet
+  publish:opm:
+    desc: Publish opm/v1alpha1 to local registry
     summary: |
-      Detect whether the v1alpha1 module has source changes (via checksum comparison),
-      bump the version, tidy, and publish.
-
-      Change detection uses SHA-256 checksums of .cue files (excluding cue.mod/)
-      stored in versions.yml.
+      Publish the opm/v1alpha1 module to the local OCI registry.
 
       Usage:
-        task publish:smart                    # Detect, bump patch, publish
-        task publish:smart DRY_RUN=true       # Preview without executing
-        task publish:smart TYPE=minor         # Minor bump instead of patch
+        task publish:opm
+        task publish:opm VERSION=v1.0.1
     vars:
-      DRY_RUN: '{{.DRY_RUN | default "false"}}'
-      TYPE: '{{.TYPE | default "patch"}}'
+      VERSION: '{{.VERSION | default ""}}'
     preconditions:
       - sh: command -v yq >/dev/null 2>&1
         msg: "yq is required. Install: brew install yq"
-      - sh: command -v cue >/dev/null 2>&1
-        msg: "cue is required. Install: go install cuelang.org/go/cmd/cue@latest"
-      - sh: command -v git >/dev/null 2>&1
-        msg: "git is required"
     cmds:
       - |
-        set -euo pipefail
-
-        MODULE_DIR="{{.V1ALPHA1_DIR}}"
-        VERSION_FILE="{{.VERSION_FILE}}"
-        DRY_RUN="{{.DRY_RUN}}"
-        BUMP_TYPE="{{.TYPE}}"
-
-        # ── Colors ────────────────────────────────────────────────────
-        BOLD='\033[1m'
-        DIM='\033[2m'
-        RED='\033[0;31m'
-        GREEN='\033[0;32m'
-        YELLOW='\033[0;33m'
-        RESET='\033[0m'
-
-        # ── Helper functions ─────────────────────────────────────────
-
-        get_version() {
-          yq '.v1alpha1.version' "$VERSION_FILE"
-        }
-
-        get_stored_checksum() {
-          yq '.v1alpha1.checksum // ""' "$VERSION_FILE"
-        }
-
-        compute_checksum() {
-          find "$MODULE_DIR" -name '*.cue' -not -path '*/cue.mod/*' | sort | xargs sha256sum | sha256sum | awk '{print $1}'
-        }
-
-        bump_version() {
-          local ver="$1"
-          local type="$2"
-          local stripped="${ver#v}"
-          IFS='.' read -r major minor patch <<< "$stripped"
-          case "$type" in
-            major) major=$((major + 1)); minor=0; patch=0 ;;
-            minor) minor=$((minor + 1)); patch=0 ;;
-            patch) patch=$((patch + 1)) ;;
-          esac
-          echo "v${major}.${minor}.${patch}"
-        }
-
-        # ── Phase 1: Detect changes ──────────────────────────────────
-
-        echo -e "${BOLD}Phase 1: Detecting changes...${RESET}"
-
-        stored=$(get_stored_checksum)
-        current=$(compute_checksum)
-
-        if [ -z "$stored" ]; then
-          echo -e "  ${YELLOW}v1alpha1${RESET}: changed (no stored checksum)"
-        elif [ "$stored" != "$current" ]; then
-          echo -e "  ${YELLOW}v1alpha1${RESET}: changed"
+        if [ -z "{{.VERSION}}" ]; then
+          VERSION=$(yq '.opm.v1alpha1.version' {{.VERSION_FILE}})
         else
-          echo -e "  v1alpha1: unchanged"
-          echo ""
-          echo -e "${GREEN}No changes detected. Nothing to publish.${RESET}"
-          exit 0
+          VERSION="{{.VERSION}}"
         fi
+        echo "Publishing opm/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.OPM_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published opm/v1alpha1@${VERSION}"
 
-        version=$(get_version)
-        new_version=$(bump_version "$version" "$BUMP_TYPE")
-
-        # ── Dry run exit ─────────────────────────────────────────────
-
-        if [ "$DRY_RUN" = "true" ]; then
-          echo ""
-          echo -e "${BOLD}Dry run — planned actions:${RESET}"
-          echo -e "  ${YELLOW}v1alpha1${RESET}: $version -> ${GREEN}$new_version${RESET} (bump + publish)"
-          echo ""
-          echo -e "${DIM}No changes made (dry run).${RESET}"
-          exit 0
-        fi
-
-        # ── Phase 2: Bump, tidy, publish, tag ───────────────────────
-
-        echo ""
-        echo -e "${BOLD}Phase 2: Publishing...${RESET}"
-        echo ""
-        echo -e "${BOLD}${GREEN}[v1alpha1]${RESET} $version -> ${GREEN}$new_version${RESET}"
-
-        # 1. Bump version
-        yq -i ".v1alpha1.version = \"${new_version}\"" "$VERSION_FILE"
-
-        # 2. Tidy
-        echo "  Tidying..."
-        (cd "$MODULE_DIR" && cue mod tidy)
-
-        # 3. Publish
-        echo "  Publishing v1alpha1@${new_version}..."
-        if ! (cd "$MODULE_DIR" && cue mod publish "$new_version"); then
-          echo -e "  ${RED}Failed to publish v1alpha1${RESET}"
-          exit 1
-        fi
-
-        # 4. Tag
-        git tag "catalog/v1alpha1/${new_version}"
-        echo "  Tagged catalog/v1alpha1/${new_version}"
-
-        # 5. Store checksum
-        new_checksum=$(compute_checksum)
-        yq -i ".v1alpha1.checksum = \"${new_checksum}\"" "$VERSION_FILE"
-        echo -e "  Checksum: ${DIM}${new_checksum:0:12}...${RESET}"
-
-        echo ""
-        echo -e "${BOLD}${GREEN}Done.${RESET} Published v1alpha1@${new_version}"
-
-  # ============================================================================
-  # Publishing — v1alpha2
-  # ============================================================================
-
-  publish:v1alpha2:
-    desc: Publish all v1alpha2 modules (opm, gateway_api, cert_manager) using versions from versions.yml
+  publish:gateway_api:
+    desc: Publish gateway_api/v1alpha1 to local registry
     summary: |
-      Publish all three v1alpha2 CUE modules to the local registry at the versions
-      recorded in versions.yml. Does NOT detect changes — always publishes.
+      Publish the gateway_api/v1alpha1 module to the local OCI registry.
 
       Usage:
-        task publish:v1alpha2
+        task publish:gateway_api
+        task publish:gateway_api VERSION=v1.0.1
+    vars:
+      VERSION: '{{.VERSION | default ""}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+    cmds:
+      - |
+        if [ -z "{{.VERSION}}" ]; then
+          VERSION=$(yq '.gateway_api.v1alpha1.version' {{.VERSION_FILE}})
+        else
+          VERSION="{{.VERSION}}"
+        fi
+        echo "Publishing gateway_api/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.GATEWAY_API_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published gateway_api/v1alpha1@${VERSION}"
+
+  publish:cert_manager:
+    desc: Publish cert_manager/v1alpha1 to local registry
+    summary: |
+      Publish the cert_manager/v1alpha1 module to the local OCI registry.
+
+      Usage:
+        task publish:cert_manager
+        task publish:cert_manager VERSION=v1.0.1
+    vars:
+      VERSION: '{{.VERSION | default ""}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+    cmds:
+      - |
+        if [ -z "{{.VERSION}}" ]; then
+          VERSION=$(yq '.cert_manager.v1alpha1.version' {{.VERSION_FILE}})
+        else
+          VERSION="{{.VERSION}}"
+        fi
+        echo "Publishing cert_manager/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.CERT_MANAGER_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published cert_manager/v1alpha1@${VERSION}"
+
+  # ============================================================================
+  # Publishing — aggregate
+  # ============================================================================
+
+  publish:local:
+    desc: Publish all domain modules to local registry in dependency order
+    summary: |
+      Publish all four domain modules in dependency order:
+        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1
+
+      Uses the version recorded in versions.yml for each module.
+
+      Usage:
+        task publish:local
     preconditions:
       - sh: command -v yq >/dev/null 2>&1
         msg: "yq is required. Install: brew install yq"
@@ -519,45 +475,49 @@ tasks:
         set -euo pipefail
         BOLD='\033[1m'; GREEN='\033[0;32m'; RED='\033[0;31m'; RESET='\033[0m'
 
-        echo -e "${BOLD}Publishing v1alpha2 modules...${RESET}"
+        echo -e "${BOLD}Publishing all domain modules...${RESET}"
 
         publish_module() {
-          local name="$1"
+          local key="$1"
           local dir="$2"
-          local key="$3"
           local version
-          version=$(yq ".v1alpha2.${key}.version" "{{.VERSION_FILE}}")
-          echo -e "${BOLD}[${name}]${RESET} publishing @ ${version}..."
-          cd "${dir}" && cue mod tidy
-          cd ../../
+          version=$(yq ".${key}.v1alpha1.version" "{{.VERSION_FILE}}")
+          echo -e "${BOLD}[${key}/v1alpha1]${RESET} publishing @ ${version}..."
           if (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod publish "${version}"); then
-            echo -e "  ${GREEN}✔ ${name}@${version}${RESET}"
+            echo -e "  ${GREEN}✔ ${key}/v1alpha1@${version}${RESET}"
           else
-            echo -e "  ${RED}✗ Failed to publish ${name}${RESET}"
+            echo -e "  ${RED}✗ Failed to publish ${key}/v1alpha1${RESET}"
             exit 1
           fi
         }
 
-        publish_module "opmodel.dev/opm@v1"          "{{.V1ALPHA2_OPM_DIR}}"          "opm"
-        publish_module "opmodel.dev/gateway_api@v1"  "{{.V1ALPHA2_GATEWAY_DIR}}"      "gateway_api"
-        publish_module "opmodel.dev/cert_manager@v1" "{{.V1ALPHA2_CERT_MANAGER_DIR}}"  "cert_manager"
+        publish_module "core"         "{{.CORE_DIR}}"
+        publish_module "opm"          "{{.OPM_DIR}}"
+        publish_module "gateway_api"  "{{.GATEWAY_API_DIR}}"
+        publish_module "cert_manager" "{{.CERT_MANAGER_DIR}}"
 
         echo ""
-        echo -e "${BOLD}${GREEN}Done.${RESET} All v1alpha2 modules published."
+        echo -e "${BOLD}${GREEN}Done.${RESET} All domain modules published."
 
-  publish:v1alpha2:smart:
-    desc: Detect changes across v1alpha2 modules, bump versions independently, and publish changed modules
+  publish:smart:
+    desc: Detect changes per domain, bump versions independently, and publish changed modules
+    deps:
+      - fmt
+      - vet
     summary: |
-      For each v1alpha2 module (opm, gateway_api, cert_manager), computes a SHA-256
-      checksum of .cue files (excluding cue.mod/), compares with the stored checksum
-      in versions.yml, and publishes only modules that changed.
+      For each domain module, computes a SHA-256 checksum of .cue files
+      (excluding cue.mod/), compares with the stored checksum in versions.yml,
+      and publishes only modules that changed.
+
+      Modules are published in dependency order:
+        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1
 
       Each module is versioned independently. A patch bump is applied by default.
 
       Usage:
-        task publish:v1alpha2:smart                  # Detect, bump patch, publish
-        task publish:v1alpha2:smart DRY_RUN=true     # Preview without executing
-        task publish:v1alpha2:smart TYPE=minor        # Minor bump instead of patch
+        task publish:smart                   # Detect, bump patch, publish
+        task publish:smart DRY_RUN=true      # Preview without executing
+        task publish:smart TYPE=minor        # Minor bump instead of patch
     vars:
       DRY_RUN: '{{.DRY_RUN | default "false"}}'
       TYPE: '{{.TYPE | default "patch"}}'
@@ -565,7 +525,7 @@ tasks:
       - sh: command -v yq >/dev/null 2>&1
         msg: "yq is required. Install: brew install yq"
       - sh: command -v cue >/dev/null 2>&1
-        msg: "cue is required"
+        msg: "cue is required. Install: go install cuelang.org/go/cmd/cue@latest"
       - sh: command -v git >/dev/null 2>&1
         msg: "git is required"
     cmds:
@@ -596,61 +556,39 @@ tasks:
 
         echo -e "${BOLD}Phase 1: Detecting changes...${RESET}"
 
-        CHANGED_NAMES=(); CHANGED_DIRS=(); CHANGED_KEYS=()
+        CHANGED_KEYS=()
+        CHANGED_DIRS=()
         declare -A NEW_VERSIONS
 
-        # --- opmodel.dev/opm@v1 ---
-        _stored=$(yq ".v1alpha2.opm.checksum // \"\"" "$VERSION_FILE")
-        _current=$(compute_checksum "{{.V1ALPHA2_OPM_DIR}}")
-        _version=$(yq ".v1alpha2.opm.version" "$VERSION_FILE")
-        _new_version=$(bump_version "$_version" "$BUMP_TYPE")
-        if [ -z "$_stored" ]; then
-          echo -e "  ${YELLOW}opmodel.dev/opm@v1${RESET}: changed (no stored checksum) → ${_version} → ${GREEN}${_new_version}${RESET}"
-          CHANGED_NAMES+=("opmodel.dev/opm@v1"); CHANGED_DIRS+=("{{.V1ALPHA2_OPM_DIR}}"); CHANGED_KEYS+=("opm")
-          NEW_VERSIONS["opm"]="$_new_version"
-        elif [ "$_stored" != "$_current" ]; then
-          echo -e "  ${YELLOW}opmodel.dev/opm@v1${RESET}: changed → ${_version} → ${GREEN}${_new_version}${RESET}"
-          CHANGED_NAMES+=("opmodel.dev/opm@v1"); CHANGED_DIRS+=("{{.V1ALPHA2_OPM_DIR}}"); CHANGED_KEYS+=("opm")
-          NEW_VERSIONS["opm"]="$_new_version"
-        else
-          echo -e "  opmodel.dev/opm@v1: unchanged"
-        fi
+        check_module() {
+          local key="$1"
+          local dir="$2"
+          local stored current version new_version
+          stored=$(yq ".${key}.v1alpha1.checksum // \"\"" "$VERSION_FILE")
+          current=$(compute_checksum "$dir")
+          version=$(yq ".${key}.v1alpha1.version" "$VERSION_FILE")
+          new_version=$(bump_version "$version" "$BUMP_TYPE")
+          if [ -z "$stored" ]; then
+            echo -e "  ${YELLOW}${key}/v1alpha1${RESET}: changed (no stored checksum) → ${version} → ${GREEN}${new_version}${RESET}"
+            CHANGED_KEYS+=("$key")
+            CHANGED_DIRS+=("$dir")
+            NEW_VERSIONS["$key"]="$new_version"
+          elif [ "$stored" != "$current" ]; then
+            echo -e "  ${YELLOW}${key}/v1alpha1${RESET}: changed → ${version} → ${GREEN}${new_version}${RESET}"
+            CHANGED_KEYS+=("$key")
+            CHANGED_DIRS+=("$dir")
+            NEW_VERSIONS["$key"]="$new_version"
+          else
+            echo -e "  ${key}/v1alpha1: unchanged"
+          fi
+        }
 
-        # --- opmodel.dev/gateway_api@v1 ---
-        _stored=$(yq ".v1alpha2.gateway_api.checksum // \"\"" "$VERSION_FILE")
-        _current=$(compute_checksum "{{.V1ALPHA2_GATEWAY_DIR}}")
-        _version=$(yq ".v1alpha2.gateway_api.version" "$VERSION_FILE")
-        _new_version=$(bump_version "$_version" "$BUMP_TYPE")
-        if [ -z "$_stored" ]; then
-          echo -e "  ${YELLOW}opmodel.dev/gateway_api@v1${RESET}: changed (no stored checksum) → ${_version} → ${GREEN}${_new_version}${RESET}"
-          CHANGED_NAMES+=("opmodel.dev/gateway_api@v1"); CHANGED_DIRS+=("{{.V1ALPHA2_GATEWAY_DIR}}"); CHANGED_KEYS+=("gateway_api")
-          NEW_VERSIONS["gateway_api"]="$_new_version"
-        elif [ "$_stored" != "$_current" ]; then
-          echo -e "  ${YELLOW}opmodel.dev/gateway_api@v1${RESET}: changed → ${_version} → ${GREEN}${_new_version}${RESET}"
-          CHANGED_NAMES+=("opmodel.dev/gateway_api@v1"); CHANGED_DIRS+=("{{.V1ALPHA2_GATEWAY_DIR}}"); CHANGED_KEYS+=("gateway_api")
-          NEW_VERSIONS["gateway_api"]="$_new_version"
-        else
-          echo -e "  opmodel.dev/gateway_api@v1: unchanged"
-        fi
+        check_module "core"         "{{.CORE_DIR}}"
+        check_module "opm"          "{{.OPM_DIR}}"
+        check_module "gateway_api"  "{{.GATEWAY_API_DIR}}"
+        check_module "cert_manager" "{{.CERT_MANAGER_DIR}}"
 
-        # --- opmodel.dev/cert_manager@v1 ---
-        _stored=$(yq ".v1alpha2.cert_manager.checksum // \"\"" "$VERSION_FILE")
-        _current=$(compute_checksum "{{.V1ALPHA2_CERT_MANAGER_DIR}}")
-        _version=$(yq ".v1alpha2.cert_manager.version" "$VERSION_FILE")
-        _new_version=$(bump_version "$_version" "$BUMP_TYPE")
-        if [ -z "$_stored" ]; then
-          echo -e "  ${YELLOW}opmodel.dev/cert_manager@v1${RESET}: changed (no stored checksum) → ${_version} → ${GREEN}${_new_version}${RESET}"
-          CHANGED_NAMES+=("opmodel.dev/cert_manager@v1"); CHANGED_DIRS+=("{{.V1ALPHA2_CERT_MANAGER_DIR}}"); CHANGED_KEYS+=("cert_manager")
-          NEW_VERSIONS["cert_manager"]="$_new_version"
-        elif [ "$_stored" != "$_current" ]; then
-          echo -e "  ${YELLOW}opmodel.dev/cert_manager@v1${RESET}: changed → ${_version} → ${GREEN}${_new_version}${RESET}"
-          CHANGED_NAMES+=("opmodel.dev/cert_manager@v1"); CHANGED_DIRS+=("{{.V1ALPHA2_CERT_MANAGER_DIR}}"); CHANGED_KEYS+=("cert_manager")
-          NEW_VERSIONS["cert_manager"]="$_new_version"
-        else
-          echo -e "  opmodel.dev/cert_manager@v1: unchanged"
-        fi
-
-        if [ ${#CHANGED_NAMES[@]} -eq 0 ]; then
+        if [ ${#CHANGED_KEYS[@]} -eq 0 ]; then
           echo ""
           echo -e "${GREEN}No changes detected. Nothing to publish.${RESET}"
           exit 0
@@ -662,32 +600,55 @@ tasks:
           exit 0
         fi
 
+        # ── Phase 2: Publish in dependency order ──────────────────────
+
         echo ""
         echo -e "${BOLD}Phase 2: Publishing...${RESET}"
 
-        for i in "${!CHANGED_NAMES[@]}"; do
-          name="${CHANGED_NAMES[$i]}"
-          dir="${CHANGED_DIRS[$i]}"
-          key="${CHANGED_KEYS[$i]}"
-          new_version="${NEW_VERSIONS[$key]}"
+        publish_if_changed() {
+          local key="$1"
+          local dir="$2"
 
-          echo -e "${BOLD}${GREEN}[${name}]${RESET} → ${GREEN}${new_version}${RESET}"
+          local found=false
+          for k in "${CHANGED_KEYS[@]}"; do
+            [ "$k" = "$key" ] && found=true && break
+          done
+          [ "$found" = false ] && return 0
 
-          yq -i ".v1alpha2.${key}.version = \"${new_version}\"" "$VERSION_FILE"
+          local new_version="${NEW_VERSIONS[$key]}"
+          echo ""
+          echo -e "${BOLD}${GREEN}[${key}/v1alpha1]${RESET} → ${GREEN}${new_version}${RESET}"
 
-          echo "  Publishing..."
+          # Bump version in versions.yml
+          yq -i ".${key}.v1alpha1.version = \"${new_version}\"" "$VERSION_FILE"
+
+          # Tidy
+          echo "  Tidying..."
+          (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod tidy)
+
+          # Publish
+          echo "  Publishing ${key}/v1alpha1@${new_version}..."
           if ! (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod publish "${new_version}"); then
-            echo -e "  ${RED}Failed to publish ${name}${RESET}"
+            echo -e "  ${RED}Failed to publish ${key}/v1alpha1${RESET}"
             exit 1
           fi
 
-          git tag "catalog/v1alpha2/${key}/${new_version}"
-          echo "  Tagged catalog/v1alpha2/${key}/${new_version}"
+          # Tag — format: catalog/<domain>/v1alpha1/<version>
+          git tag "catalog/${key}/v1alpha1/${new_version}"
+          echo "  Tagged catalog/${key}/v1alpha1/${new_version}"
 
+          # Store updated checksum
+          local new_checksum
           new_checksum=$(compute_checksum "$dir")
-          yq -i ".v1alpha2.${key}.checksum = \"${new_checksum}\"" "$VERSION_FILE"
+          yq -i ".${key}.v1alpha1.checksum = \"${new_checksum}\"" "$VERSION_FILE"
           echo -e "  Checksum: ${DIM}${new_checksum:0:12}...${RESET}"
-        done
+        }
+
+        # Publish in strict dependency order: core → opm → gateway_api, cert_manager
+        publish_if_changed "core"         "{{.CORE_DIR}}"
+        publish_if_changed "opm"          "{{.OPM_DIR}}"
+        publish_if_changed "gateway_api"  "{{.GATEWAY_API_DIR}}"
+        publish_if_changed "cert_manager" "{{.CERT_MANAGER_DIR}}"
 
         echo ""
-        echo -e "${BOLD}${GREEN}Done.${RESET} Published ${#CHANGED_NAMES[@]} v1alpha2 module(s)."
+        echo -e "${BOLD}${GREEN}Done.${RESET} Published ${#CHANGED_KEYS[@]} domain module(s)."

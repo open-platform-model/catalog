@@ -140,7 +140,7 @@ cue vet -d '#DefinitionName' ./... path/to/testdata/example_valid_case.yaml
 
 ### Schema Design
 
-- Reuse shared schemas from `opmodel.dev/schemas@v1` instead of duplicating constraints
+- Reuse shared schemas from `opmodel.dev/opm/v1alpha1/schemas@v1` instead of duplicating constraints
 - Compose via unification rather than copying fields
 - Keep module, resource, trait, and blueprint boundaries clear
 - Express intent as schemas and constraints, not procedural validation steps

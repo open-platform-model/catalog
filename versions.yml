@@ -1,17 +1,21 @@
-# v1alpha1 Module Version Registry
+# Catalog Module Version Registry
 # Format: {version: vMAJOR.MINOR.PATCH, checksum: sha256}
 # Checksum covers .cue files excluding cue.mod/ — used by publish:smart
+# Structure: <domain>.<api-version>.{version, checksum}
 
-v1alpha1:
-  version: v1.2.24
-  checksum: "2e3f4413b9790d8f970c2bb44c9d9f05c62a9e2c75ad0941b0c5d219930100c6"
-v1alpha2:
-  opm:
+core:
+  v1alpha1:
     version: v1.3.1
-    checksum: b3c0109014f339cff0a2d37c1f53058bb5750b03d06bff99f79149aaba3ecf7c
-  gateway_api:
-    version: v1.2.1
-    checksum: bb37ca81d39be2af10ff4809e1558278ae091ebc1e106e51b6ca8d17907ebdf0
-  cert_manager:
-    version: v1.2.1
-    checksum: 0b0e46cea4ed919bfe85e08eeea8f16d50b6a0e5a290a026bc41c2f527181f04
+    checksum: b5c05a3661fef9597589098af5f682d3ce31e367a7148d12c0699e50c426b8f4
+opm:
+  v1alpha1:
+    version: v1.4.1
+    checksum: 4fa1bdf2dd98519b9e683e91fe362f0a9f4515da2d3036522ecfd1fab4e198ec
+gateway_api:
+  v1alpha1:
+    version: v1.3.1
+    checksum: b71c9fac4db907c5ecaae857ec78719056f2814310b848ceef9730dacbdfb479
+cert_manager:
+  v1alpha1:
+    version: v1.3.1
+    checksum: 55dace5954ccd58cf1221951521b7e0f794d1eb5bd4fe47467e4e11f11300210
