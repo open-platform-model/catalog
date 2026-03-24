@@ -13,8 +13,8 @@ opm:
     checksum: 4fa1bdf2dd98519b9e683e91fe362f0a9f4515da2d3036522ecfd1fab4e198ec
 gateway_api:
   v1alpha1:
-    version: v1.3.1
-    checksum: b71c9fac4db907c5ecaae857ec78719056f2814310b848ceef9730dacbdfb479
+    version: v1.3.2
+    checksum: 573ea79673ea55496eed650513f92101b1f8a2e083f2fb2ec253e5e52601b27b
 cert_manager:
   v1alpha1:
     version: v1.3.1

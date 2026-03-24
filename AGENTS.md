@@ -17,12 +17,11 @@ Read these documents when entering this repository:
 - Read `CONSTITUTION.md` before changing implementation.
 - Read `docs/STYLE.md` before writing or editing documentation.
 - Keep `v1alpha1/INDEX.md` updated when adding, removing, or renaming definitions.
-  When updating `v1alpha1/INDEX.md`:
-  1. Add a row to the correct section table for every new exported definition (`#Name`).
-  2. Remove or rename rows whenever a definition is deleted or renamed.
-  3. If a new `.cue` file doesn't fit an existing section, add a new `###` subsection in the correct `##` group.
-  4. Keep file paths relative to `v1alpha1/` (e.g. `core/bundle/bundle.cue`, not an absolute path).
-  5. Keep the Project Structure tree in sync with any new or removed directories.
+  Run `task generate:index` from the `catalog/` directory to regenerate all INDEX.md files.
+  Run `task generate:index:check` to verify INDEX.md files are up-to-date.
+  Review generated output before committing — the script extracts doc comments as descriptions.
+  Keep file paths relative to `v1alpha1/` (e.g. `core/bundle/bundle.cue`, not an absolute path).
+  Keep the Project Structure tree in sync with any new or removed directories.
 
 ## Repository Layout
 
