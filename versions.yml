@@ -9,8 +9,8 @@ core:
     checksum: b5c05a3661fef9597589098af5f682d3ce31e367a7148d12c0699e50c426b8f4
 opm:
   v1alpha1:
-    version: v1.4.1
-    checksum: 4fa1bdf2dd98519b9e683e91fe362f0a9f4515da2d3036522ecfd1fab4e198ec
+    version: v1.5.3
+    checksum: 48a93d3eda2690b218fd4a6263e88c962cb578c21e1b9a3a9161e8e7388fdff9
 gateway_api:
   v1alpha1:
     version: v1.3.2
