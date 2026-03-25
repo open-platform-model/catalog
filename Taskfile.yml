@@ -588,6 +588,7 @@ tasks:
         msg: "git is required"
     cmds:
       - |
+        #!/usr/bin/env bash
         set -euo pipefail
 
         VERSION_FILE="{{.VERSION_FILE}}"
@@ -616,7 +617,7 @@ tasks:
 
         CHANGED_KEYS=()
         CHANGED_DIRS=()
-        declare -A NEW_VERSIONS
+        CHANGED_VERSIONS=()
 
         check_module() {
           local key="$1"
@@ -630,12 +631,12 @@ tasks:
             echo -e "  ${YELLOW}${key}/v1alpha1${RESET}: changed (no stored checksum) → ${version} → ${GREEN}${new_version}${RESET}"
             CHANGED_KEYS+=("$key")
             CHANGED_DIRS+=("$dir")
-            NEW_VERSIONS["$key"]="$new_version"
+            CHANGED_VERSIONS+=("$new_version")
           elif [ "$stored" != "$current" ]; then
             echo -e "  ${YELLOW}${key}/v1alpha1${RESET}: changed → ${version} → ${GREEN}${new_version}${RESET}"
             CHANGED_KEYS+=("$key")
             CHANGED_DIRS+=("$dir")
-            NEW_VERSIONS["$key"]="$new_version"
+            CHANGED_VERSIONS+=("$new_version")
           else
             echo -e "  ${key}/v1alpha1: unchanged"
           fi
@@ -658,22 +659,16 @@ tasks:
           exit 0
         fi
 
-        # ── Phase 2: Publish in dependency order ──────────────────────
+        # ── Phase 2: Publish changed modules ─────────────────────────
 
         echo ""
         echo -e "${BOLD}Phase 2: Publishing...${RESET}"
 
-        publish_if_changed() {
-          local key="$1"
-          local dir="$2"
+        for i in "${!CHANGED_KEYS[@]}"; do
+          key="${CHANGED_KEYS[$i]}"
+          dir="${CHANGED_DIRS[$i]}"
+          new_version="${CHANGED_VERSIONS[$i]}"
 
-          local found=false
-          for k in "${CHANGED_KEYS[@]}"; do
-            [ "$k" = "$key" ] && found=true && break
-          done
-          [ "$found" = false ] && return 0
-
-          local new_version="${NEW_VERSIONS[$key]}"
           echo ""
           echo -e "${BOLD}${GREEN}[${key}/v1alpha1]${RESET} → ${GREEN}${new_version}${RESET}"
 
@@ -696,17 +691,10 @@ tasks:
           echo "  Tagged catalog/${key}/v1alpha1/${new_version}"
 
           # Store updated checksum
-          local new_checksum
           new_checksum=$(compute_checksum "$dir")
           yq -i ".${key}.v1alpha1.checksum = \"${new_checksum}\"" "$VERSION_FILE"
           echo -e "  Checksum: ${DIM}${new_checksum:0:12}...${RESET}"
-        }
-
-        # Publish in strict dependency order: core → opm → gateway_api, cert_manager
-        publish_if_changed "core"         "{{.CORE_DIR}}"
-        publish_if_changed "opm"          "{{.OPM_DIR}}"
-        publish_if_changed "gateway_api"  "{{.GATEWAY_API_DIR}}"
-        publish_if_changed "cert_manager" "{{.CERT_MANAGER_DIR}}"
+        done
 
         echo ""
         echo -e "${BOLD}${GREEN}Done.${RESET} Published ${#CHANGED_KEYS[@]} domain module(s)."
