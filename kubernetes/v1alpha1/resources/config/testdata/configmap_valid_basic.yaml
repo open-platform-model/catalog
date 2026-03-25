@@ -1,0 +1,10 @@
+metadata:
+  name: my-config
+  namespace: default
+  labels:
+    app: my-app
+data:
+  app.conf: |
+    key=value
+    debug=false
+  log_level: info

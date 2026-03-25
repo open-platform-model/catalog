@@ -19,3 +19,7 @@ cert_manager:
   v1alpha1:
     version: v1.3.1
     checksum: 55dace5954ccd58cf1221951521b7e0f794d1eb5bd4fe47467e4e11f11300210
+kubernetes:
+  v1alpha1:
+    version: v1.0.1
+    checksum: "988f6c87c7a4a98963a1614709ea722d5a15594a6552a3306e0275df32f0a903"

@@ -2,7 +2,7 @@ version: '3'
 
 # Catalog CUE Module Taskfile
 # Tasks for the domain-structured modules:
-#   core/v1alpha1, opm/v1alpha1, gateway_api/v1alpha1, cert_manager/v1alpha1
+#   core/v1alpha1, opm/v1alpha1, gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1alpha1, kubernetes/v1alpha1
 #
 # Usage:
 #   task fmt
@@ -48,7 +48,7 @@ tasks:
     desc: Format CUE files across all domain modules
     cmds:
       - |
-        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}"; do
+        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.KUBERNETES_DIR}}"; do
           echo "Formatting ${dir}..."
           (cd "{{.TASKFILE_DIR}}/${dir}" && cue fmt ./...)
         done
@@ -59,10 +59,10 @@ tasks:
   # ============================================================================
 
   vet:
-    desc: Validate all four domain CUE modules in dependency order
+    desc: Validate all five domain CUE modules in dependency order
     summary: |
-      Validates all four domain modules in dependency order:
-        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1
+      Validates all five domain modules in dependency order:
+        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1alpha1
 
       Usage:
         task vet
@@ -72,6 +72,8 @@ tasks:
       - task: vet:opm
       - task: vet:gateway_api
       - task: vet:cert_manager
+      - task: vet:kubernetes
+      - task: vet:kubernetes
 
   vet:core:
     desc: Validate core/v1alpha1 CUE module
@@ -118,6 +120,17 @@ tasks:
         cd "{{.TASKFILE_DIR}}/{{.CERT_MANAGER_DIR}}" && cue vet {{.VET_FLAGS}} ./...
         echo "  ✔ cert_manager/v1alpha1"
 
+  vet:kubernetes:
+    desc: Validate kubernetes/v1alpha1 CUE module
+    vars:
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
+    cmds:
+      - |
+        echo "Validating {{.KUBERNETES_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.KUBERNETES_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "  ✔ kubernetes/v1alpha1"
+
   # ============================================================================
   # Testing
   # ============================================================================
@@ -135,11 +148,14 @@ tasks:
         task test:opm
         task test:gateway_api
         task test:cert_manager
+        task test:kubernetes
     cmds:
       - task: test:core
       - task: test:opm
       - task: test:gateway_api
       - task: test:cert_manager
+      - task: test:kubernetes
+      - task: test:kubernetes
 
   test:core:
     desc: Run core/v1alpha1 structural tests (@if(test) files)
@@ -217,6 +233,24 @@ tasks:
           exit 1
         fi
 
+  test:kubernetes:
+    desc: Run kubernetes/v1alpha1 structural tests (@if(test) files)
+    summary: |
+      Runs all *_tests.cue files tagged @if(test) in the kubernetes/v1alpha1 module.
+
+      Usage:
+        task test:kubernetes
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        echo "Testing opmodel.dev/kubernetes/v1alpha1 (structural)..."
+        if cd "{{.TASKFILE_DIR}}/{{.KUBERNETES_DIR}}" && cue vet -t test ./...; then
+          echo -e "${GREEN}✔ kubernetes/v1alpha1 — Successful${NC}"
+        else
+          echo -e "${RED}✗ kubernetes/v1alpha1 — Failed${NC}"
+          exit 1
+        fi
+
   test:strict:
     desc: Run opm/v1alpha1 tests with full concreteness checks (-c flag)
     summary: |
@@ -246,14 +280,14 @@ tasks:
     desc: Tidy dependencies across all domain modules
     cmds:
       - |
-        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}"; do
-          echo "Tidying ${dir}..."
-          (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod tidy)
+        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.KUBERNETES_DIR}}"; do
+          echo "Formatting ${dir}..."
+          (cd "{{.TASKFILE_DIR}}/${dir}" && cue fmt ./...)
         done
         echo "Done"
 
   eval:
-    desc: Evaluate CUE files in a specific module (DOMAIN=core|opm|gateway_api|cert_manager)
+    desc: Evaluate CUE files in a specific module (DOMAIN=core|opm|gateway_api|cert_manager|kubernetes)
     summary: |
       Evaluate CUE files in a specific domain module.
 
@@ -270,8 +304,9 @@ tasks:
           opm)          DIR="{{.OPM_DIR}}" ;;
           gateway_api)  DIR="{{.GATEWAY_API_DIR}}" ;;
           cert_manager) DIR="{{.CERT_MANAGER_DIR}}" ;;
+          kubernetes)   DIR="{{.KUBERNETES_DIR}}" ;;
           *)
-            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, gateway_api, or cert_manager."
+            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, gateway_api, cert_manager, or kubernetes."
             exit 1
             ;;
         esac
@@ -304,6 +339,8 @@ tasks:
       - bash .tasks/generate-index.sh opm/v1alpha1 > opm/v1alpha1/INDEX.md
       - bash .tasks/generate-index.sh gateway_api/v1alpha1 > gateway_api/v1alpha1/INDEX.md
       - bash .tasks/generate-index.sh cert_manager/v1alpha1 > cert_manager/v1alpha1/INDEX.md
+      - bash .tasks/generate-index.sh kubernetes/v1alpha1 > kubernetes/v1alpha1/INDEX.md
+      - bash .tasks/generate-index.sh kubernetes/v1alpha1 > kubernetes/v1alpha1/INDEX.md
 
   generate:index:check:
     desc: Verify INDEX.md files match generated output (exits non-zero if any differ)
@@ -339,6 +376,8 @@ tasks:
         check_module opm/v1alpha1          || FAILED=1
         check_module gateway_api/v1alpha1  || FAILED=1
         check_module cert_manager/v1alpha1 || FAILED=1
+        check_module kubernetes/v1alpha1   || FAILED=1
+        check_module kubernetes/v1alpha1   || FAILED=1
 
         if [[ "$FAILED" -eq 1 ]]; then
           echo ""
@@ -366,9 +405,11 @@ tasks:
         echo "opm/v1alpha1:          $(yq '.opm.v1alpha1.version' {{.VERSION_FILE}})"
         echo "gateway_api/v1alpha1:  $(yq '.gateway_api.v1alpha1.version' {{.VERSION_FILE}})"
         echo "cert_manager/v1alpha1: $(yq '.cert_manager.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "kubernetes/v1alpha1:   $(yq '.kubernetes.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "kubernetes/v1alpha1:   $(yq '.kubernetes.v1alpha1.version' {{.VERSION_FILE}})"
 
   version:bump:
-    desc: Bump version for a domain module (DOMAIN=core|opm|gateway_api|cert_manager TYPE=patch/minor/major)
+    desc: Bump version for a domain module (DOMAIN=core|opm|gateway_api|cert_manager|kubernetes TYPE=patch/minor/major)
     summary: |
       Bump the version for a specific domain module following SemVer.
 
@@ -385,9 +426,9 @@ tasks:
     cmds:
       - |
         case "{{.DOMAIN}}" in
-          core|opm|gateway_api|cert_manager) ;;
+          core|opm|gateway_api|cert_manager|kubernetes) ;;
           *)
-            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, gateway_api, or cert_manager."
+            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, gateway_api, cert_manager, or kubernetes."
             exit 1
             ;;
         esac
@@ -509,6 +550,30 @@ tasks:
         cd "{{.TASKFILE_DIR}}/{{.CERT_MANAGER_DIR}}" && cue mod publish "${VERSION}"
         echo "Published cert_manager/v1alpha1@${VERSION}"
 
+  publish:kubernetes:
+    desc: Publish kubernetes/v1alpha1 to local registry
+    summary: |
+      Publish the kubernetes/v1alpha1 module to the local OCI registry.
+
+      Usage:
+        task publish:kubernetes
+        task publish:kubernetes VERSION=v0.1.1
+    vars:
+      VERSION: '{{.VERSION | default ""}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+    cmds:
+      - |
+        if [ -z "{{.VERSION}}" ]; then
+          VERSION=$(yq '.kubernetes.v1alpha1.version' {{.VERSION_FILE}})
+        else
+          VERSION="{{.VERSION}}"
+        fi
+        echo "Publishing kubernetes/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.KUBERNETES_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published kubernetes/v1alpha1@${VERSION}"
+
   # ============================================================================
   # Publishing — aggregate
   # ============================================================================
@@ -516,8 +581,8 @@ tasks:
   publish:local:
     desc: Publish all domain modules to local registry in dependency order
     summary: |
-      Publish all four domain modules in dependency order:
-        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1
+      Publish all five domain modules in dependency order:
+        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1alpha1
 
       Uses the version recorded in versions.yml for each module.
 
@@ -553,6 +618,7 @@ tasks:
         publish_module "opm"          "{{.OPM_DIR}}"
         publish_module "gateway_api"  "{{.GATEWAY_API_DIR}}"
         publish_module "cert_manager" "{{.CERT_MANAGER_DIR}}"
+        publish_module "kubernetes"   "{{.KUBERNETES_DIR}}"
 
         echo ""
         echo -e "${BOLD}${GREEN}Done.${RESET} All domain modules published."
@@ -568,7 +634,7 @@ tasks:
       and publishes only modules that changed.
 
       Modules are published in dependency order:
-        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1
+        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1alpha1
 
       Each module is versioned independently. A patch bump is applied by default.
 
@@ -646,6 +712,7 @@ tasks:
         check_module "opm"          "{{.OPM_DIR}}"
         check_module "gateway_api"  "{{.GATEWAY_API_DIR}}"
         check_module "cert_manager" "{{.CERT_MANAGER_DIR}}"
+        check_module "kubernetes"   "{{.KUBERNETES_DIR}}"
 
         if [ ${#CHANGED_KEYS[@]} -eq 0 ]; then
           echo ""
