@@ -52,6 +52,8 @@ import (
 		"opmodel.dev/opm/v1alpha1/traits/workload/init-containers@v1":    workload_traits.#InitContainersTrait
 		"opmodel.dev/opm/v1alpha1/traits/security/security-context@v1":   security_traits.#SecurityContextTrait
 		"opmodel.dev/opm/v1alpha1/traits/security/workload-identity@v1":  security_traits.#WorkloadIdentityTrait
+		"opmodel.dev/opm/v1alpha1/traits/security/host-pid@v1":           security_traits.#HostPIDTrait
+		"opmodel.dev/opm/v1alpha1/traits/security/host-ipc@v1":           security_traits.#HostIPCTrait
 		"opmodel.dev/opm/v1alpha1/traits/network/host-network@v1":        network_traits.#HostNetworkTrait
 	}
 
@@ -124,9 +126,17 @@ import (
 							hostNetwork: #component.spec.hostNetwork
 						}
 
+						if #component.spec.hostPid != _|_ {
+							hostPID: #component.spec.hostPid
+						}
+
+						if #component.spec.hostIpc != _|_ {
+							hostIPC: #component.spec.hostIpc
+						}
+
 						if #component.spec.securityContext != _|_ {
 							let _sc = #component.spec.securityContext
-							if _sc.runAsNonRoot != _|_ || _sc.runAsUser != _|_ || _sc.runAsGroup != _|_ || _sc.fsGroup != _|_ {
+							if _sc.runAsNonRoot != _|_ || _sc.runAsUser != _|_ || _sc.runAsGroup != _|_ || _sc.fsGroup != _|_ || _sc.supplementalGroups != _|_ {
 								securityContext: {
 									if _sc.runAsNonRoot != _|_ {
 										runAsNonRoot: _sc.runAsNonRoot
@@ -139,6 +149,9 @@ import (
 									}
 									if _sc.fsGroup != _|_ {
 										fsGroup: _sc.fsGroup
+									}
+									if _sc.supplementalGroups != _|_ {
+										supplementalGroups: _sc.supplementalGroups
 									}
 								}
 							}
