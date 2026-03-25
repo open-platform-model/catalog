@@ -219,7 +219,6 @@ CUE module: `opmodel.dev/opm/v1alpha1@v1`
 | `#AutoscalingSpec` | `schemas/workload.cue` |  |
 | `#ContainerSchema` | `schemas/workload.cue` | Container specification |
 | `#CronJobConfigSchema` | `schemas/workload.cue` |  |
-| `#DaemonWorkloadSchema` | `schemas/workload.cue` |  |
 | `#DisruptionBudgetSchema` | `schemas/workload.cue` | Availability constraints during voluntary disruptions |
 | `#EnvFromSource` | `schemas/workload.cue` | Bulk injection source — inject all keys from a ConfigMap or Secret as env vars |
 | `#EnvVarSchema` | `schemas/workload.cue` | Environment variable specification |
@@ -237,12 +236,9 @@ CUE module: `opmodel.dev/opm/v1alpha1@v1`
 | `#ResourceRequirementsSchema` | `schemas/workload.cue` |  |
 | `#RestartPolicySchema` | `schemas/workload.cue` |  |
 | `#ScalingSchema` | `schemas/workload.cue` |  |
-| `#ScheduledTaskWorkloadSchema` | `schemas/workload.cue` |  |
 | `#SidecarContainersSchema` | `schemas/workload.cue` |  |
 | `#SizingSchema` | `schemas/workload.cue` |  |
-| `#StatefulWorkloadSchema` | `schemas/workload.cue` |  |
 | `#StatelessWorkloadSchema` | `schemas/workload.cue` |  |
-| `#TaskWorkloadSchema` | `schemas/workload.cue` |  |
 | `#UpdateStrategySchema` | `schemas/workload.cue` |  |
 | `#VerticalScalingSchema` | `schemas/workload.cue` |  |
 
@@ -652,6 +648,10 @@ CUE module: `opmodel.dev/opm/v1alpha1@v1`
 | `#EncryptionConfig` | `traits/security/encryption.cue` |  |
 | `#EncryptionConfigDefaults` | `traits/security/encryption.cue` |  |
 | `#EncryptionConfigTrait` | `traits/security/encryption.cue` |  |
+| `#HostIPC` | `traits/security/host_ipc.cue` |  |
+| `#HostIPCTrait` | `traits/security/host_ipc.cue` |  |
+| `#HostPID` | `traits/security/host_pid.cue` |  |
+| `#HostPIDTrait` | `traits/security/host_pid.cue` |  |
 | `#SecurityContext` | `traits/security/security_context.cue` |  |
 | `#SecurityContextDefaults` | `traits/security/security_context.cue` |  |
 | `#SecurityContextTrait` | `traits/security/security_context.cue` |  |
