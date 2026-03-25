@@ -1,16 +1,18 @@
 @if(test)
+
 package transformers
 
-// Test: minimal TLSRoute with gateway ref and backend port
-// Asserts: apiVersion, kind, name, namespace, parentRefs, backendRefs
+// Test: minimal TLSRoute with parentRefs
 _testTlsRouteMinimal: (#TlsRouteTransformer.#transform & {
 	#component: {
 		metadata: name: "secure-svc"
 		spec: tlsRoute: {
-			gatewayRef: name: "tls-gw"
-			rules: [{
-				backendPort: 8443
-			}]
+			spec: {
+				parentRefs: [{name: "tls-gw"}]
+				rules: [{
+					backendRefs: [{name: "secure-backend", port: 8443}]
+				}]
+			}
 		}
 	}
 	#context: (#TestCtx & {release: "my-release", namespace: "prod", component: "secure-svc"}).out
@@ -22,23 +24,18 @@ _testTlsRouteMinimal: (#TlsRouteTransformer.#transform & {
 		namespace: "prod"
 	}
 	spec: parentRefs: [{name: "tls-gw"}]
-	spec: rules: [{
-		backendRefs: [{
-			name: "my-release-secure-svc"
-			port: 8443
-		}]
-	}]
 }
 
-// Test: TLSRoute with hostnames
-// Asserts: spec.hostnames is propagated to TLSRoute output
+// Test: TLSRoute with hostnames — spec passthrough
 _testTlsRouteWithHostnames: (#TlsRouteTransformer.#transform & {
 	#component: {
 		metadata: name: "tls-svc"
 		spec: tlsRoute: {
-			gatewayRef: name: "gw"
-			hostnames: ["secure.example.com"]
-			rules: [{backendPort: 443}]
+			spec: {
+				parentRefs: [{name: "gw"}]
+				hostnames: ["secure.example.com"]
+				rules: [{backendRefs: [{name: "backend", port: 443}]}]
+			}
 		}
 	}
 	#context: (#TestCtx & {release: "rel", namespace: "ns", component: "tls-svc"}).out

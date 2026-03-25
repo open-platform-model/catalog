@@ -26,7 +26,7 @@ import (
 	spec: close({tcpRoute: schemas.#TcpRouteSchema})
 }
 
-#TcpRouteComponent: component.#Component & {
+#TcpRoute: component.#Component & {
 	#resources: {(#TcpRouteResource.metadata.fqn): #TcpRouteResource}
 }
 

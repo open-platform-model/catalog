@@ -26,7 +26,7 @@ import (
 	spec: close({referenceGrant: schemas.#ReferenceGrantSchema})
 }
 
-#ReferenceGrantComponent: component.#Component & {
+#ReferenceGrant: component.#Component & {
 	#resources: {(#ReferenceGrantResource.metadata.fqn): #ReferenceGrantResource}
 }
 

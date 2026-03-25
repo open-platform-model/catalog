@@ -26,7 +26,7 @@ import (
 	spec: close({tlsRoute: schemas.#TlsRouteSchema})
 }
 
-#TlsRouteComponent: component.#Component & {
+#TlsRoute: component.#Component & {
 	#resources: {(#TlsRouteResource.metadata.fqn): #TlsRouteResource}
 }
 

@@ -26,7 +26,7 @@ import (
 	spec: close({gatewayClass: schemas.#GatewayClassSchema})
 }
 
-#GatewayClassComponent: component.#Component & {
+#GatewayClass: component.#Component & {
 	#resources: {(#GatewayClassResource.metadata.fqn): #GatewayClassResource}
 }
 

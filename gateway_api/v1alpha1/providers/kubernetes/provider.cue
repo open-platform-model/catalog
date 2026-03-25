@@ -9,7 +9,7 @@ import (
 #Provider: provider.#Provider & {
 	metadata: {
 		name:        "kubernetes"
-		description: "Transforms Gateway API components to Kubernetes native resources"
+		description: "Pass-through transformers for native Gateway API resources"
 		version:     "0.1.0"
 
 		labels: {

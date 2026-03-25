@@ -2,18 +2,17 @@ package transformers
 
 import (
 	transformer "opmodel.dev/core/v1alpha1/transformer@v1"
-	gwcV1 "opmodel.dev/gateway_api/v1alpha1/schemas/gateway/gateway.networking.k8s.io/gatewayclass/v1@v1"
+	res "opmodel.dev/gateway_api/v1alpha1/resources/network@v1"
 )
 
-// GatewayClassTransformer creates Gateway API GatewayClasses from GatewayClassResource components.
-// GatewayClass is cluster-scoped so no namespace is emitted in metadata.
+// #GatewayClassTransformer passes native Gateway API GatewayClass resources through
+// with OPM context applied (name prefix, labels). GatewayClass is cluster-scoped — no namespace.
 #GatewayClassTransformer: transformer.#Transformer & {
 	metadata: {
 		modulePath:  "opmodel.dev/gateway-api/providers/kubernetes/transformers"
 		version:     "v1"
 		name:        "gateway-class-transformer"
-		description: "Creates cluster-scoped Gateway API GatewayClasses from GatewayClassResource components"
-
+		description: "Passes native Gateway API GatewayClass resources through with OPM context applied"
 		labels: {
 			"core.opmodel.dev/resource-category": "network"
 			"core.opmodel.dev/resource-type":     "gateway-class"
@@ -21,11 +20,7 @@ import (
 	}
 
 	requiredLabels: {}
-
-	requiredResources: {
-		"opmodel.dev/gateway-api/resources/network/gateway-class@v1": _
-	}
-
+	requiredResources: {(res.#GatewayClassResource.metadata.fqn): res.#GatewayClassResource}
 	optionalResources: {}
 	requiredTraits: {}
 	optionalTraits: {}
@@ -37,25 +32,21 @@ import (
 		_gatewayClass: #component.spec.gatewayClass
 		_name:         "\(#context.#moduleReleaseMetadata.name)-\(#component.metadata.name)"
 
-		output: gwcV1.#GatewayClass & {
+		output: {
 			apiVersion: "gateway.networking.k8s.io/v1"
 			kind:       "GatewayClass"
 			metadata: {
 				// GatewayClass is cluster-scoped — no namespace
 				name:   _name
 				labels: #context.labels
-				if len(#context.componentAnnotations) > 0 {
-					annotations: #context.componentAnnotations
+				if _gatewayClass.metadata != _|_ {
+					if _gatewayClass.metadata.annotations != _|_ {
+						annotations: _gatewayClass.metadata.annotations
+					}
 				}
 			}
-			spec: {
-				controllerName: _gatewayClass.controllerName
-				if _gatewayClass.description != _|_ {
-					description: _gatewayClass.description
-				}
-				if _gatewayClass.parametersRef != _|_ {
-					parametersRef: _gatewayClass.parametersRef
-				}
+			if _gatewayClass.spec != _|_ {
+				spec: _gatewayClass.spec
 			}
 		}
 	}

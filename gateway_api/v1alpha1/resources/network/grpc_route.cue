@@ -26,7 +26,7 @@ import (
 	spec: close({grpcRoute: schemas.#GrpcRouteSchema})
 }
 
-#GrpcRouteComponent: component.#Component & {
+#GrpcRoute: component.#Component & {
 	#resources: {(#GrpcRouteResource.metadata.fqn): #GrpcRouteResource}
 }
 

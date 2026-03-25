@@ -26,7 +26,7 @@ import (
 	spec: close({httpRoute: schemas.#HttpRouteSchema})
 }
 
-#HttpRouteComponent: component.#Component & {
+#HttpRoute: component.#Component & {
 	#resources: {(#HttpRouteResource.metadata.fqn): #HttpRouteResource}
 }
 

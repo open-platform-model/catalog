@@ -81,28 +81,28 @@ CUE module: `opmodel.dev/gateway_api/v1alpha1@v1`
 
 | Definition | File | Description |
 |---|---|---|
-| `#BackendTrafficPolicyComponent` | `resources/network/backend_traffic_policy.cue` |  |
+| `#BackendTrafficPolicy` | `resources/network/backend_traffic_policy.cue` |  |
 | `#BackendTrafficPolicyDefaults` | `resources/network/backend_traffic_policy.cue` |  |
 | `#BackendTrafficPolicyResource` | `resources/network/backend_traffic_policy.cue` |  |
-| `#GatewayClassComponent` | `resources/network/gateway_class.cue` |  |
+| `#GatewayClass` | `resources/network/gateway_class.cue` |  |
 | `#GatewayClassDefaults` | `resources/network/gateway_class.cue` |  |
 | `#GatewayClassResource` | `resources/network/gateway_class.cue` |  |
-| `#GatewayComponent` | `resources/network/gateway.cue` |  |
+| `#Gateway` | `resources/network/gateway.cue` |  |
 | `#GatewayDefaults` | `resources/network/gateway.cue` |  |
 | `#GatewayResource` | `resources/network/gateway.cue` |  |
-| `#GrpcRouteComponent` | `resources/network/grpc_route.cue` |  |
+| `#GrpcRoute` | `resources/network/grpc_route.cue` |  |
 | `#GrpcRouteDefaults` | `resources/network/grpc_route.cue` |  |
 | `#GrpcRouteResource` | `resources/network/grpc_route.cue` |  |
-| `#HttpRouteComponent` | `resources/network/http_route.cue` |  |
+| `#HttpRoute` | `resources/network/http_route.cue` |  |
 | `#HttpRouteDefaults` | `resources/network/http_route.cue` |  |
 | `#HttpRouteResource` | `resources/network/http_route.cue` |  |
-| `#ReferenceGrantComponent` | `resources/network/reference_grant.cue` |  |
+| `#ReferenceGrant` | `resources/network/reference_grant.cue` |  |
 | `#ReferenceGrantDefaults` | `resources/network/reference_grant.cue` |  |
 | `#ReferenceGrantResource` | `resources/network/reference_grant.cue` |  |
-| `#TcpRouteComponent` | `resources/network/tcp_route.cue` |  |
+| `#TcpRoute` | `resources/network/tcp_route.cue` |  |
 | `#TcpRouteDefaults` | `resources/network/tcp_route.cue` |  |
 | `#TcpRouteResource` | `resources/network/tcp_route.cue` |  |
-| `#TlsRouteComponent` | `resources/network/tls_route.cue` |  |
+| `#TlsRoute` | `resources/network/tls_route.cue` |  |
 | `#TlsRouteDefaults` | `resources/network/tls_route.cue` |  |
 | `#TlsRouteResource` | `resources/network/tls_route.cue` |  |
 

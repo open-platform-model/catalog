@@ -26,7 +26,7 @@ import (
 	spec: close({backendTrafficPolicy: schemas.#BackendTrafficPolicySchema})
 }
 
-#BackendTrafficPolicyComponent: component.#Component & {
+#BackendTrafficPolicy: component.#Component & {
 	#resources: {(#BackendTrafficPolicyResource.metadata.fqn): #BackendTrafficPolicyResource}
 }
 

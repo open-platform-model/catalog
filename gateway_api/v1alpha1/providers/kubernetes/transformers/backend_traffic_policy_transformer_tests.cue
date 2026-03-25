@@ -1,16 +1,18 @@
 @if(test)
+
 package transformers
 
-// Test: minimal BackendTrafficPolicy with targetRef
-// Asserts: apiVersion, kind, name, namespace, spec.targetRef
+// Test: minimal BackendTrafficPolicy with targetRefs
 _testBackendTrafficPolicyMinimal: (#BackendTrafficPolicyTransformer.#transform & {
 	#component: {
 		metadata: name: "api-policy"
 		spec: backendTrafficPolicy: {
-			targetRef: {
-				group: ""
-				kind:  "Service"
-				name:  "my-release-api"
+			spec: {
+				targetRefs: [{
+					group: ""
+					kind:  "Service"
+					name:  "my-release-api"
+				}]
 			}
 		}
 	}
@@ -29,19 +31,20 @@ _testBackendTrafficPolicyMinimal: (#BackendTrafficPolicyTransformer.#transform &
 	}]
 }
 
-// Test: BackendTrafficPolicy with sessionPersistence config
-// Asserts: spec.sessionPersistence is propagated
+// Test: BackendTrafficPolicy with sessionPersistence — spec passthrough
 _testBackendTrafficPolicyWithSessionPersistence: (#BackendTrafficPolicyTransformer.#transform & {
 	#component: {
 		metadata: name: "sticky-policy"
 		spec: backendTrafficPolicy: {
-			targetRef: {
-				group: ""
-				kind:  "Service"
-				name:  "rel-svc"
-			}
-			sessionPersistence: {
-				type: "Cookie"
+			spec: {
+				targetRefs: [{
+					group: ""
+					kind:  "Service"
+					name:  "rel-svc"
+				}]
+				sessionPersistence: {
+					type: "Cookie"
+				}
 			}
 		}
 	}
