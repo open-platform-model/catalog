@@ -26,7 +26,7 @@ import (
 	spec: close({clusterIssuer: schemas.#ClusterIssuerSchema})
 }
 
-#ClusterIssuerComponent: component.#Component & {
+#ClusterIssuer: component.#Component & {
 	#resources: {(#ClusterIssuerResource.metadata.fqn): #ClusterIssuerResource}
 }
 

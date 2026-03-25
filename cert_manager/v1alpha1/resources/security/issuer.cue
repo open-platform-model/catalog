@@ -26,7 +26,7 @@ import (
 	spec: close({issuer: schemas.#IssuerSchema})
 }
 
-#IssuerComponent: component.#Component & {
+#Issuer: component.#Component & {
 	#resources: {(#IssuerResource.metadata.fqn): #IssuerResource}
 }
 

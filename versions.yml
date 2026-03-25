@@ -9,17 +9,17 @@ core:
     checksum: b5c05a3661fef9597589098af5f682d3ce31e367a7148d12c0699e50c426b8f4
 opm:
   v1alpha1:
-    version: v1.5.3
-    checksum: 48a93d3eda2690b218fd4a6263e88c962cb578c21e1b9a3a9161e8e7388fdff9
+    version: v1.5.4
+    checksum: 24c7f0b71605b5cebca6da4d469460e4e0d0bd94933f78c2a65dd94c9b5b6efa
 gateway_api:
   v1alpha1:
-    version: v1.3.2
-    checksum: 573ea79673ea55496eed650513f92101b1f8a2e083f2fb2ec253e5e52601b27b
+    version: v1.3.4
+    checksum: 16352f32edfae29b3692d06afb7f8bd031193f8376ad9ea828f96481b11c469f
 cert_manager:
   v1alpha1:
-    version: v1.3.1
-    checksum: 55dace5954ccd58cf1221951521b7e0f794d1eb5bd4fe47467e4e11f11300210
+    version: v1.3.2
+    checksum: 552330e34ad9082395ca3b55061c609863f36dd72f0aa6d262d186b48c3e2ebc
 kubernetes:
-  v1alpha1:
+  v1:
     version: v1.0.1
-    checksum: "988f6c87c7a4a98963a1614709ea722d5a15594a6552a3306e0275df32f0a903"
+    checksum: 8deea377650b6ffbd5669be04606e5e76e361ac68654d99a846e61d142e08261

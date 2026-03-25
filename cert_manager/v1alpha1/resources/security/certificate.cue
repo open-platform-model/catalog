@@ -26,7 +26,7 @@ import (
 	spec: close({certificate: schemas.#CertificateSchema})
 }
 
-#CertificateComponent: component.#Component & {
+#Certificate: component.#Component & {
 	#resources: {(#CertificateResource.metadata.fqn): #CertificateResource}
 }
 

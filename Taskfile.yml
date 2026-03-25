@@ -2,7 +2,7 @@ version: '3'
 
 # Catalog CUE Module Taskfile
 # Tasks for the domain-structured modules:
-#   core/v1alpha1, opm/v1alpha1, gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1alpha1, kubernetes/v1alpha1
+#   core/v1alpha1, opm/v1alpha1, gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1
 #
 # Usage:
 #   task fmt
@@ -62,7 +62,7 @@ tasks:
     desc: Validate all five domain CUE modules in dependency order
     summary: |
       Validates all five domain modules in dependency order:
-        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1alpha1
+        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1
 
       Usage:
         task vet
@@ -72,7 +72,6 @@ tasks:
       - task: vet:opm
       - task: vet:gateway_api
       - task: vet:cert_manager
-      - task: vet:kubernetes
       - task: vet:kubernetes
 
   vet:core:
@@ -121,7 +120,7 @@ tasks:
         echo "  ✔ cert_manager/v1alpha1"
 
   vet:kubernetes:
-    desc: Validate kubernetes/v1alpha1 CUE module
+    desc: Validate kubernetes/v1 CUE module
     vars:
       CONCRETE: '{{.CONCRETE | default "false"}}'
       VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
@@ -129,7 +128,7 @@ tasks:
       - |
         echo "Validating {{.KUBERNETES_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
         cd "{{.TASKFILE_DIR}}/{{.KUBERNETES_DIR}}" && cue vet {{.VET_FLAGS}} ./...
-        echo "  ✔ kubernetes/v1alpha1"
+        echo "  ✔ kubernetes/v1"
 
   # ============================================================================
   # Testing
@@ -154,7 +153,6 @@ tasks:
       - task: test:opm
       - task: test:gateway_api
       - task: test:cert_manager
-      - task: test:kubernetes
       - task: test:kubernetes
 
   test:core:
@@ -234,20 +232,20 @@ tasks:
         fi
 
   test:kubernetes:
-    desc: Run kubernetes/v1alpha1 structural tests (@if(test) files)
+    desc: Run kubernetes/v1 structural tests (@if(test) files)
     summary: |
-      Runs all *_tests.cue files tagged @if(test) in the kubernetes/v1alpha1 module.
+      Runs all *_tests.cue files tagged @if(test) in the kubernetes/v1 module.
 
       Usage:
         task test:kubernetes
     cmds:
       - |
         GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
-        echo "Testing opmodel.dev/kubernetes/v1alpha1 (structural)..."
+        echo "Testing opmodel.dev/kubernetes/v1 (structural)..."
         if cd "{{.TASKFILE_DIR}}/{{.KUBERNETES_DIR}}" && cue vet -t test ./...; then
-          echo -e "${GREEN}✔ kubernetes/v1alpha1 — Successful${NC}"
+          echo -e "${GREEN}✔ kubernetes/v1 — Successful${NC}"
         else
-          echo -e "${RED}✗ kubernetes/v1alpha1 — Failed${NC}"
+          echo -e "${RED}✗ kubernetes/v1 — Failed${NC}"
           exit 1
         fi
 
@@ -339,8 +337,7 @@ tasks:
       - bash .tasks/generate-index.sh opm/v1alpha1 > opm/v1alpha1/INDEX.md
       - bash .tasks/generate-index.sh gateway_api/v1alpha1 > gateway_api/v1alpha1/INDEX.md
       - bash .tasks/generate-index.sh cert_manager/v1alpha1 > cert_manager/v1alpha1/INDEX.md
-      - bash .tasks/generate-index.sh kubernetes/v1alpha1 > kubernetes/v1alpha1/INDEX.md
-      - bash .tasks/generate-index.sh kubernetes/v1alpha1 > kubernetes/v1alpha1/INDEX.md
+      - bash .tasks/generate-index.sh kubernetes/v1 > kubernetes/v1/INDEX.md
 
   generate:index:check:
     desc: Verify INDEX.md files match generated output (exits non-zero if any differ)
@@ -376,8 +373,7 @@ tasks:
         check_module opm/v1alpha1          || FAILED=1
         check_module gateway_api/v1alpha1  || FAILED=1
         check_module cert_manager/v1alpha1 || FAILED=1
-        check_module kubernetes/v1alpha1   || FAILED=1
-        check_module kubernetes/v1alpha1   || FAILED=1
+        check_module kubernetes/v1         || FAILED=1
 
         if [[ "$FAILED" -eq 1 ]]; then
           echo ""
@@ -388,8 +384,6 @@ tasks:
         echo ""
         echo "All INDEX.md files are up to date."
 
-  # ============================================================================
-  # Version Management
   # ============================================================================
   # Version Management
   # ============================================================================
@@ -405,8 +399,7 @@ tasks:
         echo "opm/v1alpha1:          $(yq '.opm.v1alpha1.version' {{.VERSION_FILE}})"
         echo "gateway_api/v1alpha1:  $(yq '.gateway_api.v1alpha1.version' {{.VERSION_FILE}})"
         echo "cert_manager/v1alpha1: $(yq '.cert_manager.v1alpha1.version' {{.VERSION_FILE}})"
-        echo "kubernetes/v1alpha1:   $(yq '.kubernetes.v1alpha1.version' {{.VERSION_FILE}})"
-        echo "kubernetes/v1alpha1:   $(yq '.kubernetes.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "kubernetes/v1:         $(yq '.kubernetes.v1.version' {{.VERSION_FILE}})"
 
   version:bump:
     desc: Bump version for a domain module (DOMAIN=core|opm|gateway_api|cert_manager|kubernetes TYPE=patch/minor/major)
@@ -433,7 +426,12 @@ tasks:
             ;;
         esac
 
-        CURRENT=$(yq '.{{.DOMAIN}}.v1alpha1.version' {{.VERSION_FILE}} | sed 's/^v//')
+        case "{{.DOMAIN}}" in
+          kubernetes) API_VERSION="v1" ;;
+          *)          API_VERSION="v1alpha1" ;;
+        esac
+
+        CURRENT=$(yq ".{{.DOMAIN}}.${API_VERSION}.version" {{.VERSION_FILE}} | sed 's/^v//')
         IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
 
         case "{{.TYPE}}" in
@@ -447,8 +445,8 @@ tasks:
         esac
 
         NEW="v${MAJOR}.${MINOR}.${PATCH}"
-        yq -i '.{{.DOMAIN}}.v1alpha1.version = "'$NEW'"' {{.VERSION_FILE}}
-        echo "Bumped {{.DOMAIN}}/v1alpha1: v${CURRENT} -> ${NEW}"
+        yq -i ".{{.DOMAIN}}.${API_VERSION}.version = \"${NEW}\"" {{.VERSION_FILE}}
+        echo "Bumped {{.DOMAIN}}/${API_VERSION}: v${CURRENT} -> ${NEW}"
 
   # ============================================================================
   # Publishing — individual modules
@@ -551,9 +549,9 @@ tasks:
         echo "Published cert_manager/v1alpha1@${VERSION}"
 
   publish:kubernetes:
-    desc: Publish kubernetes/v1alpha1 to local registry
+    desc: Publish kubernetes/v1 to local registry
     summary: |
-      Publish the kubernetes/v1alpha1 module to the local OCI registry.
+      Publish the kubernetes/v1 module to the local OCI registry.
 
       Usage:
         task publish:kubernetes
@@ -566,13 +564,13 @@ tasks:
     cmds:
       - |
         if [ -z "{{.VERSION}}" ]; then
-          VERSION=$(yq '.kubernetes.v1alpha1.version' {{.VERSION_FILE}})
+          VERSION=$(yq '.kubernetes.v1.version' {{.VERSION_FILE}})
         else
           VERSION="{{.VERSION}}"
         fi
-        echo "Publishing kubernetes/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        echo "Publishing kubernetes/v1@${VERSION} to {{.LOCAL_REGISTRY}}..."
         cd "{{.TASKFILE_DIR}}/{{.KUBERNETES_DIR}}" && cue mod publish "${VERSION}"
-        echo "Published kubernetes/v1alpha1@${VERSION}"
+        echo "Published kubernetes/v1@${VERSION}"
 
   # ============================================================================
   # Publishing — aggregate
@@ -582,7 +580,7 @@ tasks:
     desc: Publish all domain modules to local registry in dependency order
     summary: |
       Publish all five domain modules in dependency order:
-        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1alpha1
+        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1
 
       Uses the version recorded in versions.yml for each module.
 
@@ -602,23 +600,24 @@ tasks:
 
         publish_module() {
           local key="$1"
-          local dir="$2"
+          local api_version="$2"
+          local dir="$3"
           local version
-          version=$(yq ".${key}.v1alpha1.version" "{{.VERSION_FILE}}")
-          echo -e "${BOLD}[${key}/v1alpha1]${RESET} publishing @ ${version}..."
+          version=$(yq ".${key}.${api_version}.version" "{{.VERSION_FILE}}")
+          echo -e "${BOLD}[${key}/${api_version}]${RESET} publishing @ ${version}..."
           if (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod publish "${version}"); then
-            echo -e "  ${GREEN}✔ ${key}/v1alpha1@${version}${RESET}"
+            echo -e "  ${GREEN}✔ ${key}/${api_version}@${version}${RESET}"
           else
-            echo -e "  ${RED}✗ Failed to publish ${key}/v1alpha1${RESET}"
+            echo -e "  ${RED}✗ Failed to publish ${key}/${api_version}${RESET}"
             exit 1
           fi
         }
 
-        publish_module "core"         "{{.CORE_DIR}}"
-        publish_module "opm"          "{{.OPM_DIR}}"
-        publish_module "gateway_api"  "{{.GATEWAY_API_DIR}}"
-        publish_module "cert_manager" "{{.CERT_MANAGER_DIR}}"
-        publish_module "kubernetes"   "{{.KUBERNETES_DIR}}"
+        publish_module "core"         "v1alpha1" "{{.CORE_DIR}}"
+        publish_module "opm"          "v1alpha1" "{{.OPM_DIR}}"
+        publish_module "gateway_api"  "v1alpha1" "{{.GATEWAY_API_DIR}}"
+        publish_module "cert_manager" "v1alpha1" "{{.CERT_MANAGER_DIR}}"
+        publish_module "kubernetes"   "v1"       "{{.KUBERNETES_DIR}}"
 
         echo ""
         echo -e "${BOLD}${GREEN}Done.${RESET} All domain modules published."
@@ -634,7 +633,7 @@ tasks:
       and publishes only modules that changed.
 
       Modules are published in dependency order:
-        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1alpha1
+        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1
 
       Each module is versioned independently. A patch bump is applied by default.
 
@@ -682,37 +681,41 @@ tasks:
         echo -e "${BOLD}Phase 1: Detecting changes...${RESET}"
 
         CHANGED_KEYS=()
+        CHANGED_API_VERSIONS=()
         CHANGED_DIRS=()
         CHANGED_VERSIONS=()
 
         check_module() {
           local key="$1"
-          local dir="$2"
+          local api_version="$2"
+          local dir="$3"
           local stored current version new_version
-          stored=$(yq ".${key}.v1alpha1.checksum // \"\"" "$VERSION_FILE")
+          stored=$(yq ".${key}.${api_version}.checksum // \"\"" "$VERSION_FILE")
           current=$(compute_checksum "$dir")
-          version=$(yq ".${key}.v1alpha1.version" "$VERSION_FILE")
+          version=$(yq ".${key}.${api_version}.version" "$VERSION_FILE")
           new_version=$(bump_version "$version" "$BUMP_TYPE")
           if [ -z "$stored" ]; then
-            echo -e "  ${YELLOW}${key}/v1alpha1${RESET}: changed (no stored checksum) → ${version} → ${GREEN}${new_version}${RESET}"
+            echo -e "  ${YELLOW}${key}/${api_version}${RESET}: changed (no stored checksum) → ${version} → ${GREEN}${new_version}${RESET}"
             CHANGED_KEYS+=("$key")
+            CHANGED_API_VERSIONS+=("$api_version")
             CHANGED_DIRS+=("$dir")
             CHANGED_VERSIONS+=("$new_version")
           elif [ "$stored" != "$current" ]; then
-            echo -e "  ${YELLOW}${key}/v1alpha1${RESET}: changed → ${version} → ${GREEN}${new_version}${RESET}"
+            echo -e "  ${YELLOW}${key}/${api_version}${RESET}: changed → ${version} → ${GREEN}${new_version}${RESET}"
             CHANGED_KEYS+=("$key")
+            CHANGED_API_VERSIONS+=("$api_version")
             CHANGED_DIRS+=("$dir")
             CHANGED_VERSIONS+=("$new_version")
           else
-            echo -e "  ${key}/v1alpha1: unchanged"
+            echo -e "  ${key}/${api_version}: unchanged"
           fi
         }
 
-        check_module "core"         "{{.CORE_DIR}}"
-        check_module "opm"          "{{.OPM_DIR}}"
-        check_module "gateway_api"  "{{.GATEWAY_API_DIR}}"
-        check_module "cert_manager" "{{.CERT_MANAGER_DIR}}"
-        check_module "kubernetes"   "{{.KUBERNETES_DIR}}"
+        check_module "core"         "v1alpha1" "{{.CORE_DIR}}"
+        check_module "opm"          "v1alpha1" "{{.OPM_DIR}}"
+        check_module "gateway_api"  "v1alpha1" "{{.GATEWAY_API_DIR}}"
+        check_module "cert_manager" "v1alpha1" "{{.CERT_MANAGER_DIR}}"
+        check_module "kubernetes"   "v1"       "{{.KUBERNETES_DIR}}"
 
         if [ ${#CHANGED_KEYS[@]} -eq 0 ]; then
           echo ""
@@ -733,33 +736,34 @@ tasks:
 
         for i in "${!CHANGED_KEYS[@]}"; do
           key="${CHANGED_KEYS[$i]}"
+          api_ver="${CHANGED_API_VERSIONS[$i]}"
           dir="${CHANGED_DIRS[$i]}"
           new_version="${CHANGED_VERSIONS[$i]}"
 
           echo ""
-          echo -e "${BOLD}${GREEN}[${key}/v1alpha1]${RESET} → ${GREEN}${new_version}${RESET}"
+          echo -e "${BOLD}${GREEN}[${key}/${api_ver}]${RESET} → ${GREEN}${new_version}${RESET}"
 
           # Bump version in versions.yml
-          yq -i ".${key}.v1alpha1.version = \"${new_version}\"" "$VERSION_FILE"
+          yq -i ".${key}.${api_ver}.version = \"${new_version}\"" "$VERSION_FILE"
 
           # Tidy
           echo "  Tidying..."
           (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod tidy)
 
           # Publish
-          echo "  Publishing ${key}/v1alpha1@${new_version}..."
+          echo "  Publishing ${key}/${api_ver}@${new_version}..."
           if ! (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod publish "${new_version}"); then
-            echo -e "  ${RED}Failed to publish ${key}/v1alpha1${RESET}"
+            echo -e "  ${RED}Failed to publish ${key}/${api_ver}${RESET}"
             exit 1
           fi
 
-          # Tag — format: catalog/<domain>/v1alpha1/<version>
-          git tag "catalog/${key}/v1alpha1/${new_version}"
-          echo "  Tagged catalog/${key}/v1alpha1/${new_version}"
+          # Tag — format: catalog/<domain>/<api_version>/<version>
+          git tag "catalog/${key}/${api_ver}/${new_version}"
+          echo "  Tagged catalog/${key}/${api_ver}/${new_version}"
 
           # Store updated checksum
           new_checksum=$(compute_checksum "$dir")
-          yq -i ".${key}.v1alpha1.checksum = \"${new_checksum}\"" "$VERSION_FILE"
+          yq -i ".${key}.${api_ver}.checksum = \"${new_checksum}\"" "$VERSION_FILE"
           echo -e "  Checksum: ${DIM}${new_checksum:0:12}...${RESET}"
         done
 
