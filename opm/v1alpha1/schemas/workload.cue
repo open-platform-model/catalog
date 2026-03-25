@@ -305,62 +305,8 @@ import (
 	sidecarContainers?: [...#SidecarContainersSchema]
 	initContainers?: [...#InitContainersSchema]
 	securityContext?: #SecurityContextSchema
-}
-
-//////////////////////////////////////////////////////////////////
-//// Stateful Workload Schema
-//////////////////////////////////////////////////////////////////
-
-#StatefulWorkloadSchema: {
-	container:       #ContainerSchema
-	scaling?:        #ScalingSchema
-	restartPolicy?:  #RestartPolicySchema
-	updateStrategy?: #UpdateStrategySchema
-	sidecarContainers?: [...#SidecarContainersSchema]
-	initContainers?: [...#InitContainersSchema]
-	serviceName?: string
-	volumes: [string]: #VolumeSchema
-	securityContext?: #SecurityContextSchema
-}
-
-//////////////////////////////////////////////////////////////////
-//// Daemon Workload Schema
-//////////////////////////////////////////////////////////////////
-
-#DaemonWorkloadSchema: {
-	container:       #ContainerSchema
-	restartPolicy?:  #RestartPolicySchema
-	updateStrategy?: #UpdateStrategySchema
-	sidecarContainers?: [...#SidecarContainersSchema]
-	initContainers?: [...#InitContainersSchema]
-	securityContext?: #SecurityContextSchema
-	hostNetwork?:     bool
-}
-
-//////////////////////////////////////////////////////////////////
-//// Task Workload Schema
-//////////////////////////////////////////////////////////////////
-
-#TaskWorkloadSchema: {
-	container:      #ContainerSchema
-	restartPolicy?: "OnFailure" | "Never" | *"Never"
-	jobConfig?:     #JobConfigSchema
-	sidecarContainers?: [...#SidecarContainersSchema]
-	initContainers?: [...#InitContainersSchema]
-	securityContext?: #SecurityContextSchema
-}
-
-//////////////////////////////////////////////////////////////////
-//// Scheduled Task Workload Schema
-//////////////////////////////////////////////////////////////////
-
-#ScheduledTaskWorkloadSchema: {
-	container:      #ContainerSchema
-	restartPolicy?: "OnFailure" | "Never" | *"Never"
-	cronJobConfig!: #CronJobConfigSchema
-	sidecarContainers?: [...#SidecarContainersSchema]
-	initContainers?: [...#InitContainersSchema]
-	securityContext?: #SecurityContextSchema
+	hostPid?:         bool
+	hostIpc?:         bool
 }
 
 //////////////////////////////////////////////////////////////////

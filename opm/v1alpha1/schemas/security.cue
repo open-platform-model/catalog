@@ -12,7 +12,8 @@ package schemas
 // Security context constraints for container and pod-level hardening.
 //
 // Fields apply at different levels in Kubernetes:
-//   Pod-level (spec.securityContext):    runAsNonRoot, runAsUser, runAsGroup, fsGroup
+//   Pod-level (spec.securityContext):    runAsNonRoot, runAsUser, runAsGroup, fsGroup,
+//                                        supplementalGroups
 //   Container-level (containers[].securityContext): privileged, allowPrivilegeEscalation,
 //                                        capabilities, readOnlyRootFilesystem,
 //                                        runAsNonRoot, runAsUser, runAsGroup
@@ -34,6 +35,10 @@ package schemas
 	runAsGroup?: int
 	// Group ID applied to mounted volumes; kubelet chowns volume contents to this GID on mount
 	fsGroup?: int
+	// Additional GIDs applied to the pod's processes (pod-level only).
+	// Used to grant access to shared devices or files owned by supplemental groups.
+	// Example: [44, 109] grants video and render group access for /dev/dri on Linux.
+	supplementalGroups?: [...int]
 	// Mount the root filesystem as read-only
 	readOnlyRootFilesystem?: bool
 	// Prevent privilege escalation via setuid/setgid binaries
