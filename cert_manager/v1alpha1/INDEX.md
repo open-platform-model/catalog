@@ -41,13 +41,13 @@ CUE module: `opmodel.dev/cert_manager/v1alpha1@v1`
 
 | Definition | File | Description |
 |---|---|---|
-| `#CertificateComponent` | `resources/security/certificate.cue` |  |
+| `#Certificate` | `resources/security/certificate.cue` |  |
 | `#CertificateDefaults` | `resources/security/certificate.cue` |  |
 | `#CertificateResource` | `resources/security/certificate.cue` |  |
-| `#ClusterIssuerComponent` | `resources/security/cluster_issuer.cue` |  |
+| `#ClusterIssuer` | `resources/security/cluster_issuer.cue` |  |
 | `#ClusterIssuerDefaults` | `resources/security/cluster_issuer.cue` |  |
 | `#ClusterIssuerResource` | `resources/security/cluster_issuer.cue` |  |
-| `#IssuerComponent` | `resources/security/issuer.cue` |  |
+| `#Issuer` | `resources/security/issuer.cue` |  |
 | `#IssuerDefaults` | `resources/security/issuer.cue` |  |
 | `#IssuerResource` | `resources/security/issuer.cue` |  |
 

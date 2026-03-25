@@ -63,15 +63,15 @@ CUE module: `opmodel.dev/gateway_api/v1alpha1@v1`
 
 | Definition | File | Description |
 |---|---|---|
-| `#BackendTrafficPolicyTransformer` | `providers/kubernetes/transformers/backend_traffic_policy_transformer.cue` | BackendTrafficPolicyTransformer creates Gateway API BackendTrafficPolicies from BackendTrafficPolicyResource components |
-| `#GatewayClassTransformer` | `providers/kubernetes/transformers/gateway_class_transformer.cue` | GatewayClassTransformer creates Gateway API GatewayClasses from GatewayClassResource components |
-| `#GatewayTransformer` | `providers/kubernetes/transformers/gateway_transformer.cue` | GatewayTransformer creates Gateway API Gateways from GatewayResource components |
-| `#GrpcRouteTransformer` | `providers/kubernetes/transformers/grpc_route_transformer.cue` | GrpcRouteTransformer creates Gateway API GRPCRoutes from components with GrpcRoute trait |
-| `#HttpRouteTransformer` | `providers/kubernetes/transformers/http_route_transformer.cue` | HttpRouteTransformer creates Gateway API HTTPRoutes from components with HttpRoute trait |
-| `#ReferenceGrantTransformer` | `providers/kubernetes/transformers/reference_grant_transformer.cue` | ReferenceGrantTransformer creates Gateway API ReferenceGrants from ReferenceGrantResource components |
-| `#TcpRouteTransformer` | `providers/kubernetes/transformers/tcp_route_transformer.cue` | TcpRouteTransformer creates Gateway API TCPRoutes from components with TcpRoute trait |
+| `#BackendTrafficPolicyTransformer` | `providers/kubernetes/transformers/backend_traffic_policy_transformer.cue` | #BackendTrafficPolicyTransformer passes native Gateway API BackendTrafficPolicy resources through with OPM context applied (name prefix, namespace, labels) |
+| `#GatewayClassTransformer` | `providers/kubernetes/transformers/gateway_class_transformer.cue` | #GatewayClassTransformer passes native Gateway API GatewayClass resources through with OPM context applied (name prefix, labels) |
+| `#GatewayTransformer` | `providers/kubernetes/transformers/gateway_transformer.cue` | #GatewayTransformer passes native Gateway API Gateway resources through with OPM context applied (name prefix, namespace, labels) |
+| `#GrpcRouteTransformer` | `providers/kubernetes/transformers/grpc_route_transformer.cue` | #GrpcRouteTransformer passes native Gateway API GRPCRoute resources through with OPM context applied (name prefix, namespace, labels) |
+| `#HttpRouteTransformer` | `providers/kubernetes/transformers/http_route_transformer.cue` | #HttpRouteTransformer passes native Gateway API HTTPRoute resources through with OPM context applied (name prefix, namespace, labels) |
+| `#ReferenceGrantTransformer` | `providers/kubernetes/transformers/reference_grant_transformer.cue` | #ReferenceGrantTransformer passes native Gateway API ReferenceGrant resources through with OPM context applied (name prefix, namespace, labels) |
+| `#TcpRouteTransformer` | `providers/kubernetes/transformers/tcp_route_transformer.cue` | #TcpRouteTransformer passes native Gateway API TCPRoute resources through with OPM context applied (name prefix, namespace, labels) |
 | `#TestCtx` | `providers/kubernetes/transformers/test_helpers.cue` | #TestCtx constructs a minimal concrete #TransformerContext for transformer tests |
-| `#TlsRouteTransformer` | `providers/kubernetes/transformers/tls_route_transformer.cue` | TlsRouteTransformer creates Gateway API TLSRoutes from components with TlsRoute trait |
+| `#TlsRouteTransformer` | `providers/kubernetes/transformers/tls_route_transformer.cue` | #TlsRouteTransformer passes native Gateway API TLSRoute resources through with OPM context applied (name prefix, namespace, labels) |
 
 ---
 
@@ -112,27 +112,14 @@ CUE module: `opmodel.dev/gateway_api/v1alpha1@v1`
 
 | Definition | File | Description |
 |---|---|---|
-| `#BackendTrafficPolicySchema` | `schemas/network.cue` | BackendTrafficPolicy spec — configures traffic behaviour for a backend |
-| `#BackendTrafficPolicyTargetRef` | `schemas/network.cue` |  |
-| `#GatewayClassSchema` | `schemas/network.cue` | GatewayClass spec — defines a class of Gateways |
-| `#GatewaySchema` | `schemas/network.cue` | Gateway resource spec |
-| `#GrpcRouteMatchSchema` | `schemas/network.cue` | Match criteria for a gRPC route rule |
-| `#GrpcRouteRuleSchema` | `schemas/network.cue` | A single gRPC route rule (embeds RouteRuleBase) |
-| `#GrpcRouteSchema` | `schemas/network.cue` | gRPC route specification (embeds RouteAttachmentSchema) |
-| `#HttpRouteMatchSchema` | `schemas/network.cue` | Match criteria for an HTTP route rule |
-| `#HttpRouteRuleSchema` | `schemas/network.cue` | A single HTTP route rule (embeds RouteRuleBase) |
-| `#HttpRouteSchema` | `schemas/network.cue` | HTTP route specification (embeds RouteAttachmentSchema) |
-| `#ListenerSchema` | `schemas/network.cue` | A single Gateway listener |
-| `#ReferenceGrantFromSchema` | `schemas/network.cue` |  |
-| `#ReferenceGrantSchema` | `schemas/network.cue` | ReferenceGrant spec — permits cross-namespace access between resources |
-| `#ReferenceGrantToSchema` | `schemas/network.cue` |  |
-| `#RouteAttachmentSchema` | `schemas/network.cue` | Shared attachment fields for route schemas (gateway, TLS, className) |
-| `#RouteHeaderMatch` | `schemas/network.cue` | Header match for route rules |
-| `#RouteRuleBase` | `schemas/network.cue` | Base fields shared by all route rules |
-| `#TcpRouteRuleSchema` | `schemas/network.cue` | A single TCP route rule (embeds RouteRuleBase, no L7 match fields) |
-| `#TcpRouteSchema` | `schemas/network.cue` | TCP route specification (embeds RouteAttachmentSchema) |
-| `#TlsRouteRuleSchema` | `schemas/network.cue` | A single TLS route rule (embeds RouteRuleBase, no L7 match fields) |
-| `#TlsRouteSchema` | `schemas/network.cue` | TLS route specification (embeds RouteAttachmentSchema) |
+| `#BackendTrafficPolicySchema` | `schemas/network.cue` | #BackendTrafficPolicySchema accepts the full Gateway API BackendTrafficPolicy spec |
+| `#GatewayClassSchema` | `schemas/network.cue` | #GatewayClassSchema accepts the full Gateway API GatewayClass spec |
+| `#GatewaySchema` | `schemas/network.cue` | #GatewaySchema accepts the full Gateway API Gateway spec |
+| `#GrpcRouteSchema` | `schemas/network.cue` | #GrpcRouteSchema accepts the full Gateway API GRPCRoute spec |
+| `#HttpRouteSchema` | `schemas/network.cue` | #HttpRouteSchema accepts the full Gateway API HTTPRoute spec |
+| `#ReferenceGrantSchema` | `schemas/network.cue` | #ReferenceGrantSchema accepts the full Gateway API ReferenceGrant spec |
+| `#TcpRouteSchema` | `schemas/network.cue` | #TcpRouteSchema accepts the full Gateway API TCPRoute spec |
+| `#TlsRouteSchema` | `schemas/network.cue` | #TlsRouteSchema accepts the full Gateway API TLSRoute spec |
 
 ### gateway/gateway.networking.k8s.io/backendtlspolicy/v1
 

@@ -16,7 +16,6 @@ CUE module: `opmodel.dev/opm/v1alpha1@v1`
 +-- resources/
 |   +-- config/
 |   +-- extension/
-|   +-- network/
 |   +-- security/
 |   +-- storage/
 |   +-- workload/
@@ -187,9 +186,22 @@ CUE module: `opmodel.dev/opm/v1alpha1@v1`
 | `#CRDSchema` | `schemas/extension.cue` | CRDSchema defines a Kubernetes CustomResourceDefinition to be deployed to the cluster |
 | `#CRDVersionSchema` | `schemas/extension.cue` | CRDVersionSchema defines a single version entry in a CRD |
 | `#ExposeSchema` | `schemas/network.cue` | Expose specification |
+| `#GrpcRouteMatchSchema` | `schemas/network.cue` | Match criteria for a gRPC route rule |
+| `#GrpcRouteRuleSchema` | `schemas/network.cue` | A single gRPC route rule (embeds RouteRuleBase) |
+| `#GrpcRouteSchema` | `schemas/network.cue` | gRPC route specification (embeds RouteAttachmentSchema) |
+| `#HttpRouteMatchSchema` | `schemas/network.cue` | Match criteria for an HTTP route rule |
+| `#HttpRouteRuleSchema` | `schemas/network.cue` | A single HTTP route rule (embeds RouteRuleBase) |
+| `#HttpRouteSchema` | `schemas/network.cue` | HTTP route specification (embeds RouteAttachmentSchema) |
 | `#NetworkRuleSchema` | `schemas/network.cue` |  |
 | `#PortSchema` | `schemas/network.cue` | Port specification |
+| `#RouteAttachmentSchema` | `schemas/network.cue` | Shared attachment fields for route schemas (gateway, TLS, className) |
+| `#RouteHeaderMatch` | `schemas/network.cue` | Header match for route rules |
+| `#RouteRuleBase` | `schemas/network.cue` | Base fields shared by all route rules |
 | `#SharedNetworkSchema` | `schemas/network.cue` |  |
+| `#TcpRouteRuleSchema` | `schemas/network.cue` | A single TCP route rule (embeds RouteRuleBase, no L7 match fields) |
+| `#TcpRouteSchema` | `schemas/network.cue` | TCP route specification (embeds RouteAttachmentSchema) |
+| `#TlsRouteRuleSchema` | `schemas/network.cue` | A single TLS route rule (embeds RouteRuleBase, no L7 match fields) |
+| `#TlsRouteSchema` | `schemas/network.cue` | TLS route specification (embeds RouteAttachmentSchema) |
 | `#NormalizeCPU` | `schemas/quantity.cue` | #NormalizeCPU normalizes CPU input to Kubernetes canonical form |
 | `#NormalizeMemory` | `schemas/quantity.cue` | #NormalizeMemory normalizes memory input to Kubernetes binary format |
 | `#AcmeHttp01SolverSchema` | `schemas/security.cue` | ACME HTTP-01 solver — uses HTTP challenge to prove domain ownership |
