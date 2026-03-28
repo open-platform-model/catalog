@@ -202,6 +202,11 @@ import (
 		if X.readinessProbe != _|_ {
 			readinessProbe: X.readinessProbe
 		}
+
+		// Pre-stop lifecycle hook
+		if X.preStopCommand != _|_ {
+			lifecycle: preStop: exec: command: X.preStopCommand
+		}
 	}
 }
 
@@ -488,4 +493,25 @@ _testToK8sContainers: {
 	]
 
 	out: (#ToK8sContainers & {"in": in}).out
+}
+
+// Test: preStopCommand produces lifecycle.preStop.exec.command
+_testToK8sContainerPreStop: {
+	in: {
+		name: "graceful"
+		image: {
+			repository: "app"
+			tag:        "v1"
+			digest:     ""
+		}
+		preStopCommand: ["/bin/sh", "-c", "sleep 5"]
+	}
+
+	out: (#ToK8sContainer & {"in": in}).out
+
+	out: {
+		name:  "graceful"
+		image: "app:v1"
+		lifecycle: preStop: exec: command: ["/bin/sh", "-c", "sleep 5"]
+	}
 }

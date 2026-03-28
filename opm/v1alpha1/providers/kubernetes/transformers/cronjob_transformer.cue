@@ -53,6 +53,7 @@ import (
 		"opmodel.dev/opm/v1alpha1/traits/security/workload-identity@v1":  security_traits.#WorkloadIdentityTrait
 		"opmodel.dev/opm/v1alpha1/traits/security/host-pid@v1":           security_traits.#HostPIDTrait
 		"opmodel.dev/opm/v1alpha1/traits/security/host-ipc@v1":           security_traits.#HostIPCTrait
+		"opmodel.dev/opm/v1alpha1/traits/workload/graceful-shutdown@v1":  workload_traits.#GracefulShutdownTrait
 	}
 
 	#transform: {
@@ -173,6 +174,11 @@ import (
 											persistentVolumeClaim: claimName: vol.name | *vName
 										},
 									]
+								}
+
+								// Graceful shutdown: pod-level termination grace period
+								if #component.spec.gracefulShutdown != _|_ {
+									terminationGracePeriodSeconds: #component.spec.gracefulShutdown.terminationGracePeriodSeconds
 								}
 							}
 						}

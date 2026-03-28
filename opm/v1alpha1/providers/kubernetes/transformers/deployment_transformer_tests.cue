@@ -101,6 +101,69 @@ _testDeploymentRestartPolicy: (#DeploymentTransformer.#transform & {
 	spec: template: spec: restartPolicy: "Never"
 }
 
+// Test: Component with gracefulShutdown trait produces terminationGracePeriodSeconds.
+// Asserts: gracefulShutdown.terminationGracePeriodSeconds is mapped to pod spec.
+_testDeploymentGracefulShutdown: (#DeploymentTransformer.#transform & {
+	#component: {
+		metadata: name: "worker"
+		spec: {
+			container: {
+				name: "worker"
+				image: {
+					repository: "worker"
+					tag:        "v1.0"
+					digest:     ""
+					pullPolicy: "IfNotPresent"
+					reference:  "worker:v1.0"
+				}
+			}
+			gracefulShutdown: terminationGracePeriodSeconds: 60
+		}
+	}
+	#context: (#TestCtx & {
+		release:   "app"
+		namespace: "default"
+		component: "worker"
+	}).out
+}).output & {
+	spec: template: spec: terminationGracePeriodSeconds: 60
+}
+
+// Test: Component with gracefulShutdown + preStopCommand on main container.
+// Asserts: both terminationGracePeriodSeconds and lifecycle.preStop appear in output.
+_testDeploymentGracefulShutdownWithPreStop: (#DeploymentTransformer.#transform & {
+	#component: {
+		metadata: name: "streamer"
+		spec: {
+			container: {
+				name: "streamer"
+				image: {
+					repository: "streamer"
+					tag:        "v2.0"
+					digest:     ""
+					pullPolicy: "IfNotPresent"
+					reference:  "streamer:v2.0"
+				}
+				preStopCommand: ["/bin/sh", "-c", "sleep 10"]
+			}
+			gracefulShutdown: terminationGracePeriodSeconds: 120
+		}
+	}
+	#context: (#TestCtx & {
+		release:   "media"
+		namespace: "streaming"
+		component: "streamer"
+	}).out
+}).output & {
+	spec: template: spec: {
+		terminationGracePeriodSeconds: 120
+		containers: [{
+			lifecycle: preStop: exec: command: ["/bin/sh", "-c", "sleep 10"]
+			...
+		}]
+	}
+}
+
 // Test: Component with environment variables wired via literal value.
 // Asserts: env vars are passed through to the container spec.
 _testDeploymentWithEnv: (#DeploymentTransformer.#transform & {

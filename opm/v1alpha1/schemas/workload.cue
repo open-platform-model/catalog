@@ -52,6 +52,9 @@ import (
 	// Pod-level constraints (fsGroup, supplementalGroups) belong on the component
 	// spec.securityContext field instead.
 	securityContext?: #SecurityContextSchema
+
+	// Pre-stop lifecycle hook command (runs before SIGTERM)
+	preStopCommand?: [...string]
 }
 
 // Image specification for container images, used in #ContainerSchema
@@ -328,8 +331,6 @@ import (
 #GracefulShutdownSchema: {
 	// Grace period before forceful termination (must be non-negative)
 	terminationGracePeriodSeconds: uint | *30
-	// Command to run before SIGTERM is sent
-	preStopCommand?: [...string]
 }
 
 //////////////////////////////////////////////////////////////////
