@@ -114,7 +114,7 @@ import (
 // Match criteria for an HTTP route rule
 #HttpRouteMatchSchema: {
 	path?: {
-		type:   *"Prefix" | "Exact" | "RegularExpression"
+		type:   *"PathPrefix" | "Exact" | "RegularExpression"
 		value!: string
 	}
 	headers?: [...#RouteHeaderMatch]
