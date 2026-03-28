@@ -7,7 +7,7 @@ import (
 
 // #SecretsResourceFQN is the canonical FQN for the secrets resource.
 // Must stay in sync with resources/config/secret.cue #SecretsResource.metadata.fqn.
-#SecretsResourceFQN: "opmodel.dev/opm/resources/config/secrets@v1"
+#SecretsResourceFQN: "opmodel.dev/opm/v1alpha1/resources/config/secrets@v1"
 
 // #OpmSecretsComponent builds the opm-secrets component from grouped secret data.
 //
