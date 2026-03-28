@@ -2,7 +2,7 @@ version: '3'
 
 # Catalog CUE Module Taskfile
 # Tasks for the domain-structured modules:
-#   core/v1alpha1, opm/v1alpha1, gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1
+#   core/v1alpha1, opm/v1alpha1, gateway_api/v1alpha1, cert_manager/v1alpha1, k8up/v1alpha1, kubernetes/v1
 #
 # Usage:
 #   task fmt
@@ -48,7 +48,7 @@ tasks:
     desc: Format CUE files across all domain modules
     cmds:
       - |
-        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.KUBERNETES_DIR}}"; do
+        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.K8UP_DIR}}" "{{.KUBERNETES_DIR}}"; do
           echo "Formatting ${dir}..."
           (cd "{{.TASKFILE_DIR}}/${dir}" && cue fmt ./...)
         done
@@ -72,6 +72,7 @@ tasks:
       - task: vet:opm
       - task: vet:gateway_api
       - task: vet:cert_manager
+      - task: vet:k8up
       - task: vet:kubernetes
 
   vet:core:
@@ -119,6 +120,17 @@ tasks:
         cd "{{.TASKFILE_DIR}}/{{.CERT_MANAGER_DIR}}" && cue vet {{.VET_FLAGS}} ./...
         echo "  ✔ cert_manager/v1alpha1"
 
+  vet:k8up:
+    desc: Validate k8up/v1alpha1 CUE module
+    vars:
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
+    cmds:
+      - |
+        echo "Validating {{.K8UP_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.K8UP_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "  ✔ k8up/v1alpha1"
+
   vet:kubernetes:
     desc: Validate kubernetes/v1 CUE module
     vars:
@@ -153,20 +165,26 @@ tasks:
       - task: test:opm
       - task: test:gateway_api
       - task: test:cert_manager
+      - task: test:k8up
       - task: test:kubernetes
 
   test:core:
     desc: Run core/v1alpha1 structural tests (@if(test) files)
     cmds:
       - |
-        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
         echo "Testing core/v1alpha1 (structural)..."
-        if cd "{{.TASKFILE_DIR}}/{{.CORE_DIR}}" && cue vet -t test ./...; then
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.CORE_DIR}}" && cue vet -t test ./... 2>&1) && {
           echo -e "${GREEN}✔ core/v1alpha1 — Successful${NC}"
-        else
-          echo -e "${RED}✗ core/v1alpha1 — Failed${NC}"
-          exit 1
-        fi
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ core/v1alpha1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ core/v1alpha1 — Failed${NC}"
+            exit 1
+          fi
+        }
 
   test:opm:
     desc: Run opm/v1alpha1 transformer structural tests (@if(test) files)
@@ -184,15 +202,20 @@ tasks:
         task test:opm
     cmds:
       - |
-        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
         echo "Testing opmodel.dev/opm/v1alpha1 (structural)..."
-        if cd "{{.TASKFILE_DIR}}/{{.OPM_DIR}}" && cue vet -t test \
-          ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...; then
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.OPM_DIR}}" && cue vet -t test \
+          ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/... 2>&1) && {
           echo -e "${GREEN}✔ opm/v1alpha1 — Successful${NC}"
-        else
-          echo -e "${RED}✗ opm/v1alpha1 — Failed${NC}"
-          exit 1
-        fi
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ opm/v1alpha1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ opm/v1alpha1 — Failed${NC}"
+            exit 1
+          fi
+        }
 
   test:gateway_api:
     desc: Run gateway_api/v1alpha1 transformer structural tests (@if(test) files)
@@ -203,14 +226,19 @@ tasks:
         task test:gateway_api
     cmds:
       - |
-        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
         echo "Testing opmodel.dev/gateway_api/v1alpha1 (structural)..."
-        if cd "{{.TASKFILE_DIR}}/{{.GATEWAY_API_DIR}}" && cue vet -t test ./...; then
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.GATEWAY_API_DIR}}" && cue vet -t test ./... 2>&1) && {
           echo -e "${GREEN}✔ gateway_api/v1alpha1 — Successful${NC}"
-        else
-          echo -e "${RED}✗ gateway_api/v1alpha1 — Failed${NC}"
-          exit 1
-        fi
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ gateway_api/v1alpha1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ gateway_api/v1alpha1 — Failed${NC}"
+            exit 1
+          fi
+        }
 
   test:cert_manager:
     desc: Run cert_manager/v1alpha1 transformer and matrix tests (@if(test) files)
@@ -222,14 +250,37 @@ tasks:
         task test:cert_manager
     cmds:
       - |
-        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
         echo "Testing opmodel.dev/cert_manager/v1alpha1 (structural + matrix)..."
-        if cd "{{.TASKFILE_DIR}}/{{.CERT_MANAGER_DIR}}" && cue vet -t test ./...; then
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.CERT_MANAGER_DIR}}" && cue vet -t test ./... 2>&1) && {
           echo -e "${GREEN}✔ cert_manager/v1alpha1 — Successful${NC}"
-        else
-          echo -e "${RED}✗ cert_manager/v1alpha1 — Failed${NC}"
-          exit 1
-        fi
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ cert_manager/v1alpha1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ cert_manager/v1alpha1 — Failed${NC}"
+            exit 1
+          fi
+        }
+
+  test:k8up:
+    desc: Run k8up/v1alpha1 structural tests (@if(test) files)
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
+        echo "Testing opmodel.dev/k8up/v1alpha1 (structural)..."
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.K8UP_DIR}}" && cue vet -t test ./... 2>&1) && {
+          echo -e "${GREEN}✔ k8up/v1alpha1 — Successful${NC}"
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ k8up/v1alpha1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ k8up/v1alpha1 — Failed${NC}"
+            exit 1
+          fi
+        }
 
   test:kubernetes:
     desc: Run kubernetes/v1 structural tests (@if(test) files)
@@ -240,14 +291,19 @@ tasks:
         task test:kubernetes
     cmds:
       - |
-        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
         echo "Testing opmodel.dev/kubernetes/v1 (structural)..."
-        if cd "{{.TASKFILE_DIR}}/{{.KUBERNETES_DIR}}" && cue vet -t test ./...; then
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.KUBERNETES_DIR}}" && cue vet -t test ./... 2>&1) && {
           echo -e "${GREEN}✔ kubernetes/v1 — Successful${NC}"
-        else
-          echo -e "${RED}✗ kubernetes/v1 — Failed${NC}"
-          exit 1
-        fi
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ kubernetes/v1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ kubernetes/v1 — Failed${NC}"
+            exit 1
+          fi
+        }
 
   test:strict:
     desc: Run opm/v1alpha1 tests with full concreteness checks (-c flag)
@@ -260,15 +316,20 @@ tasks:
         task test:strict
     cmds:
       - |
-        GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
         echo "Testing opmodel.dev/opm/v1alpha1 (structural, strict)..."
-        if cd "{{.TASKFILE_DIR}}/{{.OPM_DIR}}" && cue vet -t test -c \
-          ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...; then
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.OPM_DIR}}" && cue vet -t test -c \
+          ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/... 2>&1) && {
           echo -e "${GREEN}✔ opm/v1alpha1 strict — Successful${NC}"
-        else
-          echo -e "${RED}✗ opm/v1alpha1 strict — Failed${NC}"
-          exit 1
-        fi
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ opm/v1alpha1 strict — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ opm/v1alpha1 strict — Failed${NC}"
+            exit 1
+          fi
+        }
 
   # ============================================================================
   # Module Management
@@ -278,9 +339,9 @@ tasks:
     desc: Tidy dependencies across all domain modules
     cmds:
       - |
-        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.KUBERNETES_DIR}}"; do
-          echo "Formatting ${dir}..."
-          (cd "{{.TASKFILE_DIR}}/${dir}" && cue fmt ./...)
+        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.K8UP_DIR}}" "{{.KUBERNETES_DIR}}"; do
+          echo "Tidying ${dir}..."
+          (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod tidy)
         done
         echo "Done"
 
@@ -302,9 +363,10 @@ tasks:
           opm)          DIR="{{.OPM_DIR}}" ;;
           gateway_api)  DIR="{{.GATEWAY_API_DIR}}" ;;
           cert_manager) DIR="{{.CERT_MANAGER_DIR}}" ;;
+          k8up)         DIR="{{.K8UP_DIR}}" ;;
           kubernetes)   DIR="{{.KUBERNETES_DIR}}" ;;
           *)
-            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, gateway_api, cert_manager, or kubernetes."
+            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, gateway_api, cert_manager, k8up, or kubernetes."
             exit 1
             ;;
         esac
@@ -337,6 +399,7 @@ tasks:
       - bash .tasks/generate-index.sh opm/v1alpha1 > opm/v1alpha1/INDEX.md
       - bash .tasks/generate-index.sh gateway_api/v1alpha1 > gateway_api/v1alpha1/INDEX.md
       - bash .tasks/generate-index.sh cert_manager/v1alpha1 > cert_manager/v1alpha1/INDEX.md
+      - bash .tasks/generate-index.sh k8up/v1alpha1 > k8up/v1alpha1/INDEX.md
       - bash .tasks/generate-index.sh kubernetes/v1 > kubernetes/v1/INDEX.md
 
   generate:index:check:
@@ -373,6 +436,7 @@ tasks:
         check_module opm/v1alpha1          || FAILED=1
         check_module gateway_api/v1alpha1  || FAILED=1
         check_module cert_manager/v1alpha1 || FAILED=1
+        check_module k8up/v1alpha1         || FAILED=1
         check_module kubernetes/v1         || FAILED=1
 
         if [[ "$FAILED" -eq 1 ]]; then
@@ -399,6 +463,7 @@ tasks:
         echo "opm/v1alpha1:          $(yq '.opm.v1alpha1.version' {{.VERSION_FILE}})"
         echo "gateway_api/v1alpha1:  $(yq '.gateway_api.v1alpha1.version' {{.VERSION_FILE}})"
         echo "cert_manager/v1alpha1: $(yq '.cert_manager.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "k8up/v1alpha1:         $(yq '.k8up.v1alpha1.version' {{.VERSION_FILE}})"
         echo "kubernetes/v1:         $(yq '.kubernetes.v1.version' {{.VERSION_FILE}})"
 
   version:bump:
@@ -419,7 +484,7 @@ tasks:
     cmds:
       - |
         case "{{.DOMAIN}}" in
-          core|opm|gateway_api|cert_manager|kubernetes) ;;
+          core|opm|gateway_api|cert_manager|k8up|kubernetes) ;;
           *)
             echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, gateway_api, cert_manager, or kubernetes."
             exit 1
@@ -548,6 +613,24 @@ tasks:
         cd "{{.TASKFILE_DIR}}/{{.CERT_MANAGER_DIR}}" && cue mod publish "${VERSION}"
         echo "Published cert_manager/v1alpha1@${VERSION}"
 
+  publish:k8up:
+    desc: Publish k8up/v1alpha1 to local registry
+    vars:
+      VERSION: '{{.VERSION | default ""}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+    cmds:
+      - |
+        if [ -z "{{.VERSION}}" ]; then
+          VERSION=$(yq '.k8up.v1alpha1.version' {{.VERSION_FILE}})
+        else
+          VERSION="{{.VERSION}}"
+        fi
+        echo "Publishing k8up/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.K8UP_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published k8up/v1alpha1@${VERSION}"
+
   publish:kubernetes:
     desc: Publish kubernetes/v1 to local registry
     summary: |
@@ -617,6 +700,7 @@ tasks:
         publish_module "opm"          "v1alpha1" "{{.OPM_DIR}}"
         publish_module "gateway_api"  "v1alpha1" "{{.GATEWAY_API_DIR}}"
         publish_module "cert_manager" "v1alpha1" "{{.CERT_MANAGER_DIR}}"
+        publish_module "k8up"         "v1alpha1" "{{.K8UP_DIR}}"
         publish_module "kubernetes"   "v1"       "{{.KUBERNETES_DIR}}"
 
         echo ""
@@ -715,6 +799,7 @@ tasks:
         check_module "opm"          "v1alpha1" "{{.OPM_DIR}}"
         check_module "gateway_api"  "v1alpha1" "{{.GATEWAY_API_DIR}}"
         check_module "cert_manager" "v1alpha1" "{{.CERT_MANAGER_DIR}}"
+        check_module "k8up"         "v1alpha1" "{{.K8UP_DIR}}"
         check_module "kubernetes"   "v1"       "{{.KUBERNETES_DIR}}"
 
         if [ ${#CHANGED_KEYS[@]} -eq 0 ]; then

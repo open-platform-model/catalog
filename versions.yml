@@ -5,20 +5,24 @@
 
 core:
   v1alpha1:
-    version: v1.3.1
-    checksum: b5c05a3661fef9597589098af5f682d3ce31e367a7148d12c0699e50c426b8f4
+    version: v1.3.2
+    checksum: 8d924f3411dc8e37e4f905f4bfe393662f824bb608f4e8c7267aff06de8c0446
 opm:
   v1alpha1:
-    version: v1.5.4
-    checksum: 24c7f0b71605b5cebca6da4d469460e4e0d0bd94933f78c2a65dd94c9b5b6efa
+    version: v1.5.6
+    checksum: ebffff936eac2ff1628e97d41033daeb8e205f33073dfe581756bc03f21a7237
 gateway_api:
   v1alpha1:
-    version: v1.3.4
-    checksum: 16352f32edfae29b3692d06afb7f8bd031193f8376ad9ea828f96481b11c469f
+    version: v1.3.5
+    checksum: 18518008966c12d8f110fa42677b49ee7505ae4dd20e3c7673923e27c95a37f8
 cert_manager:
   v1alpha1:
     version: v1.3.2
     checksum: 552330e34ad9082395ca3b55061c609863f36dd72f0aa6d262d186b48c3e2ebc
+k8up:
+  v1alpha1:
+    version: v1.0.2
+    checksum: "6d80f309bed55b7aa5e39bea292171aa61dedeea30238ed73f3cb4a293444354"
 kubernetes:
   v1:
     version: v1.0.1

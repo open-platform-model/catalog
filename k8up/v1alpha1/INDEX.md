@@ -15,29 +15,56 @@ CUE module: `opmodel.dev/k8up/v1alpha1@v1`
 +-- schemas/
 ```
 
+---
+
+## Providers
+
+### kubernetes
+
+| Definition | File | Description |
+|---|---|---|
+| `#Provider` | `providers/kubernetes/provider.cue` | K8upKubernetesProvider transforms K8up backup components to Kubernetes native resources |
+
+### kubernetes/transformers
+
+| Definition | File | Description |
+|---|---|---|
+| `#BackupTransformer` | `providers/kubernetes/transformers/backup_transformer.cue` | #BackupTransformer passes K8up Backup resources through with OPM context applied (name prefix, namespace, labels) |
+| `#PreBackupPodTransformer` | `providers/kubernetes/transformers/pre_backup_pod_transformer.cue` | #PreBackupPodTransformer passes K8up PreBackupPod resources through with OPM context applied (name prefix, namespace, labels) |
+| `#RestoreTransformer` | `providers/kubernetes/transformers/restore_transformer.cue` | #RestoreTransformer passes K8up Restore resources through with OPM context applied (name prefix, namespace, labels) |
+| `#ScheduleTransformer` | `providers/kubernetes/transformers/schedule_transformer.cue` | #ScheduleTransformer passes K8up Schedule resources through with OPM context applied (name prefix, namespace, labels) |
+
+---
+
 ## Resources
 
-| Path | Name | Description |
+### backup
+
+| Definition | File | Description |
 |---|---|---|
-| `resources/backup/schedule.cue` | `#Schedule` | A K8up Schedule (recurring backup, check, and prune) |
-| `resources/backup/pre_backup_pod.cue` | `#PreBackupPod` | A K8up PreBackupPod (runs before each backup for consistency) |
-| `resources/backup/backup.cue` | `#Backup` | A K8up one-off Backup |
-| `resources/backup/restore.cue` | `#Restore` | A K8up Restore (restore from restic repository) |
+| `#Backup` | `resources/backup/backup.cue` |  |
+| `#BackupDefaults` | `resources/backup/backup.cue` |  |
+| `#BackupResource` | `resources/backup/backup.cue` |  |
+| `#PreBackupPod` | `resources/backup/pre_backup_pod.cue` |  |
+| `#PreBackupPodDefaults` | `resources/backup/pre_backup_pod.cue` |  |
+| `#PreBackupPodResource` | `resources/backup/pre_backup_pod.cue` |  |
+| `#Restore` | `resources/backup/restore.cue` |  |
+| `#RestoreDefaults` | `resources/backup/restore.cue` |  |
+| `#RestoreResource` | `resources/backup/restore.cue` |  |
+| `#Schedule` | `resources/backup/schedule.cue` |  |
+| `#ScheduleDefaults` | `resources/backup/schedule.cue` |  |
+| `#ScheduleResource` | `resources/backup/schedule.cue` |  |
+
+---
 
 ## Schemas
 
-| Path | Name | Description |
+| Definition | File | Description |
 |---|---|---|
-| `schemas/backup.cue` | `#ScheduleSchema` | Open schema for K8up Schedule CR spec |
-| `schemas/backup.cue` | `#PreBackupPodSchema` | Open schema for K8up PreBackupPod CR spec |
-| `schemas/backup.cue` | `#BackupSchema` | Open schema for K8up Backup CR spec |
-| `schemas/backup.cue` | `#RestoreSchema` | Open schema for K8up Restore CR spec |
+| `#BackupSchema` | `schemas/backup.cue` | #BackupSchema accepts the full K8up Backup spec |
+| `#PreBackupPodSchema` | `schemas/backup.cue` | #PreBackupPodSchema accepts the full K8up PreBackupPod spec |
+| `#RestoreSchema` | `schemas/backup.cue` | #RestoreSchema accepts the full K8up Restore spec |
+| `#ScheduleSchema` | `schemas/backup.cue` | #ScheduleSchema accepts the full K8up Schedule spec |
 
-## Transformers
+---
 
-| Path | Name | Description |
-|---|---|---|
-| `providers/kubernetes/transformers/schedule_transformer.cue` | `#ScheduleTransformer` | Passes K8up Schedule through with OPM context |
-| `providers/kubernetes/transformers/pre_backup_pod_transformer.cue` | `#PreBackupPodTransformer` | Passes K8up PreBackupPod through with OPM context |
-| `providers/kubernetes/transformers/backup_transformer.cue` | `#BackupTransformer` | Passes K8up Backup through with OPM context |
-| `providers/kubernetes/transformers/restore_transformer.cue` | `#RestoreTransformer` | Passes K8up Restore through with OPM context |
