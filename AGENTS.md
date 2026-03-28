@@ -29,13 +29,13 @@ Read these documents when entering this repository:
 adr/                   Architecture Decision Records
 v1alpha1/
   core/                Base constructs and primitives
+  enhancements/        Design documentation for possible future features and ADRs
   schemas/             Shared schemas and Kubernetes schema mirrors
   resources/           Resource definitions
   traits/              Trait definitions
   blueprints/          Blueprint definitions
   providers/           Providers and transformers
   examples/            Example definitions validated separately
-openspec/              Change proposals, designs, specs, tasks, constitution
 .tasks/                Shared Taskfile fragments
 versions.yml           Published module version + checksum
 ```
