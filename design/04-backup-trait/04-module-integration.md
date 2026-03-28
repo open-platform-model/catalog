@@ -148,6 +148,113 @@ values: {
 
 ---
 
+## Adding Backup Browsing with Hatch
+
+Module authors can optionally add a [Hatch](../../../hatch/) component to provide an authenticated web UI for browsing backup snapshots. Hatch is a separate workload component — not a trait — so it requires a conscious decision by the module author.
+
+See [06-backup-browser.md](06-backup-browser.md) for the full design rationale.
+
+### Module-Side: Adding a Hatch Component
+
+```cue
+#components: {
+    jellyfin: {
+        workload_blueprints.#StatefulWorkload
+        spec: statefulWorkload: { ... }
+
+        // Backup trait on the protected component
+        if #config.backup != _|_ {
+            data_traits.#Backup
+            spec: backup: {
+                pvcName:       #config.backup.pvcName
+                backend:       #config.backup.backend
+                schedule:      #config.backup.schedule
+                retention:     #config.backup.retention
+                checkSchedule: #config.backup.checkSchedule
+                pruneSchedule: #config.backup.pruneSchedule
+            }
+
+            data_traits.#PreBackupHook
+            spec: preBackupHook: {
+                image: "alpine:3.21"
+                command: ["sh", "-c", """
+                    sqlite3 /data/data/library.db 'PRAGMA wal_checkpoint(TRUNCATE)' && \
+                    sqlite3 /data/data/jellyfin.db 'PRAGMA wal_checkpoint(TRUNCATE)'
+                    """]
+                volumeMount: {
+                    pvcName:   #config.backup.pvcName
+                    mountPath: "/data"
+                }
+            }
+        }
+    }
+
+    // Hatch backup browser — separate component, conscious opt-in
+    if #config.hatch != _|_ if #config.hatch.enabled {
+        hatch: {
+            workload_blueprints.#StatelessWorkload
+            traits_network.#Expose
+
+            spec: {
+                statelessWorkload: container: {
+                    name:  "hatch"
+                    image: #config.hatch.image
+                    args: ["--config", "/etc/hatch/config.yaml"]
+                }
+
+                expose: ports: http: {
+                    targetPort:  8080
+                    exposedPort: 8080
+                }
+            }
+        }
+    }
+}
+```
+
+### Release-Side: Providing Hatch Config
+
+The release author enables Hatch and provides the image reference. The S3 credentials and repo password are shared with the backup trait via `values.backup.backend`:
+
+```cue
+// releases/kind_opm_dev/jellyfin/release.cue
+values: {
+    backup: {
+        pvcName: "jellyfin-jellyfin-config"
+        backend: {
+            s3: {
+                endpoint:        "http://garage-garage.garage.svc:3900"
+                bucket:          "jellyfin-backups"
+                accessKeyID:     {secretName: "jellyfin-backup-s3", remoteKey: "access-key-id"}
+                secretAccessKey: {secretName: "jellyfin-backup-s3", remoteKey: "secret-access-key"}
+            }
+            repoPassword: {secretName: "jellyfin-backup-restic", remoteKey: "password"}
+        }
+        retention: {keepDaily: 7, keepWeekly: 4, keepMonthly: 6}
+    }
+    hatch: {
+        enabled: true
+        image: {
+            repository: "ghcr.io/opmodel/hatch"
+            tag:        "latest"
+        }
+    }
+}
+```
+
+The Hatch container receives S3 credentials and the repo password via Kubernetes Secret volume mounts. Its YAML config references the mounted files. Config can be delivered as a ConfigMap or as an inline container argument (`--config-yaml`), following the Envoy Proxy pattern.
+
+### Updated Responsibility Split
+
+| Concern | Owner | Where |
+| --- | --- | --- |
+| Backup browser enablement | Module author + Release author | Module defines the component; release sets `hatch.enabled` |
+| Hatch image | Release author | `release.cue` via `values.hatch.image` |
+| Hatch config delivery | Module author | ConfigMap or inline `--config` / `--config-yaml` argument |
+| Backup browsing credentials | Release author (shared with backup) | Same `values.backup.backend` used by the backup trait |
+
+---
+
 ## Migration Path
 
 Existing modules (Jellyfin, Seerr) currently import the K8up catalog directly and generate K8up CRs in their `components.cue`. Migration to the trait-based approach:
