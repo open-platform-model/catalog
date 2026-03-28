@@ -3,7 +3,7 @@ package network
 import (
 	prim "opmodel.dev/core/v1alpha1/primitives@v1"
 	component "opmodel.dev/core/v1alpha1/component@v1"
-	schemas "opmodel.dev/gateway_api/v1alpha1/schemas@v1"
+	gwclass "opmodel.dev/gateway_api/v1alpha1/schemas/gateway/gateway.networking.k8s.io/gatewayclass/v1@v1"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -23,11 +23,17 @@ import (
 
 	#defaults: #GatewayClassDefaults
 
-	spec: close({gatewayClass: schemas.#GatewayClassSchema})
+	spec: close({gatewayClass: {
+		metadata?: _#metadata
+		spec?:     gwclass.#GatewayClassSpec
+	}})
 }
 
 #GatewayClass: component.#Component & {
 	#resources: {(#GatewayClassResource.metadata.fqn): #GatewayClassResource}
 }
 
-#GatewayClassDefaults: schemas.#GatewayClassSchema
+#GatewayClassDefaults: {
+	metadata?: _#metadata
+	spec?:     gwclass.#GatewayClassSpec
+}

@@ -3,7 +3,7 @@ package network
 import (
 	prim "opmodel.dev/core/v1alpha1/primitives@v1"
 	component "opmodel.dev/core/v1alpha1/component@v1"
-	schemas "opmodel.dev/gateway_api/v1alpha1/schemas@v1"
+	btp "opmodel.dev/gateway_api/v1alpha1/schemas/gateway/gateway.networking.x-k8s.io/xbackendtrafficpolicy/v1alpha1@v1"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -23,11 +23,17 @@ import (
 
 	#defaults: #BackendTrafficPolicyDefaults
 
-	spec: close({backendTrafficPolicy: schemas.#BackendTrafficPolicySchema})
+	spec: close({backendTrafficPolicy: {
+		metadata?: _#metadata
+		spec?:     btp.#XBackendTrafficPolicySpec
+	}})
 }
 
 #BackendTrafficPolicy: component.#Component & {
 	#resources: {(#BackendTrafficPolicyResource.metadata.fqn): #BackendTrafficPolicyResource}
 }
 
-#BackendTrafficPolicyDefaults: schemas.#BackendTrafficPolicySchema
+#BackendTrafficPolicyDefaults: {
+	metadata?: _#metadata
+	spec?:     btp.#XBackendTrafficPolicySpec
+}

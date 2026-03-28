@@ -3,7 +3,7 @@ package network
 import (
 	prim "opmodel.dev/core/v1alpha1/primitives@v1"
 	component "opmodel.dev/core/v1alpha1/component@v1"
-	schemas "opmodel.dev/gateway_api/v1alpha1/schemas@v1"
+	tlsr "opmodel.dev/gateway_api/v1alpha1/schemas/gateway/gateway.networking.k8s.io/tlsroute/v1@v1"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -23,11 +23,17 @@ import (
 
 	#defaults: #TlsRouteDefaults
 
-	spec: close({tlsRoute: schemas.#TlsRouteSchema})
+	spec: close({tlsRoute: {
+		metadata?: _#metadata
+		spec?:     tlsr.#TLSRouteSpec
+	}})
 }
 
 #TlsRoute: component.#Component & {
 	#resources: {(#TlsRouteResource.metadata.fqn): #TlsRouteResource}
 }
 
-#TlsRouteDefaults: schemas.#TlsRouteSchema
+#TlsRouteDefaults: {
+	metadata?: _#metadata
+	spec?:     tlsr.#TLSRouteSpec
+}

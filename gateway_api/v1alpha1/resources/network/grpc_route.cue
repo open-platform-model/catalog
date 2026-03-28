@@ -3,7 +3,7 @@ package network
 import (
 	prim "opmodel.dev/core/v1alpha1/primitives@v1"
 	component "opmodel.dev/core/v1alpha1/component@v1"
-	schemas "opmodel.dev/gateway_api/v1alpha1/schemas@v1"
+	gr "opmodel.dev/gateway_api/v1alpha1/schemas/gateway/gateway.networking.k8s.io/grpcroute/v1@v1"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -23,11 +23,17 @@ import (
 
 	#defaults: #GrpcRouteDefaults
 
-	spec: close({grpcRoute: schemas.#GrpcRouteSchema})
+	spec: close({grpcRoute: {
+		metadata?: _#metadata
+		spec?:     gr.#GRPCRouteSpec
+	}})
 }
 
 #GrpcRoute: component.#Component & {
 	#resources: {(#GrpcRouteResource.metadata.fqn): #GrpcRouteResource}
 }
 
-#GrpcRouteDefaults: schemas.#GrpcRouteSchema
+#GrpcRouteDefaults: {
+	metadata?: _#metadata
+	spec?:     gr.#GRPCRouteSpec
+}

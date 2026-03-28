@@ -3,7 +3,7 @@ package network
 import (
 	prim "opmodel.dev/core/v1alpha1/primitives@v1"
 	component "opmodel.dev/core/v1alpha1/component@v1"
-	schemas "opmodel.dev/gateway_api/v1alpha1/schemas@v1"
+	tr "opmodel.dev/gateway_api/v1alpha1/schemas/gateway/gateway.networking.k8s.io/tcproute/v1alpha2@v1"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -23,11 +23,17 @@ import (
 
 	#defaults: #TcpRouteDefaults
 
-	spec: close({tcpRoute: schemas.#TcpRouteSchema})
+	spec: close({tcpRoute: {
+		metadata?: _#metadata
+		spec?:     tr.#TCPRouteSpec
+	}})
 }
 
 #TcpRoute: component.#Component & {
 	#resources: {(#TcpRouteResource.metadata.fqn): #TcpRouteResource}
 }
 
-#TcpRouteDefaults: schemas.#TcpRouteSchema
+#TcpRouteDefaults: {
+	metadata?: _#metadata
+	spec?:     tr.#TCPRouteSpec
+}

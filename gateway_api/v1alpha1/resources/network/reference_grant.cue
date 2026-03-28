@@ -3,7 +3,7 @@ package network
 import (
 	prim "opmodel.dev/core/v1alpha1/primitives@v1"
 	component "opmodel.dev/core/v1alpha1/component@v1"
-	schemas "opmodel.dev/gateway_api/v1alpha1/schemas@v1"
+	rg "opmodel.dev/gateway_api/v1alpha1/schemas/gateway/gateway.networking.k8s.io/referencegrant/v1@v1"
 )
 
 /////////////////////////////////////////////////////////////////
@@ -23,11 +23,17 @@ import (
 
 	#defaults: #ReferenceGrantDefaults
 
-	spec: close({referenceGrant: schemas.#ReferenceGrantSchema})
+	spec: close({referenceGrant: {
+		metadata?: _#metadata
+		spec?:     rg.#ReferenceGrantSpec
+	}})
 }
 
 #ReferenceGrant: component.#Component & {
 	#resources: {(#ReferenceGrantResource.metadata.fqn): #ReferenceGrantResource}
 }
 
-#ReferenceGrantDefaults: schemas.#ReferenceGrantSchema
+#ReferenceGrantDefaults: {
+	metadata?: _#metadata
+	spec?:     rg.#ReferenceGrantSpec
+}
