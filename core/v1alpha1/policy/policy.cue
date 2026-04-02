@@ -6,10 +6,10 @@ import (
 	component "opmodel.dev/core/v1alpha1/component@v1"
 )
 
-// #Policy: Groups PolicyRules and targets them to a set of
-// components via label matching or explicit references.
-// Policies enable cross-cutting governance without coupling
-// rules to individual components.
+// #Policy: Groups PolicyRules and Directives and targets them
+// to a set of components via label matching or explicit references.
+// Policies enable cross-cutting governance and operational behavior
+// without coupling rules to individual components.
 #Policy: {
 	apiVersion: "opmodel.dev/core/v1alpha1"
 	kind:       "Policy"
@@ -21,10 +21,17 @@ import (
 		annotations?: t.#LabelsAnnotationsType
 	}
 
-	// PolicyRules grouped by this policy
+	// PolicyRules grouped by this policy (governance)
 	#rules: [RuleFQN=string]: prim.#PolicyRule & {
 		metadata: {
 			name: string | *RuleFQN
+		}
+	}
+
+	// Directives grouped by this policy (operational behavior)
+	#directives?: [DirectiveFQN=string]: prim.#Directive & {
+		metadata: {
+			name: string | *DirectiveFQN
 		}
 	}
 
@@ -43,6 +50,15 @@ import (
 			for _, rule in #rules {
 				if rule.#spec != _|_ {
 					for k, v in rule.#spec {
+						(k): v
+					}
+				}
+			}
+		}
+		if #directives != _|_ {
+			for _, directive in #directives {
+				if directive.#spec != _|_ {
+					for k, v in directive.#spec {
 						(k): v
 					}
 				}

@@ -67,6 +67,14 @@ import (
 	// If not provided, defaults from the definition can be used
 	optionalTraits: [string]: _
 
+	// Directives required by this transformer - component MUST be targeted by a Policy
+	// containing these directives. Map key is the FQN, value is the Directive definition.
+	requiredDirectives: [string]: _
+
+	// Directives optionally used by this transformer - component MAY be targeted by
+	// a Policy containing these directives.
+	optionalDirectives: [string]: _
+
 	// Transform function
 	// IMPORTANT: output must be a single resource
 	#transform: {

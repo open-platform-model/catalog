@@ -11,6 +11,7 @@ graph TB
     subgraph Primitives[" "]
         direction LR
         PolicyRule:::primitive
+        Directive:::primitive
         StatusProbe:::primitive
         Op:::primitive
         Action:::primitive
@@ -30,6 +31,7 @@ graph TB
 
     %% Primitives compose their direct constructs
     PolicyRule -->|composes| Policy
+    Directive -->|composes| Policy
     StatusProbe -->|composes| Status
     Op -->|composes| Action
     Action -->|consumed by| Lifecycle
@@ -78,6 +80,7 @@ graph TB
 | [**Trait**](primitives.md#trait) | Primitive | "How does it behave?" | Component |
 | [**Blueprint**](primitives.md#blueprint) | Primitive | "What is the reusable pattern?" | Component |
 | [**PolicyRule**](primitives.md#policyrule) | Primitive | "What must be true?" | Policy |
+| [**Directive**](primitives.md#directive) | Primitive | "What should the platform do?" | Policy |
 | [**StatusProbe**](primitives.md#statusprobe) | Primitive | "What should be checked?" | Module |
 | [**Op**](primitives.md#op) | Primitive | "What is the unit of work?" | Action |
 | [**Action**](primitives.md#action) | Primitive | "What is the composed operation?" | Lifecycle/Workflow |
@@ -104,7 +107,8 @@ graph TB
         2. Does this modify how a Resource operates? → **Trait**
         3. Is this a reusable composition of Resources/Traits? → **Blueprint**
         4. Is this a constraint with enforcement consequences? → **PolicyRule**
-        5. Is this a runtime health/readiness check? → **StatusProbe**
-        6. Is this an atomic unit of work? → **Op**
-        7. Is this a composed operation built from Ops/Actions? → **Action**
+        5. Is this operational behavior the platform should execute? → **Directive**
+        6. Is this a runtime health/readiness check? → **StatusProbe**
+        7. Is this an atomic unit of work? → **Op**
+        8. Is this a composed operation built from Ops/Actions? → **Action**
     - No → It's a **Construct**. See [Constructs](constructs.md).
