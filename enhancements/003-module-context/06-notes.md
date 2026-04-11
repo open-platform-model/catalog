@@ -14,17 +14,13 @@ This file collects every item that was explicitly flagged during the design proc
 
 ---
 
-## N1: Context Field Overrides
+## N1: Context Field Overrides — RESOLVED
 
 **Noted during:** Design session, clarifying question 4.
 
-**Note:** The current design makes `#ctx.runtime` fields fully computed — they are derived from `#ModuleRelease` metadata and `#environment` with no mechanism for a release author to override individual values. However, the intent expressed during design is to allow overrides in the future (e.g., overriding `resourceName` for a specific component without changing the release name).
+**Resolution:** Resource name override is now part of this design. `#Component.metadata` gains an optional `resourceName` field. `#ContextBuilder` reads it when iterating components and passes it into `#ComponentNames`, where CUE unification replaces the default `"{release}-{component}"`. All DNS variants cascade automatically. See `03-schema.md` for the schema changes.
 
-**Why this matters:** If the schema is designed in a way that structurally prevents overrides — for example, by using opaque `let` bindings rather than unifiable CUE fields — then adding override support later will require breaking changes. The initial implementation should leave the door open by preferring unification-based computation over closed expressions wherever possible.
-
-**What needs to happen:** Before implementation, confirm that the `#ContextBuilder` helper computes values via CUE field defaults and unification rather than `let` bindings or `_` hidden fields that cannot be overridden by a caller. Document the override surface explicitly when it is added.
-
-**Related decision:** D11 (`#ComponentNames` cascading derivation from `resourceName`) — the cascade already assumes `resourceName` can be overridden; the override mechanism itself is deferred.
+This supersedes the separate `002-resource-name-override` enhancement — the override mechanism lives entirely within the `#ctx` design and requires no additional schema constructs, Go pipeline changes, or transformer migration.
 
 ---
 
@@ -88,9 +84,11 @@ This is explicitly out of scope for the current design and must not be retrofitt
 
 ---
 
-## N6: `#ctx` Override Propagation to Release Files
+## N6: `#ctx` Override Propagation to Release Files — RESOLVED
 
 **Noted during:** Post-design review of the `#environment` field placement.
+
+**Resolution:** Enhancement 008 introduces `#Environment` as an importable CUE package. Each environment is defined in `.opm/environments/<env>/environment.cue` and imported by release files via `#env: env.#Environment`. Changing `clusterDomain` or `routeDomain` for a cluster requires updating only the `#Platform` or `#Environment` definition — all release files importing that environment pick up the change automatically via CUE's import mechanism. The shared environment profile pattern described below is now the default behavior, not a future aspiration.
 
 **Note:** Platform operators supply `#environment` fields in `#ModuleRelease` today. If a future cluster migration changes `clusterDomain` or `routeDomain`, every release file referencing that cluster must be updated. There is currently no mechanism for a shared environment profile to be imported across all releases in a cluster.
 

@@ -116,6 +116,8 @@ Decision log for all design choices made during the module context (`#ctx`) desi
 
 ### D8: `#environment` Input — New Optional Field on `#ModuleRelease`
 
+> **Superseded by enhancement 008, D18.** The `#Environment` construct replaces the inline `#environment` field. See [008 decisions](../008-platform-construct/04-decisions.md).
+
 **Decision:** Cluster and route domain values are supplied to `#ModuleRelease` via a new optional `#environment` field, separate from both `values` and `metadata`.
 
 **Alternatives considered:**
@@ -137,6 +139,8 @@ Decision log for all design choices made during the module context (`#ctx`) desi
 - No default, require explicit injection — rejected: would break all existing modules until every release file is updated; a backwards-incompatible requirement with no practical benefit
 
 **Rationale:** `"cluster.local"` is the correct default for the vast majority of Kubernetes clusters. The value is overridable via `#environment` without any module change when a non-standard domain is needed.
+
+> **Updated by enhancement 008.** The default `"cluster.local"` is now set at the `#Platform.#ctx.runtime.cluster.domain` level rather than in a flat `#environment` struct. The default value and rationale are unchanged.
 
 **Source:** Design session 2026-03-25
 
@@ -164,7 +168,7 @@ Decision log for all design choices made during the module context (`#ctx`) desi
 
 - Independent computation for each DNS variant — rejected: creates four separate places to update when the naming strategy changes; makes future `nameOverride` support more complex
 
-**Rationale:** A single source of truth for the base name (`resourceName`) means the entire cascade of DNS variants stays consistent automatically. Future override support (see [N1 in 06-notes.md](06-notes.md)) only needs to target `resourceName` rather than each variant independently.
+**Rationale:** A single source of truth for the base name (`resourceName`) means the entire cascade of DNS variants stays consistent automatically. The `metadata.resourceName` override (D16) targets `resourceName` only — all variants propagate automatically.
 
 **Source:** Design session 2026-03-25
 
@@ -176,7 +180,7 @@ Decision log for all design choices made during the module context (`#ctx`) desi
 
 **Alternatives considered:**
 
-- Keep hashes in transformers only — rejected: perpetuates the scattered, convention-dependent hash computation identified in the `02-resource-name-override` design; provides no module-level access to hash values
+- Keep hashes in transformers only — rejected: perpetuates the scattered, convention-dependent hash computation; provides no module-level access to hash values
 
 **Rationale:** Centralising hash computation at `#ctx` provides a single lookup point for both module components and transformers, eliminates duplication, and aligns with the principle of one computation site per derived value.
 
@@ -226,7 +230,23 @@ Decision log for all design choices made during the module context (`#ctx`) desi
 
 ---
 
-### D16: `#ContextBuilder` Location — `catalog/core/v1alpha1/helpers/`
+### D16: Resource Name Override — `metadata.resourceName` on `#Component`
+
+**Decision:** Components can override their Kubernetes resource base name by setting an optional `resourceName` field on `#Component.metadata`. `#ContextBuilder` reads this field and passes it into `#ComponentNames.resourceName`, replacing the default `"{release}-{component}"`. All DNS variants cascade automatically.
+
+**Alternatives considered:**
+
+- Separate `#ComponentContext` struct on `#Component.#ctx` — rejected: creates a CUE cycle risk because `#ctx` flows down from `#ModuleRelease` to `#Module` to components, but the override input flows up from component to builder
+- Override set directly on `#ctx.runtime.components[key].resourceName` from inside the module — rejected: self-referential; the module receives `#ctx` as input and cannot write to it without creating a dependency loop
+- Separate `002-resource-name-override` design with `nameOverride`, `#resolvedNames`, and transformer helpers — rejected: the `#ctx` design already provides a centralized name computation via `#ComponentNames` and `#ContextBuilder`; a separate override mechanism adds unnecessary complexity
+
+**Rationale:** Placing the override on component metadata keeps it as a clean input that `#ContextBuilder` reads before computing context. No cycle risk — metadata is set at module definition time, context is computed at release time. The existing `#ComponentNames` cascade handles propagation. This subsumes enhancement `002-resource-name-override` entirely.
+
+**Source:** Design session 2026-04-11
+
+---
+
+### D17: `#ContextBuilder` Location — `catalog/core/v1alpha1/helpers/`
 
 **Decision:** The `#ContextBuilder` helper is placed at `catalog/core/v1alpha1/helpers/context_builder.cue`.
 
@@ -237,3 +257,28 @@ Decision log for all design choices made during the module context (`#ctx`) desi
 **Rationale:** Placing `#ContextBuilder` in the helpers package keeps it importable from `#ModuleRelease` without circular imports, independently testable as a CUE value, and consistent with the existing pattern for catalog-side computation helpers.
 
 **Source:** Design session 2026-03-25; `#OpmSecretsComponent` precedent in `catalog/core/v1alpha1/helpers/`
+
+---
+
+### D18: Alignment with Enhancement 008 — `#environment` Replaced by `#env`
+
+**Decision:** Enhancement 003's inline `#environment` field on `#ModuleRelease` is superseded by enhancement 008's `#Environment` construct. The `#ContextBuilder` inputs are restructured: the flat `#environment: { clusterDomain, routeDomain? }` is replaced by typed `#platform: platform.#Platform` and `#environment: environment.#Environment` inputs. The `#ctx.platform` layer is populated by merging `#Platform.#ctx.platform` and `#Environment.#ctx.platform`, rather than starting as an empty struct.
+
+**What changed:**
+
+- `#ModuleRelease.#environment?` → `#ModuleRelease.#env: environment.#Environment`
+- `#ContextBuilder.#environment: { clusterDomain, routeDomain? }` → `#ContextBuilder.#platform` + `#ContextBuilder.#environment` (typed constructs)
+- `#ctx.platform: {}` (empty) → `#ctx.platform: #platform.#ctx.platform & #environment.#ctx.platform` (merged)
+- CLI `FillPath` injection for `#environment` → removed; environment imported via CUE
+
+**What is preserved:**
+
+- `#RuntimeContext` and `#ComponentNames` schemas (unchanged)
+- `resourceName` override on `#Component.metadata` (unchanged)
+- `#ComponentNames` cascading derivation (unchanged)
+- Content hash injection via Strategy B (unchanged)
+- `#ContextBuilder` location in `catalog/core/v1alpha1/helpers/` (unchanged)
+
+**Rationale:** Enhancement 008's `#Environment` is a strict superset of the inline `#environment` field. It adds platform reference, structured context hierarchy, environment identity, and namespace defaults. Keeping both mechanisms would create confusion and precedence ambiguity. See [enhancement 008, D18](../008-platform-construct/04-decisions.md).
+
+**Source:** Enhancement 008 design, 2026-04-11

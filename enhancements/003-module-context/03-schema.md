@@ -34,6 +34,33 @@
 
 ---
 
+## `#Component.metadata` Changes
+
+`resourceName` is added as an optional field on `#Component.metadata`. When set, it overrides the default Kubernetes resource base name (`{release}-{component}`) for all resources produced by this component. The `#ContextBuilder` reads this field when computing `#ComponentNames`.
+
+```cue
+// catalog/core/v1alpha1/component/component.cue
+#Component: {
+    ...
+
+    metadata: {
+        name!: t.#NameType
+
+        // Override the Kubernetes resource base name for this component.
+        // When absent, resourceName defaults to "{release}-{component}".
+        // All DNS variants in #ctx.runtime.components cascade from this value.
+        resourceName?: t.#NameType
+
+        labels?:      t.#LabelsAnnotationsType
+        annotations?: t.#LabelsAnnotationsType
+    }
+
+    ...
+}
+```
+
+---
+
 ## `#ModuleContext`
 
 The top-level context struct, defined in a new `context` package under `catalog/core/v1alpha1/context/`.
@@ -77,7 +104,8 @@ The OPM-owned layer. All fields are required to be concrete when the module is r
     // Cluster environment
     cluster: {
         // DNS search domain for Kubernetes Services.
-        // Defaults to "cluster.local"; overridable via #environment.clusterDomain.
+        // Defaults to "cluster.local"; overridable via #Platform.#ctx and #Environment.#ctx
+        // (see enhancement 008 context hierarchy).
         domain: *"cluster.local" | string
     }
 
@@ -100,7 +128,7 @@ The OPM-owned layer. All fields are required to be concrete when the module is r
 
 ## `#ComponentNames`
 
-Computes all name variants for one component. The four DNS variants cascade automatically from `resourceName`. Overriding `resourceName` (e.g., via a future `nameOverride` mechanism) propagates to all `dns` fields without any further change.
+Computes all name variants for one component. The four DNS variants cascade automatically from `resourceName`. When a component sets `metadata.resourceName`, `#ContextBuilder` passes it through and it replaces the default; all `dns` fields propagate without any further change.
 
 ```cue
 // catalog/core/v1alpha1/context/context.cue
@@ -111,7 +139,8 @@ Computes all name variants for one component. The four DNS variants cascade auto
     _compName:      string
 
     // Base Kubernetes resource name for all resources produced by this component.
-    // Future: may be overridden by component.metadata.nameOverride.
+    // Defaults to "{release}-{component}". Overridden when the component
+    // sets metadata.resourceName — #ContextBuilder passes the override here.
     resourceName: string | *"\(_releaseName)-\(_compName)"
 
     dns: {
@@ -139,7 +168,7 @@ Computes all name variants for one component. The four DNS variants cascade auto
 
 ## `#ContextBuilder`
 
-A standalone helper that assembles `#RuntimeContext` from its inputs. Defined in `catalog/core/v1alpha1/helpers/` alongside `#OpmSecretsComponent` and similar helpers. This keeps `#ModuleRelease` readable and makes the context computation independently testable.
+A standalone helper that assembles `#ModuleContext` from platform, environment, and release inputs. Defined in `catalog/core/v1alpha1/helpers/` alongside `#OpmSecretsComponent` and similar helpers. This keeps `#ModuleRelease` readable and makes the context computation independently testable. The inputs changed from a flat `#environment` struct (enhancement 003 original) to typed `#platform` and `#environment` construct references (enhancement 008). See 008's [05-environment.md](../008-platform-construct/05-environment.md) for the context hierarchy.
 
 ```cue
 // catalog/core/v1alpha1/helpers/context_builder.cue
@@ -147,60 +176,67 @@ A standalone helper that assembles `#RuntimeContext` from its inputs. Defined in
     // Inputs
     #release:     { name: t.#NameType, namespace: string, uuid: t.#UUIDType }
     #module:      { name: t.#NameType, version: t.#VersionType, fqn: string, uuid: t.#UUIDType }
-    #components:  [string]: _   // component key map; values not inspected
-    #environment: {
-        clusterDomain: *"cluster.local" | string
-        routeDomain?:  string
-    }
+    #components:  [string]: _   // component key map; values inspected for metadata.resourceName
+    #platform:    platform.#Platform
+    #environment: environment.#Environment
+
+    // Resolve cluster domain: environment overrides platform default.
+    let _clusterDomain = *#environment.#ctx.runtime.cluster.domain |
+                         #platform.#ctx.runtime.cluster.domain
 
     // Output
-    out: #RuntimeContext & {
-        release: #release
-        module:  #module
-        cluster: domain: #environment.clusterDomain
-        if #environment.routeDomain != _|_ {
-            route: domain: #environment.routeDomain
-        }
-        components: {
-            for compName, _ in #components {
-                (compName): {
-                    _releaseName:   #release.name
-                    _namespace:     #release.namespace
-                    _clusterDomain: #environment.clusterDomain
-                    _compName:      compName
+    out: #ModuleContext & {
+        runtime: #RuntimeContext & {
+            release: #release
+            module:  #module
+            cluster: domain: _clusterDomain
+            if #environment.#ctx.runtime.route != _|_ {
+                route: #environment.#ctx.runtime.route
+            }
+            components: {
+                for compName, comp in #components {
+                    (compName): {
+                        _releaseName:   #release.name
+                        _namespace:     #release.namespace
+                        _clusterDomain: _clusterDomain
+                        _compName:      compName
+                        // If the component declares a resourceName override, pass it through.
+                        // CUE unification replaces the default in #ComponentNames.
+                        if comp.metadata.resourceName != _|_ {
+                            resourceName: comp.metadata.resourceName
+                        }
+                    }
                 }
             }
         }
+        // Merge platform extensions from both platform and environment layers.
+        platform: #platform.#ctx.platform & #environment.#ctx.platform
     }
 }
 ```
 
 ---
 
-## `#environment` on `#ModuleRelease`
+## `#env` on `#ModuleRelease`
 
-A new optional input field on `#ModuleRelease`. It carries the deployment-environment properties that `#ContextBuilder` needs. These are distinct from `values` (user application config) and distinct from `metadata` (release identity).
+> **Superseded by enhancement 008, D18.** The original `#environment?` inline field has been replaced by the `#Environment` construct. See [enhancement 008 — 05-environment.md](../008-platform-construct/05-environment.md).
+
+`#ModuleRelease` targets a deployment environment via the `#env` definition field. `#env` references an `#Environment` construct, which carries both the platform reference and environment-level context:
 
 ```cue
 // catalog/core/v1alpha1/modulerelease/module_release.cue
 #ModuleRelease: {
     ...
 
-    // Environment configuration injected by the platform or runtime.
-    // Provides cluster- and route-domain information to #ctx.runtime.
-    // When absent, clusterDomain defaults to "cluster.local" and route is omitted.
-    #environment?: {
-        clusterDomain: *"cluster.local" | string
-        routeDomain?:  string
-        // Open for future environment properties.
-        ...
-    }
+    // Target environment — carries platform reference and context hierarchy.
+    // Imported from .opm/environments/<env>/ by the release file.
+    #env: environment.#Environment
 
     values: _
 }
 ```
 
-The `#environment` field is populated via `FillPath` in the Go pipeline when the CLI has environment configuration available (e.g., from a flags or config file). When not populated, CUE defaults apply.
+Environment properties (cluster domain, route domain, namespace default) are no longer flat fields on `#ModuleRelease` — they live in the `#Environment` and `#Platform` constructs and are resolved via the context hierarchy (CUE defaults → `#Platform.#ctx` → `#Environment.#ctx` → release identity). The `#ContextBuilder` reads from `#env.#platform` and `#env` to assemble the final `#ModuleContext`.
 
 ---
 
@@ -210,8 +246,11 @@ The `#environment` field is populated via `FillPath` in the Go pipeline when the
 | -------- | ------- |
 | `catalog/core/v1alpha1/context/context.cue` | `#ModuleContext`, `#RuntimeContext`, `#ComponentNames` |
 | `catalog/core/v1alpha1/helpers/context_builder.cue` | `#ContextBuilder` helper |
+| `catalog/core/v1alpha1/platform/platform.cue` | `#Platform` construct (enhancement 008) |
+| `catalog/core/v1alpha1/environment/environment.cue` | `#Environment` construct (enhancement 008) |
 
 | Modified file | Change |
 | ------------- | ------ |
+| `catalog/core/v1alpha1/component/component.cue` | Add optional `resourceName?: t.#NameType` to `metadata` |
 | `catalog/core/v1alpha1/module/module.cue` | Add `#ctx: ctx.#ModuleContext` |
-| `catalog/core/v1alpha1/modulerelease/module_release.cue` | Add `#environment?`; compute and inject `#ctx` via `#ContextBuilder` |
+| `catalog/core/v1alpha1/modulerelease/module_release.cue` | Add `#env: environment.#Environment`; compute and inject `#ctx` via `#ContextBuilder` |

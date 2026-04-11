@@ -24,7 +24,6 @@
 - Cross-module context references (e.g., a module reading another module's resource names)
 - Bundle-level shared context (deferred — see open questions in README)
 - `#TransformerContext` replacement or unification (deferred — see open questions in README)
-- Per-component context overrides by the release author
 
 ---
 
@@ -55,7 +54,7 @@ Defined and validated by the OPM catalog. Every field in `runtime` has a known s
 
 An open struct with no catalog-defined constraints. Platform teams use this to inject fields that are specific to their environment or tooling. Module authors who target a specific platform can reference `#ctx.platform` fields, with the understanding that those fields are platform-specific and not universally available.
 
-The `platform` layer starts as a flat open struct. Conventions for naming platform extensions are left to platform teams.
+The `platform` layer is populated by merging `#Platform.#ctx.platform` and `#Environment.#ctx.platform` via `#ContextBuilder` (see [enhancement 008](../008-platform-construct/02-design.md)). Conventions for naming platform extensions are left to platform teams.
 
 ---
 
@@ -77,7 +76,7 @@ runtime: {
     }
 
     cluster: {
-        domain: string       // default "cluster.local"; overridable via #environment
+        domain: string       // default "cluster.local"; overridable via #Platform.#ctx / #Environment.#ctx
     }
 
     route?: {
@@ -94,7 +93,7 @@ runtime: {
 
 The per-component sub-struct is the centerpiece of the runtime context. It takes the four primitive inputs — release name, component name, namespace, and cluster domain — and derives all useful name variants from them.
 
-`resourceName` is the base Kubernetes name for all resources produced by the component. It defaults to `{release}-{component}`. The design anticipates a future `nameOverride` mechanism (see design `02-resource-name-override`) that would change `resourceName` without touching other fields; all `dns` variants cascade from `resourceName` automatically.
+`resourceName` is the base Kubernetes name for all resources produced by the component. It defaults to `{release}-{component}`. A component can override this by setting `metadata.resourceName` on its `#Component` definition — `#ContextBuilder` reads the override and passes it into `#ComponentNames`, where it replaces the default. All `dns` variants cascade from `resourceName` automatically, so a single override propagates everywhere.
 
 ```
 #ComponentNames: {
@@ -182,4 +181,4 @@ if #ctx.runtime.route != _|_ {
 }
 ```
 
-The operator configures `routeDomain` once in their `#environment` block. Every module that derives a URL from `#ctx.runtime.route.domain` picks it up automatically.
+The environment operator configures `route.domain` once in the `#Environment` construct. Every module that derives a URL from `#ctx.runtime.route.domain` picks it up automatically. See [enhancement 008](../008-platform-construct/05-environment.md) for the `#Environment` construct.

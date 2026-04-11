@@ -17,7 +17,7 @@ hardcoding values or requiring manual user input for derived configuration.
 
 1. [01-problem.md](01-problem.md) — Why modules are currently blind to deployment context; the cost of that blindness
 2. [02-design.md](02-design.md) — Two-layer design: `runtime` (OPM-owned) + `platform` (open extension)
-3. [03-schema.md](03-schema.md) — `#RuntimeContext`, `#ComponentNames`, `#ContextBuilder`, and `#environment` schemas
+3. [03-schema.md](03-schema.md) — `#RuntimeContext`, `#ComponentNames`, `#ContextBuilder`, and `#env` schemas
 4. [04-pipeline-changes.md](04-pipeline-changes.md) — `#ModuleRelease` changes; `#ContextBuilder` computation; injection flow
 5. [05-decisions.md](05-decisions.md) — All design decisions with rationale and alternatives considered
 6. [06-notes.md](06-notes.md) — Deferred discussions, forward-leaning notes, and open questions requiring follow-up
@@ -41,4 +41,5 @@ All items flagged during design as requiring further discussion are tracked in [
 | `catalog/core/v1alpha1/schemas/schemas.cue` | `#ContentHash`, `#ImmutableName` — hash computation moving to `#ctx` |
 | `cli/pkg/render/execute.go` | `injectContext()` — receives environment inputs for `#ctx` |
 | `modules/jellyfin/components.cue` | Concrete example: `publishedServerUrl` derivable from `#ctx.runtime.route.domain` |
-| `catalog/design/02-resource-name-override/` | `#resolvedNames` design — superseded by `#ctx.runtime.components` |
+| `catalog/enhancements/002-resource-name-override/` | Superseded — resource name override is now part of this design (D16) |
+| `catalog/enhancements/008-platform-construct/` | Enhancement 008 — `#Platform`, `#Environment`. Supersedes 003's inline `#environment` (008 D18) |

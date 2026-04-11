@@ -14,20 +14,22 @@
 ModuleRelease (CUE)
   metadata: { name, namespace, uuid }
   #module: <module definition>
-  #environment?: { clusterDomain, routeDomain }
+  #env: env.#Environment       // carries #platform + environment #ctx
   values: { ... }
 
-  → #ContextBuilder computes _computedCtx from metadata + #environment + component keys
+  → #ContextBuilder computes _computedCtx from:
+      #env.#platform.#ctx (Layer 2) + #env.#ctx (Layer 3)
+      + metadata (Layer 4) + component keys
   → let unifiedModule = #module & {
         #config: values
-        #ctx:    { runtime: _computedCtx, platform: {} }
+        #ctx:    _computedCtx
     }
   → components: { for name, comp in unifiedModule.#components { (name): comp } }
 
 CLI (Go)
   → ParseModuleRelease() loads the CUE value
-  → If CLI has clusterDomain / routeDomain flags or config, inject via FillPath
-      into #environment before evaluation
+  → #env is imported by the release file; no CLI FillPath injection for environment
+  → Extracts #env.#platform.#provider (composed transformer registry)
   → Evaluate unifiedModule.components
   → For each (component, transformer) pair:
       injectContext() fills #context in the transformer with #TransformerContext data
@@ -39,35 +41,27 @@ CLI (Go)
 
 ## `#ModuleRelease` Changes (CUE)
 
-The `#ModuleRelease` definition gains two additions:
-
-1. The optional `#environment` input field (see `03-schema.md`)
-2. A `let` binding that invokes `#ContextBuilder` and passes the result into the unified module
+The `#ModuleRelease` definition targets an `#Environment` via `#env` (see `03-schema.md`). The `#ContextBuilder` receives the platform and environment from `#env` and merges them with release identity to produce `#ModuleContext`.
 
 ```cue
 // catalog/core/v1alpha1/modulerelease/module_release.cue
 #ModuleRelease: {
     ...
 
-    #environment?: {
-        clusterDomain: *"cluster.local" | string
-        routeDomain?:  string
-        ...
-    }
-
-    let _env = #environment | {clusterDomain: "cluster.local"}
+    #env: environment.#Environment
 
     let _computedCtx = (helpers.#ContextBuilder & {
         #release:     { name: metadata.name, namespace: metadata.namespace, uuid: metadata.uuid }
         #module:      { name: #moduleMetadata.name, version: #moduleMetadata.version,
                         fqn: #moduleMetadata.fqn, uuid: #moduleMetadata.uuid }
         #components:  #module.#components
-        #environment: _env
+        #platform:    #env.#platform
+        #environment: #env
     }).out
 
     let unifiedModule = #module & {
         #config: values
-        #ctx:    { runtime: _computedCtx, platform: {} }
+        #ctx:    _computedCtx
     }
 
     _autoSecrets: (schemas.#AutoSecrets & {#in: unifiedModule.#config}).out
@@ -85,28 +79,25 @@ The `#ModuleRelease` definition gains two additions:
 }
 ```
 
-The `platform` layer is initialized as an empty open struct. Platform teams populate it by injecting their own values via `FillPath` before evaluation, using the same mechanism as `#environment`.
+The `platform` layer in `#ctx` is merged from `#env.#platform.#ctx.platform` and `#env.#ctx.platform` by the `#ContextBuilder`. Platform teams set platform-level extensions on the `#Platform` construct; environment operators can add environment-specific extensions on `#Environment`. No Go-side `FillPath` injection is needed for platform or environment context.
 
 ---
 
 ## Go Pipeline Changes (`cli/pkg/render/`)
 
-### `ParseModuleRelease()` — environment injection
+### `ParseModuleRelease()` — environment import (no Go injection)
 
-When the CLI has cluster or route domain configuration available (from flags, config file, or provider defaults), it injects these into `#environment` before the CUE value is evaluated:
+Enhancement 003 originally injected `#environment` via `FillPath` from CLI flags. With enhancement 008, the environment is imported by the release file as a CUE package (`#env: env.#Environment`). The CLI no longer needs to inject cluster or route domain values — they are resolved via the CUE import chain.
+
+The `ParseModuleRelease()` function still loads the CUE value but no longer calls `FillPath` for `#environment`. Instead, it extracts `#env.#platform.#provider` to obtain the composed transformer registry for the matcher.
 
 ```go
 // cli/pkg/module/parse.go (illustrative)
-if cfg.ClusterDomain != "" || cfg.RouteDomain != "" {
-    env := map[string]any{"clusterDomain": cfg.ClusterDomain}
-    if cfg.RouteDomain != "" {
-        env["routeDomain"] = cfg.RouteDomain
-    }
-    spec = spec.FillPath(cue.MakePath(cue.Def("environment")), cueCtx.Encode(env))
-}
+// FillPath injection for #environment is no longer needed.
+// The release file imports #env, which carries platform + environment context.
+// The CLI extracts the composed provider for the matcher:
+provider := spec.LookupPath(cue.MakePath(cue.Def("env"), cue.Def("platform"), cue.Def("provider")))
 ```
-
-When `#environment` is not injected by Go, the CUE default (`clusterDomain: "cluster.local"`, no route) applies. This means the Go injection is additive and optional — the system works without it.
 
 ### `injectContext()` — no change required
 
@@ -132,7 +123,7 @@ Step 5 creates a circular dependency if done purely in CUE: `#ctx` must be prese
 
 **Strategy A — Two-pass CUE evaluation**: `#ctx` is injected without hashes first. Component specs are evaluated. Hashes are computed from the resolved data, then `#ctx` is re-injected with hashes populated via a second `FillPath` call. Components that reference hashes (e.g., for constructing an immutable ConfigMap name in an env var) use the second pass result.
 
-**Strategy B — Hash computation deferred to transformers**: `#ctx.runtime.components[name].hashes` is populated by Go code in `injectContext()` rather than in `#ContextBuilder`. The Go pipeline computes hashes from the resolved component spec before calling transformers, and injects them into the context at that point. This mirrors how `#resolvedNames` was designed in `02-resource-name-override`.
+**Strategy B — Hash computation deferred to transformers**: `#ctx.runtime.components[name].hashes` is populated by Go code in `injectContext()` rather than in `#ContextBuilder`. The Go pipeline computes hashes from the resolved component spec before calling transformers, and injects them into the context at that point. This mirrors the Go-side injection pattern used elsewhere in the pipeline.
 
 Strategy B is lower risk because it follows the existing pattern and avoids a second CUE evaluation pass. It is the recommended starting point. Strategy A can be adopted later if there is a strong need for components to reference their own hash values at definition time (e.g., to self-reference an immutable ConfigMap name in an environment variable).
 
@@ -140,21 +131,25 @@ Strategy B is lower risk because it follows the existing pattern and avoids a se
 
 ## Release File — Operator Usage
 
-A release file gains an optional `#environment` block alongside the existing `values` block:
+A release file imports its target environment and references the module:
 
 ```cue
-// releases/home/jellyfin/release.cue
-#module: jellyfin_module.#Module & jellyfinModule
+// releases/dev/jellyfin/release.cue
+package jellyfin
+
+import (
+    jellyfin "opmodel.dev/jellyfin/v1alpha1@v1"
+    env "opmodel.dev/config@v1/.opm/environments/dev"
+)
+
+#env: env.#Environment
 
 metadata: {
     name:      "jellyfin"
-    namespace: "media"
+    namespace: "media"  // overrides environment default namespace
 }
 
-#environment: {
-    clusterDomain: "cluster.local"
-    routeDomain:   "home.example.com"
-}
+#module: jellyfin.#Module
 
 values: {
     port:        8096
@@ -166,4 +161,12 @@ values: {
 }
 ```
 
-With this configuration, `#ctx.runtime.route.domain` resolves to `"home.example.com"` inside the module's components, and `publishedServerUrl` is derived automatically — no entry in `values` required.
+With this configuration, context resolves as:
+
+- `#ctx.runtime.cluster.domain` → `"cluster.local"` (from platform)
+- `#ctx.runtime.route.domain` → `"dev.local"` (from environment)
+- `#ctx.runtime.release.namespace` → `"media"` (from release, overriding env default)
+- `#ctx.runtime.release.name` → `"jellyfin"` (from release metadata)
+- `#ctx.platform` → merged from platform and environment extensions
+
+`publishedServerUrl` is derived automatically from `#ctx.runtime.route.domain` — no entry in `values` required.
