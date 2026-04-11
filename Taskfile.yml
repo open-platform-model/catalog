@@ -1,11 +1,13 @@
 version: '3'
 
 # Catalog CUE Module Taskfile
-# Tasks for the v1alpha1/ module (opmodel.dev@v1).
+# Tasks for the domain-structured modules:
+#   core/v1alpha1, opm/v1alpha1, gateway_api/v1alpha1, cert_manager/v1alpha1, k8up/v1alpha1, kubernetes/v1
 #
 # Usage:
 #   task fmt
 #   task vet
+#   task test
 #   task publish:local
 #   task publish:smart
 
@@ -43,11 +45,13 @@ tasks:
   # ============================================================================
 
   fmt:
-    desc: Format CUE files
+    desc: Format CUE files across all domain modules
     cmds:
       - |
-        echo "Formatting {{.V1ALPHA1_DIR}}..."
-        cd "{{.V1ALPHA1_DIR}}" && cue fmt ./...
+        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.K8UP_DIR}}" "{{.KUBERNETES_DIR}}"; do
+          echo "Formatting ${dir}..."
+          (cd "{{.TASKFILE_DIR}}/${dir}" && cue fmt ./...)
+        done
         echo "Done"
 
   # ============================================================================
@@ -55,169 +59,450 @@ tasks:
   # ============================================================================
 
   vet:
-    desc: Validate CUE files (excludes examples — use vet:examples for those)
+    desc: Validate all five domain CUE modules in dependency order
     summary: |
-      Validate CUE files in the v1alpha1 module, excluding the examples/ directory.
-      Use 'task vet:examples' to validate examples separately.
+      Validates all five domain modules in dependency order:
+        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1
 
       Usage:
         task vet
         task vet CONCRETE=true    # Validate with concreteness checks
+    cmds:
+      - task: vet:core
+      - task: vet:opm
+      - task: vet:gateway_api
+      - task: vet:cert_manager
+      - task: vet:k8up
+      - task: vet:kubernetes
+
+  vet:core:
+    desc: Validate core/v1alpha1 CUE module
     vars:
       CONCRETE: '{{.CONCRETE | default "false"}}'
       VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
     cmds:
       - |
-        echo "Validating {{.V1ALPHA1_DIR}} (excluding examples){{if eq .CONCRETE "true"}} (concrete){{end}}..."
-        cd "{{.V1ALPHA1_DIR}}" && cue vet {{.VET_FLAGS}} \
-          ./core/... ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...
-        echo "Done"
+        echo "Validating {{.CORE_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.CORE_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "  ✔ core/v1alpha1"
 
-  vet:examples:
-    desc: Validate CUE files in the examples/ directory
-    summary: |
-      Validate CUE files in v1alpha1/examples/ separately.
-      Examples include alternative value files that conflict when evaluated together;
-      this task surfaces those errors in isolation.
-
-      Usage:
-        task vet:examples
-        task vet:examples CONCRETE=true
+  vet:opm:
+    desc: Validate opm/v1alpha1 CUE module
     vars:
       CONCRETE: '{{.CONCRETE | default "false"}}'
       VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
     cmds:
       - |
-        if [ ! -d "{{.V1ALPHA1_DIR}}/examples" ]; then
-          echo "Skipping {{.V1ALPHA1_DIR}}/examples (directory does not exist)"
-          exit 0
-        fi
-        echo "Validating {{.V1ALPHA1_DIR}}/examples{{if eq .CONCRETE "true"}} (concrete){{end}}..."
-        cd "{{.V1ALPHA1_DIR}}" && cue vet {{.VET_FLAGS}} ./examples/...
-        echo "Done"
+        echo "Validating {{.OPM_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.OPM_DIR}}" && cue vet {{.VET_FLAGS}} \
+          ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...
+        echo "  ✔ opm/v1alpha1"
 
-  eval:
-    desc: Evaluate CUE files
-    summary: |
-      Evaluate CUE files in the v1alpha1 module.
-
-      Usage:
-        task eval
-        task eval OUTPUT=out.cue    # Write output to file
+  vet:gateway_api:
+    desc: Validate gateway_api/v1alpha1 CUE module
     vars:
-      OUTPUT: '{{.OUTPUT | default ""}}'
-      EVAL_REDIRECT: '{{if .OUTPUT}}> {{.OUTPUT}}{{end}}'
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
     cmds:
       - |
-        echo "Evaluating {{.V1ALPHA1_DIR}}..."
-        cd "{{.V1ALPHA1_DIR}}" && cue eval ./... {{.EVAL_REDIRECT}}
-        echo "Done"
+        echo "Validating {{.GATEWAY_API_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.GATEWAY_API_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "  ✔ gateway_api/v1alpha1"
+
+  vet:cert_manager:
+    desc: Validate cert_manager/v1alpha1 CUE module
+    vars:
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
+    cmds:
+      - |
+        echo "Validating {{.CERT_MANAGER_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.CERT_MANAGER_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "  ✔ cert_manager/v1alpha1"
+
+  vet:k8up:
+    desc: Validate k8up/v1alpha1 CUE module
+    vars:
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
+    cmds:
+      - |
+        echo "Validating {{.K8UP_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.K8UP_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "  ✔ k8up/v1alpha1"
+
+  vet:kubernetes:
+    desc: Validate kubernetes/v1 CUE module
+    vars:
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
+    cmds:
+      - |
+        echo "Validating {{.KUBERNETES_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.KUBERNETES_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "  ✔ kubernetes/v1"
+
+  # ============================================================================
+  # Testing
+  # ============================================================================
+
+  test:
+    desc: Run structural tests (@if(test) files) across all domain modules
+    summary: |
+      Runs all *_tests.cue files tagged @if(test) across all domain modules.
+      Tests use CUE unification for assertions — a test fails when the computed
+      output conflicts with the asserted expected value.
+
+      Usage:
+        task test
+        task test:core
+        task test:opm
+        task test:gateway_api
+        task test:cert_manager
+        task test:kubernetes
+    cmds:
+      - task: test:core
+      - task: test:opm
+      - task: test:gateway_api
+      - task: test:cert_manager
+      - task: test:k8up
+      - task: test:kubernetes
+
+  test:core:
+    desc: Run core/v1alpha1 structural tests (@if(test) files)
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
+        echo "Testing core/v1alpha1 (structural)..."
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.CORE_DIR}}" && cue vet -t test ./... 2>&1) && {
+          echo -e "${GREEN}✔ core/v1alpha1 — Successful${NC}"
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ core/v1alpha1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ core/v1alpha1 — Failed${NC}"
+            exit 1
+          fi
+        }
+
+  test:opm:
+    desc: Run opm/v1alpha1 transformer structural tests (@if(test) files)
+    summary: |
+      Runs all *_tests.cue files tagged @if(test) in the opm/v1alpha1 module.
+
+      Tests use CUE unification for assertions — a test fails when the computed
+      transformer output conflicts with the asserted expected value.
+
+      Runs WITHOUT -c (concreteness) because transformer outputs include intermediate
+      computed fields that depend on optional trait defaults. Use test:strict
+      for fully-concrete subset tests.
+
+      Usage:
+        task test:opm
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
+        echo "Testing opmodel.dev/opm/v1alpha1 (structural)..."
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.OPM_DIR}}" && cue vet -t test \
+          ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/... 2>&1) && {
+          echo -e "${GREEN}✔ opm/v1alpha1 — Successful${NC}"
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ opm/v1alpha1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ opm/v1alpha1 — Failed${NC}"
+            exit 1
+          fi
+        }
+
+  test:gateway_api:
+    desc: Run gateway_api/v1alpha1 transformer structural tests (@if(test) files)
+    summary: |
+      Runs all *_tests.cue files tagged @if(test) in the gateway_api/v1alpha1 module.
+
+      Usage:
+        task test:gateway_api
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
+        echo "Testing opmodel.dev/gateway_api/v1alpha1 (structural)..."
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.GATEWAY_API_DIR}}" && cue vet -t test ./... 2>&1) && {
+          echo -e "${GREEN}✔ gateway_api/v1alpha1 — Successful${NC}"
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ gateway_api/v1alpha1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ gateway_api/v1alpha1 — Failed${NC}"
+            exit 1
+          fi
+        }
+
+  test:cert_manager:
+    desc: Run cert_manager/v1alpha1 transformer and matrix tests (@if(test) files)
+    summary: |
+      Runs all *_tests.cue and *_matrix_tests.cue files tagged @if(test) in the
+      cert_manager/v1alpha1 module. Matrix tests are included naturally via ./...
+
+      Usage:
+        task test:cert_manager
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
+        echo "Testing opmodel.dev/cert_manager/v1alpha1 (structural + matrix)..."
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.CERT_MANAGER_DIR}}" && cue vet -t test ./... 2>&1) && {
+          echo -e "${GREEN}✔ cert_manager/v1alpha1 — Successful${NC}"
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ cert_manager/v1alpha1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ cert_manager/v1alpha1 — Failed${NC}"
+            exit 1
+          fi
+        }
+
+  test:k8up:
+    desc: Run k8up/v1alpha1 structural tests (@if(test) files)
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
+        echo "Testing opmodel.dev/k8up/v1alpha1 (structural)..."
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.K8UP_DIR}}" && cue vet -t test ./... 2>&1) && {
+          echo -e "${GREEN}✔ k8up/v1alpha1 — Successful${NC}"
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ k8up/v1alpha1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ k8up/v1alpha1 — Failed${NC}"
+            exit 1
+          fi
+        }
+
+  test:kubernetes:
+    desc: Run kubernetes/v1 structural tests (@if(test) files)
+    summary: |
+      Runs all *_tests.cue files tagged @if(test) in the kubernetes/v1 module.
+
+      Usage:
+        task test:kubernetes
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
+        echo "Testing opmodel.dev/kubernetes/v1 (structural)..."
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.KUBERNETES_DIR}}" && cue vet -t test ./... 2>&1) && {
+          echo -e "${GREEN}✔ kubernetes/v1 — Successful${NC}"
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ kubernetes/v1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ kubernetes/v1 — Failed${NC}"
+            exit 1
+          fi
+        }
+
+  test:strict:
+    desc: Run opm/v1alpha1 tests with full concreteness checks (-c flag)
+    summary: |
+      Like test:opm but adds -c (concreteness check).
+      Only run this when all test values are fully concrete (no abstract type
+      constraints in the final evaluated value).
+
+      Usage:
+        task test:strict
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
+        echo "Testing opmodel.dev/opm/v1alpha1 (structural, strict)..."
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.OPM_DIR}}" && cue vet -t test -c \
+          ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/... 2>&1) && {
+          echo -e "${GREEN}✔ opm/v1alpha1 strict — Successful${NC}"
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ opm/v1alpha1 strict — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ opm/v1alpha1 strict — Failed${NC}"
+            exit 1
+          fi
+        }
 
   # ============================================================================
   # Module Management
   # ============================================================================
 
   tidy:
-    desc: Tidy module dependencies
+    desc: Tidy dependencies across all domain modules
     cmds:
       - |
-        echo "Tidying {{.V1ALPHA1_DIR}} dependencies..."
-        cd "{{.V1ALPHA1_DIR}}" && cue mod tidy
+        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.K8UP_DIR}}" "{{.KUBERNETES_DIR}}"; do
+          echo "Tidying ${dir}..."
+          (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod tidy)
+        done
         echo "Done"
 
-  # ============================================================================
-  # Watch Mode
-  # ============================================================================
+  eval:
+    desc: Evaluate CUE files in a specific module (DOMAIN=core|opm|gateway_api|cert_manager|kubernetes)
+    summary: |
+      Evaluate CUE files in a specific domain module.
 
-  watch:fmt:
-    desc: Watch and auto-format on changes
-    preconditions:
-      - sh: command -v watchexec
-        msg: "watchexec is required. Install: brew install watchexec"
+      Usage:
+        task eval DOMAIN=opm
+        task eval DOMAIN=core OUTPUT=out.cue    # Write output to file
+    vars:
+      DOMAIN: '{{.DOMAIN | default "opm"}}'
+      OUTPUT: '{{.OUTPUT | default ""}}'
     cmds:
       - |
-        echo "Watching {{.V1ALPHA1_DIR}} for changes..."
-        echo "Press Ctrl+C to stop"
-        watchexec -w "{{.V1ALPHA1_DIR}}" -e cue -- bash -c '
-          cd "{{.V1ALPHA1_DIR}}" && cue fmt ./...
-          echo "Formatted"
-        '
-
-  watch:vet:
-    desc: Watch and auto-validate on changes
-    preconditions:
-      - sh: command -v watchexec
-        msg: "watchexec is required. Install: brew install watchexec"
-    cmds:
-      - |
-        echo "Watching {{.V1ALPHA1_DIR}} for changes..."
-        echo "Press Ctrl+C to stop"
-        watchexec -w "{{.V1ALPHA1_DIR}}" -e cue -- bash -c '
-          if cd "{{.V1ALPHA1_DIR}}" && cue vet ./core/... ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/... 2>&1; then
-            echo "Valid"
-          else
-            echo "Validation failed"
-          fi
-        '
+        case "{{.DOMAIN}}" in
+          core)         DIR="{{.CORE_DIR}}" ;;
+          opm)          DIR="{{.OPM_DIR}}" ;;
+          gateway_api)  DIR="{{.GATEWAY_API_DIR}}" ;;
+          cert_manager) DIR="{{.CERT_MANAGER_DIR}}" ;;
+          k8up)         DIR="{{.K8UP_DIR}}" ;;
+          kubernetes)   DIR="{{.KUBERNETES_DIR}}" ;;
+          *)
+            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, gateway_api, cert_manager, k8up, or kubernetes."
+            exit 1
+            ;;
+        esac
+        echo "Evaluating ${DIR}..."
+        if [ -n "{{.OUTPUT}}" ]; then
+          cd "{{.TASKFILE_DIR}}/${DIR}" && cue eval ./... > "{{.OUTPUT}}"
+        else
+          cd "{{.TASKFILE_DIR}}/${DIR}" && cue eval ./...
+        fi
+        echo "Done"
 
   # ============================================================================
   # Combined Operations
   # ============================================================================
 
   check:
-    desc: Run fmt and vet
+    desc: Run fmt and vet across all domain modules
     cmds:
-      - task fmt
-      - task vet
+      - task: fmt
+      - task: vet
+
+  # ============================================================================
+  # Index Generation
+  # ============================================================================
+
+  generate:index:
+    desc: Generate INDEX.md for all v1alpha1 modules
+    cmds:
+      - bash .tasks/generate-index.sh core/v1alpha1 > core/v1alpha1/INDEX.md
+      - bash .tasks/generate-index.sh opm/v1alpha1 > opm/v1alpha1/INDEX.md
+      - bash .tasks/generate-index.sh gateway_api/v1alpha1 > gateway_api/v1alpha1/INDEX.md
+      - bash .tasks/generate-index.sh cert_manager/v1alpha1 > cert_manager/v1alpha1/INDEX.md
+      - bash .tasks/generate-index.sh k8up/v1alpha1 > k8up/v1alpha1/INDEX.md
+      - bash .tasks/generate-index.sh kubernetes/v1 > kubernetes/v1/INDEX.md
+
+  generate:index:check:
+    desc: Verify INDEX.md files match generated output (exits non-zero if any differ)
+    cmds:
+      - |
+        set -euo pipefail
+        TMPDIR_CHECK=$(mktemp -d)
+        trap 'rm -rf "$TMPDIR_CHECK"' EXIT
+
+        check_module() {
+          local dir="$1"
+          local expected="$dir/INDEX.md"
+          local generated="$TMPDIR_CHECK/$(echo "$dir" | tr '/' '_').md"
+
+          bash .tasks/generate-index.sh "$dir" > "$generated"
+
+          if [[ ! -f "$expected" ]]; then
+            echo "FAIL: $expected does not exist — run 'task generate:index' to create it"
+            return 1
+          fi
+
+          if ! diff -q "$expected" "$generated" > /dev/null 2>&1; then
+            echo "FAIL: $expected is out of date"
+            diff "$expected" "$generated" || true
+            return 1
+          fi
+
+          echo "OK: $expected"
+        }
+
+        FAILED=0
+        check_module core/v1alpha1         || FAILED=1
+        check_module opm/v1alpha1          || FAILED=1
+        check_module gateway_api/v1alpha1  || FAILED=1
+        check_module cert_manager/v1alpha1 || FAILED=1
+        check_module k8up/v1alpha1         || FAILED=1
+        check_module kubernetes/v1         || FAILED=1
+
+        if [[ "$FAILED" -eq 1 ]]; then
+          echo ""
+          echo "Run 'task generate:index' to regenerate INDEX.md files."
+          exit 1
+        fi
+
+        echo ""
+        echo "All INDEX.md files are up to date."
 
   # ============================================================================
   # Version Management
   # ============================================================================
 
   version:
-    desc: Show current module version
+    desc: Show current versions for all domain modules
     preconditions:
       - sh: command -v yq >/dev/null 2>&1
         msg: "yq is required. Install: brew install yq"
     cmds:
       - |
-        VERSION=$(yq '.v1alpha1.version' {{.VERSION_FILE}})
-        echo "v1alpha1: $VERSION"
+        echo "core/v1alpha1:         $(yq '.core.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "opm/v1alpha1:          $(yq '.opm.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "gateway_api/v1alpha1:  $(yq '.gateway_api.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "cert_manager/v1alpha1: $(yq '.cert_manager.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "k8up/v1alpha1:         $(yq '.k8up.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "kubernetes/v1:         $(yq '.kubernetes.v1.version' {{.VERSION_FILE}})"
 
   version:bump:
-    desc: Bump module version (TYPE=patch/minor/major)
+    desc: Bump version for a domain module (DOMAIN=core|opm|gateway_api|cert_manager|kubernetes TYPE=patch/minor/major)
     summary: |
-      Bump the version for the v1alpha1 module following SemVer.
+      Bump the version for a specific domain module following SemVer.
 
       Usage:
-        task version:bump              # Bump patch (default)
-        task version:bump TYPE=patch   # v1.0.0 -> v1.0.1
-        task version:bump TYPE=minor   # v1.0.0 -> v1.1.0
-        task version:bump TYPE=major   # v1.0.0 -> v2.0.0
+        task version:bump DOMAIN=opm              # Bump opm patch (default)
+        task version:bump DOMAIN=core TYPE=minor  # v1.0.0 -> v1.1.0
+        task version:bump DOMAIN=opm TYPE=major   # v1.0.0 -> v2.0.0
     vars:
+      DOMAIN: '{{.DOMAIN | default "opm"}}'
       TYPE: '{{.TYPE | default "patch"}}'
     preconditions:
       - sh: command -v yq >/dev/null 2>&1
         msg: "yq is required. Install: brew install yq"
     cmds:
       - |
-        CURRENT=$(yq '.v1alpha1.version' {{.VERSION_FILE}} | sed 's/^v//')
+        case "{{.DOMAIN}}" in
+          core|opm|gateway_api|cert_manager|k8up|kubernetes) ;;
+          *)
+            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, gateway_api, cert_manager, or kubernetes."
+            exit 1
+            ;;
+        esac
 
+        case "{{.DOMAIN}}" in
+          kubernetes) API_VERSION="v1" ;;
+          *)          API_VERSION="v1alpha1" ;;
+        esac
+
+        CURRENT=$(yq ".{{.DOMAIN}}.${API_VERSION}.version" {{.VERSION_FILE}} | sed 's/^v//')
         IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
 
         case "{{.TYPE}}" in
-          major)
-            MAJOR=$((MAJOR + 1))
-            MINOR=0
-            PATCH=0
-            ;;
-          minor)
-            MINOR=$((MINOR + 1))
-            PATCH=0
-            ;;
-          patch)
-            PATCH=$((PATCH + 1))
-            ;;
+          major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+          minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+          patch) PATCH=$((PATCH + 1)) ;;
           *)
             echo "Invalid TYPE: {{.TYPE}}. Use patch, minor, or major."
             exit 1
@@ -225,21 +510,21 @@ tasks:
         esac
 
         NEW="v${MAJOR}.${MINOR}.${PATCH}"
-        yq -i '.v1alpha1.version = "'$NEW'"' {{.VERSION_FILE}}
-        echo "Bumped v1alpha1: v${CURRENT} -> ${NEW}"
+        yq -i ".{{.DOMAIN}}.${API_VERSION}.version = \"${NEW}\"" {{.VERSION_FILE}}
+        echo "Bumped {{.DOMAIN}}/${API_VERSION}: v${CURRENT} -> ${NEW}"
 
   # ============================================================================
-  # Publishing
+  # Publishing — individual modules
   # ============================================================================
 
-  publish:local:
-    desc: Publish v1alpha1 to local registry
+  publish:core:
+    desc: Publish core/v1alpha1 to local registry
     summary: |
-      Publish the v1alpha1 module to the local OCI registry.
+      Publish the core/v1alpha1 module to the local OCI registry.
 
       Usage:
-        task publish:local              # Use version from versions.yml
-        task publish:local VERSION=v1.0.1  # Use explicit version
+        task publish:core                    # Use version from versions.yml
+        task publish:core VERSION=v1.0.1     # Use explicit version
     vars:
       VERSION: '{{.VERSION | default ""}}'
     preconditions:
@@ -248,31 +533,198 @@ tasks:
     cmds:
       - |
         if [ -z "{{.VERSION}}" ]; then
-          VERSION=$(yq '.v1alpha1.version' {{.VERSION_FILE}})
+          VERSION=$(yq '.core.v1alpha1.version' {{.VERSION_FILE}})
         else
           VERSION="{{.VERSION}}"
         fi
+        echo "Publishing core/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.CORE_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published core/v1alpha1@${VERSION}"
 
-        echo "Publishing v1alpha1@$VERSION to {{.LOCAL_REGISTRY}}..."
-        cd "{{.V1ALPHA1_DIR}}" && cue mod publish "$VERSION"
-        echo "Published v1alpha1@$VERSION"
+  publish:opm:
+    desc: Publish opm/v1alpha1 to local registry
+    summary: |
+      Publish the opm/v1alpha1 module to the local OCI registry.
+
+      Usage:
+        task publish:opm
+        task publish:opm VERSION=v1.0.1
+    vars:
+      VERSION: '{{.VERSION | default ""}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+    cmds:
+      - |
+        if [ -z "{{.VERSION}}" ]; then
+          VERSION=$(yq '.opm.v1alpha1.version' {{.VERSION_FILE}})
+        else
+          VERSION="{{.VERSION}}"
+        fi
+        echo "Publishing opm/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.OPM_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published opm/v1alpha1@${VERSION}"
+
+  publish:gateway_api:
+    desc: Publish gateway_api/v1alpha1 to local registry
+    summary: |
+      Publish the gateway_api/v1alpha1 module to the local OCI registry.
+
+      Usage:
+        task publish:gateway_api
+        task publish:gateway_api VERSION=v1.0.1
+    vars:
+      VERSION: '{{.VERSION | default ""}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+    cmds:
+      - |
+        if [ -z "{{.VERSION}}" ]; then
+          VERSION=$(yq '.gateway_api.v1alpha1.version' {{.VERSION_FILE}})
+        else
+          VERSION="{{.VERSION}}"
+        fi
+        echo "Publishing gateway_api/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.GATEWAY_API_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published gateway_api/v1alpha1@${VERSION}"
+
+  publish:cert_manager:
+    desc: Publish cert_manager/v1alpha1 to local registry
+    summary: |
+      Publish the cert_manager/v1alpha1 module to the local OCI registry.
+
+      Usage:
+        task publish:cert_manager
+        task publish:cert_manager VERSION=v1.0.1
+    vars:
+      VERSION: '{{.VERSION | default ""}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+    cmds:
+      - |
+        if [ -z "{{.VERSION}}" ]; then
+          VERSION=$(yq '.cert_manager.v1alpha1.version' {{.VERSION_FILE}})
+        else
+          VERSION="{{.VERSION}}"
+        fi
+        echo "Publishing cert_manager/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.CERT_MANAGER_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published cert_manager/v1alpha1@${VERSION}"
+
+  publish:k8up:
+    desc: Publish k8up/v1alpha1 to local registry
+    vars:
+      VERSION: '{{.VERSION | default ""}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+    cmds:
+      - |
+        if [ -z "{{.VERSION}}" ]; then
+          VERSION=$(yq '.k8up.v1alpha1.version' {{.VERSION_FILE}})
+        else
+          VERSION="{{.VERSION}}"
+        fi
+        echo "Publishing k8up/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.K8UP_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published k8up/v1alpha1@${VERSION}"
+
+  publish:kubernetes:
+    desc: Publish kubernetes/v1 to local registry
+    summary: |
+      Publish the kubernetes/v1 module to the local OCI registry.
+
+      Usage:
+        task publish:kubernetes
+        task publish:kubernetes VERSION=v0.1.1
+    vars:
+      VERSION: '{{.VERSION | default ""}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+    cmds:
+      - |
+        if [ -z "{{.VERSION}}" ]; then
+          VERSION=$(yq '.kubernetes.v1.version' {{.VERSION_FILE}})
+        else
+          VERSION="{{.VERSION}}"
+        fi
+        echo "Publishing kubernetes/v1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.KUBERNETES_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published kubernetes/v1@${VERSION}"
+
+  # ============================================================================
+  # Publishing — aggregate
+  # ============================================================================
+
+  publish:local:
+    desc: Publish all domain modules to local registry in dependency order
+    summary: |
+      Publish all five domain modules in dependency order:
+        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1
+
+      Uses the version recorded in versions.yml for each module.
+
+      Usage:
+        task publish:local
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+      - sh: command -v cue >/dev/null 2>&1
+        msg: "cue is required"
+    cmds:
+      - |
+        set -euo pipefail
+        BOLD='\033[1m'; GREEN='\033[0;32m'; RED='\033[0;31m'; RESET='\033[0m'
+
+        echo -e "${BOLD}Publishing all domain modules...${RESET}"
+
+        publish_module() {
+          local key="$1"
+          local api_version="$2"
+          local dir="$3"
+          local version
+          version=$(yq ".${key}.${api_version}.version" "{{.VERSION_FILE}}")
+          echo -e "${BOLD}[${key}/${api_version}]${RESET} publishing @ ${version}..."
+          if (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod publish "${version}"); then
+            echo -e "  ${GREEN}✔ ${key}/${api_version}@${version}${RESET}"
+          else
+            echo -e "  ${RED}✗ Failed to publish ${key}/${api_version}${RESET}"
+            exit 1
+          fi
+        }
+
+        publish_module "core"         "v1alpha1" "{{.CORE_DIR}}"
+        publish_module "opm"          "v1alpha1" "{{.OPM_DIR}}"
+        publish_module "gateway_api"  "v1alpha1" "{{.GATEWAY_API_DIR}}"
+        publish_module "cert_manager" "v1alpha1" "{{.CERT_MANAGER_DIR}}"
+        publish_module "k8up"         "v1alpha1" "{{.K8UP_DIR}}"
+        publish_module "kubernetes"   "v1"       "{{.KUBERNETES_DIR}}"
+
+        echo ""
+        echo -e "${BOLD}${GREEN}Done.${RESET} All domain modules published."
 
   publish:smart:
-    desc: Auto-detect changes, bump version, and publish
+    desc: Detect changes per domain, bump versions independently, and publish changed modules
     deps:
       - fmt
       - vet
     summary: |
-      Detect whether the v1alpha1 module has source changes (via checksum comparison),
-      bump the version, tidy, and publish.
+      For each domain module, computes a SHA-256 checksum of .cue files
+      (excluding cue.mod/), compares with the stored checksum in versions.yml,
+      and publishes only modules that changed.
 
-      Change detection uses SHA-256 checksums of .cue files (excluding cue.mod/)
-      stored in versions.yml.
+      Modules are published in dependency order:
+        core/v1alpha1 → opm/v1alpha1 → gateway_api/v1alpha1, cert_manager/v1alpha1, kubernetes/v1
+
+      Each module is versioned independently. A patch bump is applied by default.
 
       Usage:
-        task publish:smart                    # Detect, bump patch, publish
-        task publish:smart DRY_RUN=true       # Preview without executing
-        task publish:smart TYPE=minor         # Minor bump instead of patch
+        task publish:smart                   # Detect, bump patch, publish
+        task publish:smart DRY_RUN=true      # Preview without executing
+        task publish:smart TYPE=minor        # Minor bump instead of patch
     vars:
       DRY_RUN: '{{.DRY_RUN | default "false"}}'
       TYPE: '{{.TYPE | default "patch"}}'
@@ -285,109 +737,120 @@ tasks:
         msg: "git is required"
     cmds:
       - |
+        #!/usr/bin/env bash
         set -euo pipefail
 
-        MODULE_DIR="{{.V1ALPHA1_DIR}}"
         VERSION_FILE="{{.VERSION_FILE}}"
         DRY_RUN="{{.DRY_RUN}}"
         BUMP_TYPE="{{.TYPE}}"
 
-        # ── Colors ────────────────────────────────────────────────────
-        BOLD='\033[1m'
-        DIM='\033[2m'
-        RED='\033[0;31m'
-        GREEN='\033[0;32m'
-        YELLOW='\033[0;33m'
-        RESET='\033[0m'
-
-        # ── Helper functions ─────────────────────────────────────────
-
-        get_version() {
-          yq '.v1alpha1.version' "$VERSION_FILE"
-        }
-
-        get_stored_checksum() {
-          yq '.v1alpha1.checksum // ""' "$VERSION_FILE"
-        }
+        BOLD='\033[1m'; DIM='\033[2m'; RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; RESET='\033[0m'
 
         compute_checksum() {
-          find "$MODULE_DIR" -name '*.cue' -not -path '*/cue.mod/*' | sort | xargs sha256sum | sha256sum | awk '{print $1}'
+          local dir="$1"
+          find "{{.TASKFILE_DIR}}/${dir}" -name '*.cue' -not -path '*/cue.mod/*' | sort | xargs sha256sum | sha256sum | awk '{print $1}'
         }
 
         bump_version() {
-          local ver="$1"
-          local type="$2"
-          local stripped="${ver#v}"
-          IFS='.' read -r major minor patch <<< "$stripped"
-          case "$type" in
-            major) major=$((major + 1)); minor=0; patch=0 ;;
-            minor) minor=$((minor + 1)); patch=0 ;;
-            patch) patch=$((patch + 1)) ;;
+          local ver="${1#v}"
+          IFS='.' read -r major minor patch <<< "$ver"
+          case "$2" in
+            major) major=$((major+1)); minor=0; patch=0 ;;
+            minor) minor=$((minor+1)); patch=0 ;;
+            patch) patch=$((patch+1)) ;;
           esac
           echo "v${major}.${minor}.${patch}"
         }
 
-        # ── Phase 1: Detect changes ──────────────────────────────────
-
         echo -e "${BOLD}Phase 1: Detecting changes...${RESET}"
 
-        stored=$(get_stored_checksum)
-        current=$(compute_checksum)
+        CHANGED_KEYS=()
+        CHANGED_API_VERSIONS=()
+        CHANGED_DIRS=()
+        CHANGED_VERSIONS=()
 
-        if [ -z "$stored" ]; then
-          echo -e "  ${YELLOW}v1alpha1${RESET}: changed (no stored checksum)"
-        elif [ "$stored" != "$current" ]; then
-          echo -e "  ${YELLOW}v1alpha1${RESET}: changed"
-        else
-          echo -e "  v1alpha1: unchanged"
+        check_module() {
+          local key="$1"
+          local api_version="$2"
+          local dir="$3"
+          local stored current version new_version
+          stored=$(yq ".${key}.${api_version}.checksum // \"\"" "$VERSION_FILE")
+          current=$(compute_checksum "$dir")
+          version=$(yq ".${key}.${api_version}.version" "$VERSION_FILE")
+          new_version=$(bump_version "$version" "$BUMP_TYPE")
+          if [ -z "$stored" ]; then
+            echo -e "  ${YELLOW}${key}/${api_version}${RESET}: changed (no stored checksum) → ${version} → ${GREEN}${new_version}${RESET}"
+            CHANGED_KEYS+=("$key")
+            CHANGED_API_VERSIONS+=("$api_version")
+            CHANGED_DIRS+=("$dir")
+            CHANGED_VERSIONS+=("$new_version")
+          elif [ "$stored" != "$current" ]; then
+            echo -e "  ${YELLOW}${key}/${api_version}${RESET}: changed → ${version} → ${GREEN}${new_version}${RESET}"
+            CHANGED_KEYS+=("$key")
+            CHANGED_API_VERSIONS+=("$api_version")
+            CHANGED_DIRS+=("$dir")
+            CHANGED_VERSIONS+=("$new_version")
+          else
+            echo -e "  ${key}/${api_version}: unchanged"
+          fi
+        }
+
+        check_module "core"         "v1alpha1" "{{.CORE_DIR}}"
+        check_module "opm"          "v1alpha1" "{{.OPM_DIR}}"
+        check_module "gateway_api"  "v1alpha1" "{{.GATEWAY_API_DIR}}"
+        check_module "cert_manager" "v1alpha1" "{{.CERT_MANAGER_DIR}}"
+        check_module "k8up"         "v1alpha1" "{{.K8UP_DIR}}"
+        check_module "kubernetes"   "v1"       "{{.KUBERNETES_DIR}}"
+
+        if [ ${#CHANGED_KEYS[@]} -eq 0 ]; then
           echo ""
           echo -e "${GREEN}No changes detected. Nothing to publish.${RESET}"
           exit 0
         fi
 
-        version=$(get_version)
-        new_version=$(bump_version "$version" "$BUMP_TYPE")
-
-        # ── Dry run exit ─────────────────────────────────────────────
-
         if [ "$DRY_RUN" = "true" ]; then
           echo ""
-          echo -e "${BOLD}Dry run — planned actions:${RESET}"
-          echo -e "  ${YELLOW}v1alpha1${RESET}: $version -> ${GREEN}$new_version${RESET} (bump + publish)"
-          echo ""
-          echo -e "${DIM}No changes made (dry run).${RESET}"
+          echo -e "${BOLD}Dry run — no changes made.${RESET}"
           exit 0
         fi
 
-        # ── Phase 2: Bump, tidy, publish, tag ───────────────────────
+        # ── Phase 2: Publish changed modules ─────────────────────────
 
         echo ""
         echo -e "${BOLD}Phase 2: Publishing...${RESET}"
+
+        for i in "${!CHANGED_KEYS[@]}"; do
+          key="${CHANGED_KEYS[$i]}"
+          api_ver="${CHANGED_API_VERSIONS[$i]}"
+          dir="${CHANGED_DIRS[$i]}"
+          new_version="${CHANGED_VERSIONS[$i]}"
+
+          echo ""
+          echo -e "${BOLD}${GREEN}[${key}/${api_ver}]${RESET} → ${GREEN}${new_version}${RESET}"
+
+          # Bump version in versions.yml
+          yq -i ".${key}.${api_ver}.version = \"${new_version}\"" "$VERSION_FILE"
+
+          # Tidy
+          echo "  Tidying..."
+          (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod tidy)
+
+          # Publish
+          echo "  Publishing ${key}/${api_ver}@${new_version}..."
+          if ! (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod publish "${new_version}"); then
+            echo -e "  ${RED}Failed to publish ${key}/${api_ver}${RESET}"
+            exit 1
+          fi
+
+          # Tag — format: catalog/<domain>/<api_version>/<version>
+          git tag "catalog/${key}/${api_ver}/${new_version}"
+          echo "  Tagged catalog/${key}/${api_ver}/${new_version}"
+
+          # Store updated checksum
+          new_checksum=$(compute_checksum "$dir")
+          yq -i ".${key}.${api_ver}.checksum = \"${new_checksum}\"" "$VERSION_FILE"
+          echo -e "  Checksum: ${DIM}${new_checksum:0:12}...${RESET}"
+        done
+
         echo ""
-        echo -e "${BOLD}${GREEN}[v1alpha1]${RESET} $version -> ${GREEN}$new_version${RESET}"
-
-        # 1. Bump version
-        yq -i ".v1alpha1.version = \"${new_version}\"" "$VERSION_FILE"
-
-        # 2. Tidy
-        echo "  Tidying..."
-        (cd "$MODULE_DIR" && cue mod tidy)
-
-        # 3. Publish
-        echo "  Publishing v1alpha1@${new_version}..."
-        if ! (cd "$MODULE_DIR" && cue mod publish "$new_version"); then
-          echo -e "  ${RED}Failed to publish v1alpha1${RESET}"
-          exit 1
-        fi
-
-        # 4. Tag
-        git tag "catalog/v1alpha1/${new_version}"
-        echo "  Tagged catalog/v1alpha1/${new_version}"
-
-        # 5. Store checksum
-        new_checksum=$(compute_checksum)
-        yq -i ".v1alpha1.checksum = \"${new_checksum}\"" "$VERSION_FILE"
-        echo -e "  Checksum: ${DIM}${new_checksum:0:12}...${RESET}"
-
-        echo ""
-        echo -e "${BOLD}${GREEN}Done.${RESET} Published v1alpha1@${new_version}"
+        echo -e "${BOLD}${GREEN}Done.${RESET} Published ${#CHANGED_KEYS[@]} domain module(s)."

@@ -139,15 +139,17 @@ basicModule: core.#Module & {
 
 ### Policy
 
-A **Policy** groups [PolicyRules](primitives.md#policyrule) and targets them to a set of Components via label matching or explicit references. Policies enable cross-cutting governance without coupling rules to individual components.
+A **Policy** groups [PolicyRules](primitives.md#policyrule) and [Directives](primitives.md#directive) and targets them to a set of Components via label matching or explicit references. Policies enable cross-cutting governance and operational behavior without coupling rules to individual components.
 
-Policy follows the same composition pattern as Component: PolicyRules define independent `#spec` schemas, and Policy merges them into a single `spec` via `_allFields`. Pre-built policies from the `v0/policies/` module can be composed together via CUE unification — a module author can combine network rules and shared networking into a single policy by unifying them.
+Policy follows the same composition pattern as Component: PolicyRules and Directives define independent `#spec` schemas, and Policy merges them into a single `spec` via `_allFields`. Pre-built policies from the `v0/policies/` module can be composed together via CUE unification — a module author can combine network rules and shared networking into a single policy by unifying them.
+
+A Policy may contain only `#rules` (governance), only `#directives` (operations), or both.
 
 #### What Policy Infers
 
-- "These **governance rules** apply to this set of components"
+- "These **governance rules and/or operational directives** apply to this set of components"
 - "This is **cross-cutting** — it spans multiple components"
-- "This **decouples** governance from component definitions"
+- "This **decouples** governance and operations from component definitions"
 
 #### Policy Structure
 
@@ -162,14 +164,15 @@ Policy follows the same composition pattern as Component: PolicyRules define ind
         annotations?: {...}
     }
 
-    #rules: [RuleFQN=string]: #PolicyRule  // PolicyRules grouped by this policy
+    #rules: [RuleFQN=string]: #PolicyRule        // Governance rules (platform team)
+    #directives?: [DirFQN=string]: #Directive    // Operational directives (module author)
 
     appliesTo: {
         matchLabels?: {...}         // Label-based component selection
         components?:  [...#Component]  // Explicit component references
     }
 
-    spec: close({...})  // Unified from all #rules specs
+    spec: close({...})  // Unified from all #rules and #directives specs
 }
 ```
 
@@ -178,7 +181,7 @@ Policy follows the same composition pattern as Component: PolicyRules define ind
 ```text
 PolicyRule A ──┐
 PolicyRule B ──┤──unify──▶ Policy.spec
-PolicyRule C ──┘
+Directive A  ──┘
 
 Policy.appliesTo ──targets──▶ Components (by labels or explicit reference)
 Policy ──contains──▶ Module.#policies
@@ -378,8 +381,8 @@ A Provider declares its capabilities through its transformer registry. The rende
 #### Key Relationships
 
 ```text
-Provider
-├── transformers: [FQN]: Transformer
+#Provider
+├── transformers: [FQN]: #Transformer
 │   ├── #DeploymentTransformer  ──matches──▶ stateless components
 │   ├── #StatefulsetTransformer ──matches──▶ stateful components
 │   ├── #ServiceTransformer     ──matches──▶ exposed components

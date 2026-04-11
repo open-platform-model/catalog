@@ -305,6 +305,84 @@ Ask yourself:
 
 ---
 
+## Directive
+
+A **Directive** represents an operational behavior that the platform should execute on behalf of the module author. Directives are the "instructions" of OPM — they answer the question "what should the platform do for this module?" Unlike PolicyRules which express governance with enforcement consequences, Directives describe operations like backup scheduling, restore procedures, and pre-backup hooks. When a Directive is present, the platform acts on it — there is no violation semantic.
+
+Directives are separate from PolicyRules because they express **operations** rather than governance — a PolicyRule says "this must be true" while a Directive says "do this." Directives are composed into [Policies](constructs.md#policy) alongside PolicyRules, targeting components via `appliesTo`.
+
+### What Directive Infers
+
+- "The platform should **execute this operational behavior**"
+- "This has **no enforcement consequences** — it is not governance"
+- "This is written by the **module author**, not the platform team"
+
+### When to Create a Directive
+
+Ask yourself:
+
+- Does this describe operational behavior the platform should execute?
+- Is this something the module author declares, not the platform team?
+- Does this have no meaningful enforcement mode (block/warn/audit)?
+
+**Examples**: Backup, Restore, PreBackupHook
+
+### Directive Structure
+
+```cue
+#Directive: {
+    apiVersion: "opmodel.dev/core/v1alpha1"
+    kind:       "Directive"
+
+    metadata: {
+        modulePath!:  string  // e.g., "opmodel.dev/opm/v1alpha1/directives/data"
+        version!:     string  // e.g., "v1"
+        name!:        string  // e.g., "backup"
+        fqn:          string  // Computed: "{modulePath}/{name}@{version}"
+        description?: string
+        labels?:      {...}
+        annotations?: {...}
+    }
+
+    #spec!: {...}  // OpenAPIv3 schema this directive exposes
+}
+```
+
+### Key Difference from PolicyRule
+
+Directives omit the `enforcement` block entirely:
+
+```text
+PolicyRule → enforcement (mode, onViolation) → governance
+Directive  → no enforcement                  → operations
+```
+
+### Directive Example
+
+```cue
+#BackupDirective: core.#Directive & {
+    metadata: {
+        modulePath:  "opmodel.dev/opm/v1alpha1/directives/data"
+        version:     "v1"
+        name:        "backup"
+        description: "Backup scheduling, pre-backup hooks, and restore for persistent data"
+    }
+
+    #spec: backup: {
+        targets!:  [...{pvcName!: string, mountPath: string}]
+        schedule:  *"0 2 * * *" | string
+        backend!:  { s3: { endpoint!: string, bucket!: string, ... }, repoPassword!: _ }
+        retention: { keepDaily: *7 | int, keepWeekly: *4 | int, keepMonthly: *6 | int }
+        preBackupHook?: { image!: string, command!: [...string], ... }
+        restore?: { healthCheck?: { path!: string, port!: int }, requiresScaleDown: *true | bool }
+    }
+}
+```
+
+**CUE schema**: [`v1alpha1/core/primitives/directive.cue`](../../v1alpha1/core/primitives/directive.cue)
+
+---
+
 ## StatusProbe
 
 > **Draft** — This definition type is not yet finalized.

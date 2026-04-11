@@ -1,0 +1,28 @@
+metadata:
+  name: my-validating-webhook
+  labels:
+    app: my-webhook
+webhooks:
+  - name: validate.example.com
+    admissionReviewVersions:
+      - v1
+      - v1beta1
+    clientConfig:
+      service:
+        name: my-webhook-service
+        namespace: default
+        path: /validate
+        port: 443
+    rules:
+      - apiGroups:
+          - apps
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - deployments
+    failurePolicy: Fail
+    sideEffects: None
+    timeoutSeconds: 10

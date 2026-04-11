@@ -1,0 +1,28 @@
+metadata:
+  name: my-mutating-webhook
+  labels:
+    app: my-webhook
+webhooks:
+  - name: mutate.example.com
+    admissionReviewVersions:
+      - v1
+      - v1beta1
+    clientConfig:
+      service:
+        name: my-webhook-service
+        namespace: default
+        path: /mutate
+        port: 443
+    rules:
+      - apiGroups:
+          - ""
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+        resources:
+          - pods
+    failurePolicy: Ignore
+    sideEffects: None
+    reinvocationPolicy: Never
+    timeoutSeconds: 5
