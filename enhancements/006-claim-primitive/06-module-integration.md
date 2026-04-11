@@ -1,13 +1,5 @@
 # Module Integration — `#Claim` Primitive
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-03-29       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Overview
 
 This document shows how module authors use Claims and Orchestrations in practice.

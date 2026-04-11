@@ -1,13 +1,5 @@
 # Design — `#Op` & `#Action` Primitives
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-04-11       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Design Goals
 
 - Introduce `#Op` as a slim base type (not a full primitive) for atomic, runtime-dispatched operations

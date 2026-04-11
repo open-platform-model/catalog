@@ -1,13 +1,5 @@
 # Architectural Decisions — Grafana Dashboards
 
-| Field       | Value                          |
-| ----------- | ------------------------------ |
-| **Status**  | Draft                          |
-| **Created** | 2026-03-25                     |
-| **Authors** | OPM Contributors               |
-
----
-
 ## Summary
 
 Decision log for all architectural choices made during the Grafana dashboard feature design.

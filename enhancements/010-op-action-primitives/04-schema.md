@@ -1,13 +1,5 @@
 # Schema — `#Op` & `#Action` Primitives
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-04-11       |
-| **Authors** | OPM Contributors |
-
----
-
 ## New Definitions
 
 ### `#Op` — base type

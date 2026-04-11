@@ -1,13 +1,5 @@
 # Problem Statement — `#Offer` Primitive
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-04-01       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Current State
 
 Enhancement 006 introduced `#Claim` as a component-level primitive: "what does this component need from the platform?" Enhancement 008 introduced `#Platform` as a composition construct that merges providers and their transformers. The `#Transformer` gained `requiredClaims`/`optionalClaims` for matcher-based claim routing, and `#Provider` gained `#declaredClaims` auto-computation.

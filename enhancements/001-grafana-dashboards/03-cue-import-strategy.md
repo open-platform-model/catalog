@@ -1,13 +1,5 @@
 # CUE Import Strategy — Grafana JSON Schema
 
-| Field       | Value                          |
-| ----------- | ------------------------------ |
-| **Status**  | Draft                          |
-| **Created** | 2026-03-25                     |
-| **Authors** | OPM Contributors               |
-
----
-
 ## Summary
 
 `cue import` converts vendored Grafana JSON Schema files into CUE definition types suitable for use as a validation layer inside `opm/v1alpha1`. CUE v0.16.0 is required for reliable import of Grafana's complex schema combinators.

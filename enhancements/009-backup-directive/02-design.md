@@ -1,13 +1,5 @@
 # Design — `#Directive` Primitive: Backup & Restore
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Accepted         |
-| **Created** | 2026-04-02       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Design Goals
 
 - Introduce `#Directive` as a primitive type within `#Policy`, alongside `#PolicyRule`

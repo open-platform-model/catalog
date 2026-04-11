@@ -1,13 +1,5 @@
 # Well-Known Claims — Data Interface Types
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-03-29       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Overview
 
 OPM publishes a catalog of well-known claim types for common data dependencies. These are `#Claim` definitions with `#shape` — typed contracts whose fields the module author wires into component specs. The platform fills the shape with concrete values at deploy time.

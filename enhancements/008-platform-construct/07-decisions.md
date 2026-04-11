@@ -1,13 +1,5 @@
 # Design Decisions
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-03-25       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Summary
 
 Decision log for all design choices made during the module context, platform composition, and environment targeting design.

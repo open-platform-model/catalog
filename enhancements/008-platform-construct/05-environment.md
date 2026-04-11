@@ -1,13 +1,5 @@
 # The `#Environment` Construct
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-04-11       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Purpose
 
 `#Environment` is the user-facing deployment target. It binds a name to a `#Platform` and contributes environment-level context overrides. Multiple environments can reference the same platform. `#Environment` does not override `#config` (values). It only contributes to `#ctx`.

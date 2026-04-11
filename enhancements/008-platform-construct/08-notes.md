@@ -1,13 +1,5 @@
 # Notes and Deferred Discussions
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-03-25       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Purpose
 
 This file collects every item that was explicitly flagged during the design process as requiring further discussion, follow-up design work, or implementation consideration before the feature can be considered complete. Items here are not blockers for the initial implementation unless otherwise noted.

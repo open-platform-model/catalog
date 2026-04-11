@@ -1,11 +1,5 @@
 # Implementation Plan
 
-| Field       | Value                          |
-| ----------- | ------------------------------ |
-| **Status**  | Draft                          |
-| **Created** | 2026-03-25                     |
-| **Authors** | OPM Contributors               |
-
 ## Summary
 
 Five-phase implementation plan for adding Grafana dashboard support to OPM, covering schema import, opinionated wrappers, catalog registration, module proof-of-concept, and publishing.

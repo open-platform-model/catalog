@@ -1,13 +1,5 @@
 # The `#Platform` Construct
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-03-29       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Purpose
 
 `#Platform` is a pure capability manifest for a cluster. It composes a base provider with zero or more capability providers into a unified transformer registry (`#composedTransformers`), and contributes platform-level `#ctx` defaults (cluster domain, platform extensions) typed as `#PlatformContext` (see [03-schema.md](03-schema.md)).

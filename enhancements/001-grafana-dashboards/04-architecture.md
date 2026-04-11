@@ -1,11 +1,5 @@
 # Three-Layer Schema Architecture
 
-| Field       | Value                          |
-| ----------- | ------------------------------ |
-| **Status**  | Draft                          |
-| **Created** | 2026-03-25                     |
-| **Authors** | OPM Contributors               |
-
 ## Summary
 
 Grafana dashboard support uses a three-layer schema architecture in which each layer constrains the one below via CUE unification. Any dashboard defined at Layer 2 is guaranteed to produce valid Grafana JSON because it must satisfy Layer 1's imported base types at definition time.

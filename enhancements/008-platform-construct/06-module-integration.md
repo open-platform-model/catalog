@@ -1,13 +1,5 @@
 # Module Integration and Pipeline Changes
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-03-25       |
-| **Authors** | OPM Contributors |
-
----
-
 ## End-to-End Flow
 
 ```text

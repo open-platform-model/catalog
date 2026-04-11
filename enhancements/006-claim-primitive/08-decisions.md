@@ -1,13 +1,5 @@
 # Design Decisions — `#Claim` Primitive & Policy Broadening
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-03-29       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Summary
 
 Decision log for all design choices. This enhancement went through three design iterations before converging:

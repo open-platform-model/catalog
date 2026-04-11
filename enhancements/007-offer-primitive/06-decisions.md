@@ -1,13 +1,5 @@
 # Design Decisions — `#Offer` Primitive
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-04-01       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Summary
 
 Decision log for all design choices in the `#Offer` primitive enhancement. This enhancement realizes the `#Offer` counterpart to `#Claim` (enhancement 006), deferred in 006's decision D6.

@@ -1,13 +1,5 @@
 # Problem: Module Blindness and Monolithic Providers
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-03-25       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Problem 1: Modules Are Blind to Deployment Context
 
 A `#Module` defines components that reference `#config` for all user-supplied values. This is correct for operator-provided configuration — image tags, storage sizes, replica counts. It is not correct for values that the runtime already knows and that no operator should need to supply manually.

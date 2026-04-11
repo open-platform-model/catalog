@@ -1,13 +1,5 @@
 # Transformer Integration — K8up Backup Directive
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Accepted         |
-| **Created** | 2026-04-02       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Overview
 
 The `#K8upBackupDirective` is consumed by K8up-specific transformers via the `requiredDirectives` matching field. The `#RestoreDirective` is not consumed by transformers — it is read directly by the CLI.

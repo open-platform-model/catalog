@@ -1,13 +1,5 @@
 # Module Integration — Backup & Restore Directives
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Accepted         |
-| **Created** | 2026-04-02       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Responsibility Split
 
 | Concern | Owner | Where |

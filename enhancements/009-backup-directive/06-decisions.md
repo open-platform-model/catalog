@@ -1,13 +1,5 @@
 # Design Decisions — `#Directive` Primitive: Backup & Restore
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Accepted         |
-| **Created** | 2026-04-02       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Summary
 
 Decision log for enhancement 009. The design evolved through several iterations:

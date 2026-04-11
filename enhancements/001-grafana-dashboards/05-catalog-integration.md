@@ -1,13 +1,5 @@
 # Catalog Integration — #DashboardResource
 
-| Field       | Value                          |
-| ----------- | ------------------------------ |
-| **Status**  | Draft                          |
-| **Created** | 2026-03-25                     |
-| **Authors** | OPM Contributors               |
-
----
-
 ## Summary
 
 `#DashboardResource` is a new Resource type in the `observability` category of `opm/v1alpha1`, extending `prim.#Resource` to carry typed Grafana dashboard definitions. Dashboards are rendered to Kubernetes ConfigMaps bearing the `grafana_dashboard: "1"` label, which triggers Grafana's sidecar provisioner for automatic discovery.

@@ -1,13 +1,5 @@
 # Platform Integration — `#Offer` Primitive
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-04-01       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Overview
 
 `#Platform` (enhancement 008) composes providers into a unified transformer registry. Each platform is its own CUE package in `.opm/platforms/<name>/`. With `#Offer`, the Platform also composes a unified offer registry, enabling claim/offer validation and capability reporting.

@@ -1,13 +1,5 @@
 # Well-Known Offers — `#Offer` Primitive
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-04-01       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Overview
 
 Every well-known Claim from enhancement 006 has a paired well-known Offer. These are published in the OPM catalog as standard definitions that capability providers implement.

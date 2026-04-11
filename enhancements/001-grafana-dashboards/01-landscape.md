@@ -1,13 +1,5 @@
 # CUE + Grafana Ecosystem Survey
 
-| Field       | Value                          |
-| ----------- | ------------------------------ |
-| **Status**  | Draft                          |
-| **Created** | 2026-03-25                     |
-| **Authors** | OPM Contributors               |
-
----
-
 ## Summary
 
 Survey of existing CUE-based Grafana dashboard tooling as of Q1 2026. No existing tool provides the composability OPM requires; native support is necessary.

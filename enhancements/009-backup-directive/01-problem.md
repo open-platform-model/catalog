@@ -1,13 +1,5 @@
 # Problem Statement — `#Directive` Primitive: Backup & Restore
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Accepted         |
-| **Created** | 2026-04-02       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Current State
 
 Backup support in OPM is implemented per-module with high duplication. Each module that needs backup defines an identical `backup?:` config schema (~20 lines), conditional K8up Schedule and PreBackupPod components (~30 lines), and direct K8up catalog imports. Jellyfin and Seerr demonstrate this — identical backup structures, identical boilerplate.

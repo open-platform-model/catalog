@@ -1,11 +1,5 @@
 # Module Integration
 
-| Field       | Value                          |
-| ----------- | ------------------------------ |
-| **Status**  | Draft                          |
-| **Created** | 2026-03-25                     |
-| **Authors** | OPM Contributors               |
-
 ## Summary
 
 Module authors add a `dashboard.cue` file to their module that uses `#DashboardResource` and the panel helpers from `opm/v1alpha1`. ConfigMap rendering is automatic — no manual wiring beyond composing the `#Dashboard` component.

@@ -1,13 +1,5 @@
 # Design: Module Context, Platform Composition, and Environment Targeting
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-03-25       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Design Goals
 
 - Make release identity (name, namespace, UUID) available to components at definition time

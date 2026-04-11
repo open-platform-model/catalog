@@ -1,13 +1,5 @@
 # Problem Statement — `#Op` & `#Action` Primitives
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-04-11       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Current State
 
 OPM's type system covers the declarative side — Resources, Traits, Blueprints, Claims compose into Components, which compose into Modules. The rendering pipeline (Provider, Transformer, Matcher) produces platform-specific output from these declarations.

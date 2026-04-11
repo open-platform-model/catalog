@@ -1,13 +1,5 @@
 # Operational Claims & Policy Orchestrations
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-03-29       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Overview
 
 Operational claims are `#Claim` definitions without `#shape` — the platform acts on the component rather than injecting data. Policy orchestrations are `#Orchestration` definitions that coordinate across components at the module level.

@@ -1,13 +1,5 @@
 # CLI Integration — `#RestoreDirective`
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Accepted         |
-| **Created** | 2026-04-02       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Overview
 
 The OPM CLI reads `#RestoreDirective` from module policies to provide backup browsing and restore commands. The CLI evaluates the module's CUE, discovers the restore directive, and uses `repository` to connect to the backup repository. The `#K8upBackupDirective` is not read by the CLI — it is consumed only by the transformer.

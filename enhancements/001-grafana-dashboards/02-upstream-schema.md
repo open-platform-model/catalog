@@ -1,11 +1,5 @@
 # Grafana Foundation SDK JSON Schema Reference
 
-| Field       | Value                          |
-| ----------- | ------------------------------ |
-| **Status**  | Draft                          |
-| **Created** | 2026-03-25                     |
-| **Authors** | OPM Contributors               |
-
 ## Summary
 
 The Grafana Foundation SDK publishes official JSON Schema files for dashboards, panel types, and common types at (https://github.com/grafana/grafana-foundation-sdk). These are the upstream source for `cue import` and must be vendored into the catalog before any CUE schema work begins.

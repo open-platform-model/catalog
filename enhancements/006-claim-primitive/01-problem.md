@@ -1,13 +1,5 @@
 # Problem Statement — `#Claim` Primitive & Policy Broadening
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-03-29       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Current State
 
 OPM components are defined using three primitives: Resource ("what exists"), Trait ("how it behaves"), and Blueprint ("reusable pattern of Resources + Traits"). The platform team governs deployments using PolicyRules composed into Policies.

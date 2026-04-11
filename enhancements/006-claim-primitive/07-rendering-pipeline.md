@@ -1,13 +1,5 @@
 # Rendering Pipeline — `#Claim` Primitive
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-03-29       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Overview
 
 Claims introduce a second rendering path alongside trait transformers. Data claims use a resolver for value injection. Operational claims use transformers for platform resource generation. Both are independent from the trait transformer pipeline.

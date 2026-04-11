@@ -1,13 +1,5 @@
 # Design — `#Claim` Primitive & Policy Broadening
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-03-29       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Design Goals
 
 - Introduce `#Claim` as a component-level primitive that composes into Blueprints alongside Resources and Traits

@@ -1,13 +1,5 @@
 # Schema Reference
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-03-25       |
-| **Authors** | OPM Contributors |
-
----
-
 ## `#Module` Changes
 
 `#ctx` is added as a definition field on `#Module`. It is abstract at module definition time — its value is supplied by `#ModuleRelease` during unification, not by the module author.

@@ -1,13 +1,5 @@
 # Design — `#Offer` Primitive
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-04-01       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Design Goals
 
 - Introduce `#Offer` as the supply-side counterpart to `#Claim`

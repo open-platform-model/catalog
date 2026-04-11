@@ -1,13 +1,5 @@
 # Provider Integration — `#Offer` Primitive
 
-| Field       | Value            |
-| ----------- | ---------------- |
-| **Status**  | Draft            |
-| **Created** | 2026-04-01       |
-| **Authors** | OPM Contributors |
-
----
-
 ## Overview
 
 Offers are linked to Transformers. This document describes how the link works and how Providers compose Offers into their transformer registries.
