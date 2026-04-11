@@ -1,7 +1,3 @@
-Can't write temp file due to permissions. Compressing manually and outputting directly:
-
----
-
 # Catalog repository guide
 
 ## Purpose
