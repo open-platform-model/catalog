@@ -10,13 +10,13 @@
 
 ## Summary
 
-Decision log for enhancement 009. The design evolved from exploring three approaches:
+Decision log for enhancement 009. The design evolved through several iterations:
 
-1. **H1: Stretch `#PolicyRule`** — reuse `#PolicyRule` with optional enforcement for operational concerns
-2. **H2: `#Directive` in `#Policy`** — new primitive type alongside `#PolicyRule`, no enforcement semantics
-3. **H3: Hybrid traits + policy** — keep component-level traits (004) and add module-level policy for restore only
-
-H2 was selected for clean semantic separation between governance and operations.
+1. **H1: Stretch `#PolicyRule`** — rejected: enforcement semantics incompatible with operations
+2. **H2: `#Directive` in `#Policy`** — accepted: clean semantic separation
+3. **Combined backup+restore directive** — initially accepted, then split
+4. **Generic backup abstraction** — rejected: provider details leak; K8up and Velero are too different
+5. **Provider-specific backup + provider-agnostic restore** — accepted: each directive serves one consumer
 
 ---
 
@@ -27,22 +27,22 @@ H2 was selected for clean semantic separation between governance and operations.
 **Decision:** Introduce `#Directive` as a separate primitive type within `#Policy`, alongside `#PolicyRule`. Directives have no `enforcement` block.
 
 **Alternatives considered:**
-- Reuse `#PolicyRule` with optional enforcement — rejected: enforcement fields become meaningless noise on backup directives; "policy rule" implies governance, not operations; conflates two distinct ownership models
+- Reuse `#PolicyRule` with optional enforcement — rejected: enforcement fields become meaningless noise; "policy rule" implies governance, not operations
 - Add enforcement with a new mode value (e.g., "operational") — rejected: `onViolation` (block/warn/audit) has no meaning for backup scheduling
 
-**Rationale:** Backup scheduling is not governance. There is no "violation" when a backup runs. The `enforcement.mode` and `enforcement.onViolation` fields are structurally incompatible with operational descriptions. A separate primitive type maintains clear semantics.
+**Rationale:** Backup scheduling is not governance. The `enforcement.mode` and `enforcement.onViolation` fields are structurally incompatible with operational descriptions.
 
 ---
 
 ### D2: Module-level placement via `#Policy`, not component-level
 
-**Decision:** Backup directives live in `#Policy` at the module level, targeting components via `appliesTo`. They do not attach to individual components.
+**Decision:** Backup directives live in `#Policy` at the module level, targeting components via `appliesTo`.
 
 **Alternatives considered:**
-- Component-level placement (enhancement 004 trait approach) — rejected: backup is a module-level decision; component-level cannot express cross-component restore ordering or module-wide backup policy
-- Component-level with Blueprint composition (enhancement 006 claim approach) — rejected: overkill for backup; `#BackedUpStatefulWorkload` Blueprint is theoretical, not demonstrated; introduces second rendering pipeline
+- Component-level placement (enhancement 004 trait approach) — rejected: backup is a module-level decision; component-level cannot express cross-component restore ordering
+- Component-level with Blueprint composition (enhancement 006 claim approach) — rejected: overkill for backup; introduces second rendering pipeline
 
-**Rationale:** Module authors think about backup as "protect this module's data." The policy model already supports module-level placement with component targeting via `appliesTo`. No new constructs needed.
+**Rationale:** Module authors think about backup as "protect this module's data." The policy model already supports module-level placement with component targeting.
 
 ---
 
@@ -51,55 +51,57 @@ H2 was selected for clean semantic separation between governance and operations.
 **Decision:** The primitive is named `#Directive`. Within `#Policy`, the field is `#directives`.
 
 **Alternatives considered:**
-- `#Orchestration` (from enhancement 006) — rejected: implies multi-step coordination; too heavy for simple backup scheduling
+- `#Orchestration` (from enhancement 006) — rejected: implies multi-step coordination; too heavy
 - `#Procedure` — rejected: implies step-by-step execution; the schema describes *what*, not *how*
 - `#Operation` — rejected: too generic; overloaded with Kubernetes "operator" terminology
 
-**Rationale:** "Directive" communicates the right relationship: the module author directs the platform to perform operational behavior. It is declarative, authoritative without being enforcement. The pairing `#rules` (governance) and `#directives` (operations) within `#Policy` reads naturally.
+**Rationale:** "Directive" communicates authoritative operational instruction without governance connotation. The pairing `#rules` (governance) and `#directives` (operations) reads naturally.
 
 ---
 
-### D4: Combined `#BackupDirective` (backup + hook + restore), not three separate directives
+### D4: Two separate directives — backup (provider-specific) and restore (provider-agnostic)
 
-**Decision:** One directive with optional `preBackupHook` and `restore` sections, rather than `#BackupDirective` + `#PreBackupHookDirective` + `#RestoreDirective`.
+**Decision:** Split into `#K8upBackupDirective` (consumed by transformer) and `#RestoreDirective` (consumed by CLI). Both self-contained with explicit duplication.
 
 **Alternatives considered:**
-- Three separate directives (mirrors 004's two-trait split) — rejected: at the policy level there is no independent composition pressure; the module author always writes these together; splitting duplicates backend config and target lists
+- Single combined directive (original 009 design) — rejected: backup is inherently provider-specific (K8up has checkSchedule/pruneSchedule/Restic retention; Velero has TTL/CSI snapshots); combining forces either a leaky generic abstraction or K8up-specific fields in what should be a provider-agnostic contract
+- Generic backup abstraction across providers — rejected after K8up/Velero API research: the two systems differ fundamentally in scope (namespace vs PVC), engine (Restic vs Kopia/CSI), hooks (PreBackupPod vs exec-in-container), retention (Restic prune vs TTL), and backend management (inline vs separate CR)
 
-**Rationale:** Enhancement 004 split backup and pre-backup hook into two traits because traits compose independently on components. Directives live in `#Policy` where independent composition is not a requirement. Combining reduces boilerplate and keeps related config co-located. Optional fields (`preBackupHook?`, `restore?`) handle the cases where hooks or restore aren't needed.
+**Rationale:** Backup is provider-specific — different providers have different scheduling, retention, hook, and backend models. Restore is provider-agnostic — the CLI browses a Restic/Kopia repo regardless of who wrote to it. Separating means adding Velero support = new `#VeleroBackupDirective`, same `#RestoreDirective`.
 
 ---
 
 ### D5: Restore included from the start
 
-**Decision:** `#BackupDirective` includes an optional `restore` block. The CLI reads it to automate restore procedures.
+**Decision:** `#RestoreDirective` is part of the initial design. The CLI reads it to automate restore procedures.
 
 **Alternatives considered:**
-- Defer restore to a follow-up enhancement (as 004 did) — rejected: restore is the primary motivation for CLI integration; without it, the CLI only lists snapshots, which is insufficient value
+- Defer restore (as 004 did) — rejected: restore is the primary motivation for CLI integration
 
-**Rationale:** The restore procedure (scale down, restore PVC, verify health) is described declaratively in the directive. The CLI executes it. This is the core value proposition — turning a 12+ step manual procedure into a single command. Deferring it would leave the enhancement incomplete.
+**Rationale:** Turning a 12+ step manual `kubectl` procedure into `opm restore run` is the core value proposition.
 
 ---
 
-### D6: Explicit `pvcName` in targets, not inferred from workload
+### D6: Volume names reference component resources, not raw PVC names
 
-**Decision:** The `targets` list uses explicit `pvcName` fields. PVCs are not inferred from the component's workload spec.
+**Decision:** `targets[component].volumes` map keys reference the component's `spec.volumes` entries. The transformer resolves volume name → PVC name.
 
 **Alternatives considered:**
-- Infer PVC from workload volumes — rejected: couples backup to workload internals; fails for non-workload components; ambiguous when multiple PVCs exist
+- Raw `pvcName` strings (004 approach) — rejected: no validated link; easy to typo
+- Infer all PVCs from workload spec — rejected: not all PVCs should be backed up
 
-**Rationale:** Same decision as 004-D5. The module author knows which PVCs contain data worth protecting. Explicit naming is unambiguous and supports components with multiple PVCs or non-standard volume configurations.
+**Rationale:** The directive targets a specific component via `appliesTo`. Referencing volumes by name creates a validated link.
 
 ---
 
 ### D7: `backend.s3` wrapper for future extensibility
 
-**Decision:** S3 config is nested under `backend.s3`, not at the top level.
+**Decision:** S3 config is nested under `backend.s3` in the K8up directive and `repository.s3` in the restore directive.
 
 **Alternatives considered:**
-- Flat S3 fields at top level — rejected: no room for `backend.gcs`, `backend.azure` in future versions
+- Flat S3 fields at top level — rejected: no room for `gcs`, `azure` in future
 
-**Rationale:** Same decision as 004-D10. The wrapper allows adding alternative backends without breaking the schema.
+**Rationale:** The wrapper allows adding alternative backends.
 
 ---
 
@@ -107,31 +109,132 @@ H2 was selected for clean semantic separation between governance and operations.
 
 **Decision:** Enhancement 006 stays as Draft. This enhancement does not supersede it.
 
-**Alternatives considered:**
-- Supersede 006 with this enhancement — rejected: 006 addresses broader concerns (data claims, Blueprint composition, cross-component coordination) that this enhancement does not
-- Supersede only the backup-specific parts of 006 — rejected: 006's backup claim and restore orchestration are part of a cohesive design; partial supersession creates confusion
-
-**Rationale:** Enhancement 009 is a pragmatic stepping stone. It extracts one concept (`#Directive`) from 006's broader vision. If 006 is implemented later, `#BackupDirective` could either remain alongside `#Claim` or migrate to a `#BackupClaim` + restore orchestration. The two designs are compatible, not competing.
+**Rationale:** Enhancement 009 is a pragmatic stepping stone. 006's broader `#Claim`/`#Orchestration` design handles concerns (data dependencies, Blueprint composition) that this enhancement does not. The two are compatible.
 
 ---
 
 ### D9: Transformer matching via `requiredDirectives` field
 
-**Decision:** `#Transformer` gains `requiredDirectives` and `optionalDirectives` fields. The pipeline resolves directive matching by checking policies targeting the current component.
+**Decision:** `#Transformer` gains `requiredDirectives` and `optionalDirectives` fields.
 
 **Alternatives considered:**
-- Label-based matching only (directive adds a label to the policy/component) — rejected: labels carry no schema; transformer needs access to directive spec values
-- Separate directive rendering pipeline (enhancement 006 approach) — rejected: unnecessary complexity; extending the existing pipeline is sufficient
+- Label-based matching only — rejected: labels carry no schema
+- Separate directive rendering pipeline — rejected: unnecessary complexity
 
-**Rationale:** Directive matching is a natural extension of the existing multi-dimensional matching (labels, resources, traits). The pipeline already resolves policy → component targeting via `appliesTo`. Adding directive FQN matching is a small incremental change.
+**Rationale:** Directive matching is a natural extension of existing multi-dimensional matching (labels, resources, traits).
 
 ---
 
 ### D10: PVC annotation is module author's responsibility (v1)
 
-**Decision:** K8up's `k8up.io/backup=true` PVC annotation is added by the module author or bypassed via K8up operator config. The transformer does not modify other components' PVC definitions.
+**Decision:** K8up's `k8up.io/backup=true` PVC annotation is managed by the module author or bypassed via K8up operator config.
+
+**Rationale:** The transformer model does not support cross-component mutation.
+
+---
+
+### D11: Per-component target map, not flat target list
+
+**Decision:** `targets` is a keyed map where each key is a component name.
 
 **Alternatives considered:**
-- Transformer emits PVC annotation — rejected: requires cross-component mutation not supported by the transformer model
+- Flat list of PVC targets — rejected: hooks are per-component, not global
+- One policy per target — rejected: massive duplication of backend/schedule/retention
 
-**Rationale:** Same decision as 004-D12. The transformer model produces output resources, it does not modify existing resources from other transformers. This is a deliberate architectural constraint.
+**Rationale:** Different components need different treatment (hooks, restore procedures). The per-component map groups all concerns per component.
+
+---
+
+### D12: Three resource types — volumes, configMaps, secrets
+
+**Decision:** Backup targets can be volumes (Restic file backup), configMaps (API export), or secrets (API export).
+
+**Alternatives considered:**
+- Volumes only (004 approach) — rejected: ConfigMaps and Secrets also contain data worth protecting
+- Discriminated union — rejected: keyed maps mirror component resource structure
+
+**Rationale:** Each type has different backup mechanics. Map keys reference corresponding resource names on the component.
+
+---
+
+### D13: Field naming `backupPath` (not `mountPath` or `path`)
+
+**Decision:** The subtree filter within a PVC is named `backupPath`, defaulting to `"/"`.
+
+**Alternatives considered:**
+- `mountPath` — rejected: sounds like a container mount point
+- `path` — rejected: too generic
+- `subPath` — rejected: Kubernetes has specific `subPath` semantics
+
+**Rationale:** `backupPath` is unambiguous: "the path within the PVC to back up."
+
+---
+
+### D14: preBackupHook is per-component, not per-directive
+
+**Decision:** `preBackupHook` lives inside each component's target entry in the K8up directive.
+
+**Alternatives considered:**
+- Global hook at directive level — rejected: different components need different hooks
+- Hook per volume target — rejected: hooks are per-component, not per-volume
+
+**Rationale:** A Jellyfin component needs SQLite checkpoint; a Postgres component needs pg_dump; static files need no hook.
+
+---
+
+### D15: Provider-specific backup, provider-agnostic restore
+
+**Decision:** Backup directives are per-provider (`#K8upBackupDirective`). The restore directive (`#RestoreDirective`) is provider-agnostic and consumed by the CLI.
+
+**Alternatives considered:**
+- Both provider-agnostic — rejected after K8up/Velero API research: K8up (Restic retention, checkSchedule, pruneSchedule, PreBackupPod) and Velero (TTL, CSI snapshots, exec-in-container hooks, BackupStorageLocation) are too different to abstract cleanly
+- Both provider-specific — rejected: restore is inherently provider-agnostic; the CLI browses a Restic repo regardless of who wrote to it
+
+**Rationale:** Backup generates provider-specific CRs (transformer consumer). Restore reads a repository and orchestrates kubectl operations (CLI consumer). Different consumers, different abstraction levels.
+
+---
+
+### D16: Explicit duplication between backup and restore directives
+
+**Decision:** Both directives carry their own backend/repository credentials and target lists. No structural references between them.
+
+**Alternatives considered:**
+- Restore references backup directive values — rejected: couples the two directives structurally; restore should work even if the backup directive changes
+- Shared schema type for backend — rejected: the fields are named differently (`backend.s3` vs `repository.s3`) to reflect their different roles
+
+**Rationale:** Each directive is self-contained. Module authors use `#config.backup` to deduplicate at the module level. Change the bucket → change `#config` → both directives update. The duplication is in the schema structure, not in the module code.
+
+---
+
+### D17: Restore directive gains `repository.format` field
+
+**Decision:** `repository.format: *"restic" | "kopia"` tells the CLI which tool to use for repository access.
+
+**Alternatives considered:**
+- Auto-detect format from repository — rejected: adds complexity; Restic and Kopia repos may not be trivially distinguishable
+- Assume Restic always — rejected: Velero defaults to Kopia (Restic deprecated in Velero 1.15+); future `#VeleroBackupDirective` will write Kopia repos
+
+**Rationale:** K8up uses Restic. Velero uses Kopia. The CLI needs to know which tool to invoke. Default is `"restic"` since the first provider is K8up.
+
+---
+
+### D18: Restore order uses CUE definition order, not explicit ordering field
+
+**Decision:** The `components` map in `#RestoreDirective` uses definition order as restore order. Database before app = write database first in the map.
+
+**Alternatives considered:**
+- Explicit `order: int` field — rejected: adds noise; CUE preserves struct field order; the visual order in the file matches the execution order
+- Flat ordered list instead of map — rejected: maps are more natural for keyed data; component names as keys enable direct access
+
+**Rationale:** CUE preserves struct field order. The module author writes components in the order they should be restored. Visual order = execution order — no indirection.
+
+---
+
+### D19: No default schedule in K8up backup directive
+
+**Decision:** `schedule!: string` is required with no default. The module author must explicitly choose a backup schedule.
+
+**Alternatives considered:**
+- Default to `"0 2 * * *"` (2 AM daily) — rejected: backup frequency is a conscious decision; silent defaults risk either too-frequent backups (wasting resources) or insufficient coverage
+
+**Rationale:** Unlike retention (where sensible defaults exist), schedule depends on the workload's data change rate and RPO requirements. The module or release author must make this choice.

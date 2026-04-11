@@ -12,10 +12,9 @@
 
 - Introduce `#Directive` as a primitive type within `#Policy`, alongside `#PolicyRule`
 - Directives describe operational behavior the platform executes — no enforcement semantics
-- Define `#BackupDirective` as a combined backup + pre-backup hook + restore schema
-- Transformers generate K8up resources from directives
-- CLI reads directives to browse snapshots and execute restores
-- Provider-agnostic contract — K8up is an implementation detail in the transformer
+- Provider-specific backup directives (K8up first, Velero later)
+- Provider-agnostic restore directive consumed by the CLI
+- Two self-contained directives: backup generates CRs, restore drives CLI operations
 
 ## Non-Goals (v1)
 
@@ -23,7 +22,7 @@
 - Data dependency claims (Postgres, Redis connections)
 - Cross-module backup coordination
 - Environment-level S3 backend defaults
-- Automatic PVC discovery from workload specs
+- Generic/universal backup abstraction across providers
 
 ---
 
@@ -39,7 +38,7 @@
     metadata: {
         modulePath!:  t.#ModulePathType   // Example: "opmodel.dev/opm/v1alpha1/directives/data"
         version!:     t.#MajorVersionType // Example: "v1"
-        name!:        t.#NameType         // Example: "backup"
+        name!:        t.#NameType         // Example: "k8up-backup"
         #definitionName: (t.#KebabToPascal & {"in": name}).out
 
         fqn: t.#FQNType & "\(modulePath)/\(name)@\(version)"
@@ -64,7 +63,7 @@
 | Purpose | Governance rules, security, compliance | Operational behavior the platform executes |
 | Enforcement | Required (`mode`, `onViolation`) | None |
 | Who writes it | Platform team | Module author |
-| Examples | Encryption policy, resource limits | Backup scheduling, restore procedures |
+| Examples | Encryption policy, resource limits | K8up backup, restore procedures |
 | Metadata | Same pattern | Same pattern |
 | Spec | Same pattern (`#spec!: camelName: _`) | Same pattern |
 
@@ -130,53 +129,64 @@
 }
 ```
 
-A `#Policy` may contain only `#rules`, only `#directives`, or both. This is valid — a policy grouping backup directives with no governance rules is a natural pattern.
+A `#Policy` may contain only `#rules`, only `#directives`, or both.
 
 ---
 
-## `#BackupDirective`
+## Two Directives, Two Consumers
 
-A single combined directive covering backup scheduling, optional pre-backup hooks, and optional restore procedures. Combined because:
+| Directive | Consumer | Provider-specific? | Purpose |
+|-----------|----------|-------------------|---------|
+| `#K8upBackupDirective` | Transformer | Yes (K8up) | Generate K8up Schedule + PreBackupPod CRs |
+| `#RestoreDirective` | CLI | No (repo-format aware) | Browse snapshots, execute restores |
 
-- At the policy level there is no independent composition pressure (unlike component-level traits)
-- Restore is tightly coupled to backup (same S3 backend, same repo, same PVC targets)
-- Module authors define all three concerns together
+Both are self-contained. Both carry their own backend/repository credentials. Duplication is handled at the module level via `#config` references.
+
+### Why Two Directives Instead of One
+
+Backup is provider-specific — K8up has `checkSchedule`, `pruneSchedule`, Restic retention semantics. Velero has TTL, CSI snapshots, exec-in-container hooks. Abstracting over them wastes effort and leaks provider details into the contract.
+
+Restore is provider-agnostic — the CLI needs repository connection info, what was backed up, and how to restore. It doesn't care whether K8up or Velero created the backups. Restic repos are Restic repos.
+
+Separating them means:
+- Adding Velero support = new `#VeleroBackupDirective`, same `#RestoreDirective`
+- CLI works unchanged regardless of which backup provider wrote the data
+
+---
+
+## `#K8upBackupDirective`
+
+Unapologetically K8up-specific. Maps closely to K8up's Schedule CR.
 
 ```cue
-#BackupDirective: prim.#Directive & {
+#K8upBackupDirective: prim.#Directive & {
     metadata: {
         modulePath:  "opmodel.dev/opm/v1alpha1/directives/data"
         version:     "v1"
-        name:        "backup"
-        description: "Backup scheduling, pre-backup hooks, and restore for persistent data"
+        name:        "k8up-backup"
+        description: "K8up backup scheduling and pre-backup hooks"
     }
-    #spec: close({backup: #BackupDirectiveSchema})
+    #spec: close({k8upBackup: #K8upBackupDirectiveSchema})
 }
 ```
 
-### `#BackupDirectiveSchema`
+### `#K8upBackupDirectiveSchema`
 
 ```cue
-#BackupDirectiveSchema: {
-    // What to back up — one or more PVC targets
-    targets!: [...{
-        pvcName!:  string          // Explicit PVC name (not inferred from workload)
-        mountPath: *"/data" | string // Mount path for Restic file discovery
-    }]
+#K8upBackupDirectiveSchema: {
+    // K8up scheduling
+    schedule!:     string                   // Backup cron schedule (required, no default)
+    checkSchedule: *"0 4 * * 0" | string   // Restic repo integrity check
+    pruneSchedule: *"0 5 * * 0" | string   // Restic snapshot pruning
 
-    // Backup schedule (cron syntax)
-    schedule:      *"0 2 * * *" | string  // Default: 2 AM daily
-    checkSchedule: *"0 4 * * 0" | string  // Default: 4 AM weekly
-    pruneSchedule: *"0 5 * * 0" | string  // Default: 5 AM weekly
-
-    // Retention policy
+    // Restic retention policy
     retention: {
         keepDaily:   *7 | int
         keepWeekly:  *4 | int
         keepMonthly: *6 | int
     }
 
-    // Storage backend — release-provided
+    // K8up backend — S3 + Restic repo password
     backend!: {
         s3: {
             endpoint!:        string
@@ -187,46 +197,123 @@ A single combined directive covering backup scheduling, optional pre-backup hook
         repoPassword!: schemas.#Secret
     }
 
-    // Optional pre-backup hook — runs before backup starts
-    preBackupHook?: {
-        image!:   string          // Container image for the hook
-        command!: [...string]     // Command to execute
-        volumeMount?: {
-            pvcName!:  string            // PVC to mount (may differ from backup target)
-            mountPath: *"/data" | string
+    // Per-component backup targets
+    // Keys are component names matching Policy.appliesTo
+    targets!: [componentName=string]: {
+        // Volume targets — file-level backup via Restic
+        // Keys reference volume names from the component's spec.volumes
+        volumes?: [volumeName=string]: {
+            backupPath: *"/" | string  // subtree within the PVC to back up
         }
-    }
 
-    // Optional restore description — read by CLI for restore execution
-    restore?: {
-        healthCheck?: {
-            path!: string   // HTTP path to check after restore
-            port!: int      // Port to check
+        // ConfigMap targets — API object export
+        configMaps?: [configMapName=string]: {}
+
+        // Secret targets — API object export
+        secrets?: [secretName=string]: {}
+
+        // K8up PreBackupPod — runs before this component's backup
+        preBackupHook?: {
+            image!:   string
+            command!: [...string]
+            volumeMount?: {
+                volume!:   string            // references a volume name from this component
+                mountPath: *"/data" | string
+            }
         }
-        requiresScaleDown: *true | bool // Whether workload must be scaled to 0 during restore
     }
 }
 ```
 
 ### Design Notes
 
-**`targets` uses explicit `pvcName`**: Avoids coupling to workload internals. The module author knows which PVCs contain data worth protecting. Supports components that own multiple PVCs or non-workload components.
+**No default schedule**: Module author must choose. Backup frequency is a conscious decision, not something that should silently default.
 
-**`backend.s3` wrapper**: Allows adding `backend.gcs`, `backend.azure` in future versions without breaking the schema.
+**`checkSchedule` and `pruneSchedule`**: K8up/Restic-specific. These map directly to `restic check` and `restic forget --prune`. Defaults are sensible for most deployments (weekly check, weekly prune).
 
-**`schemas.#Secret` for credentials**: Reuses OPM's existing secret type, supporting both inline values and secret references (`{secretName, remoteKey}`).
+**`retention` is Restic-native**: `keepDaily`, `keepWeekly`, `keepMonthly` map directly to Restic prune flags. No abstraction layer.
 
-**`preBackupHook` is optional and inline**: Many backups need no hook (static files, configuration). When needed, the hook is defined inline rather than as a separate directive because it shares the backup's lifecycle and targets.
+**`backend.s3` only for v1**: K8up supports S3, GCS, Azure, B2, Swift, local, REST. S3 covers MinIO, Garage, AWS S3, and most S3-compatible stores. Additional backends can be added without breaking the schema.
 
-**`preBackupHook.volumeMount` may differ from backup target**: The hook may access a different PVC than what is being backed up (e.g., hook reads a database PVC to run checkpoint, backup captures a different data PVC).
+**`preBackupHook` generates K8up PreBackupPod**: The transformer creates a separate K8up PreBackupPod CR from this definition. The hook runs as a temporary pod before each backup.
 
-**`restore` is optional and descriptive**: Not all modules need structured restore. When present, the CLI reads it to automate the restore procedure (scale down, create K8up Restore CR, verify health, scale up). When absent, restore is manual.
+---
+
+## `#RestoreDirective`
+
+Provider-agnostic. Consumed by the OPM CLI, not by transformers. Describes how to connect to the backup repository, what can be restored, and the restore procedure per component.
+
+```cue
+#RestoreDirective: prim.#Directive & {
+    metadata: {
+        modulePath:  "opmodel.dev/opm/v1alpha1/directives/data"
+        version:     "v1"
+        name:        "restore"
+        description: "Restore procedures and repository connection for CLI operations"
+    }
+    #spec: close({restore: #RestoreDirectiveSchema})
+}
+```
+
+### `#RestoreDirectiveSchema`
+
+```cue
+#RestoreDirectiveSchema: {
+    // Repository connection — CLI uses to browse and restore snapshots
+    repository!: {
+        // Backup tool format — determines which CLI tool to use
+        format: *"restic" | "kopia"
+
+        // Storage backend
+        s3?: {
+            endpoint!:        string
+            bucket!:          string
+            accessKeyID!:     schemas.#Secret
+            secretAccessKey!: schemas.#Secret
+        }
+
+        // Repository encryption key
+        repoPassword!: schemas.#Secret
+    }
+
+    // Per-component restore procedures
+    // Definition order = restore order (database before app)
+    components!: [componentName=string]: {
+        // What was backed up on this component (CLI uses for listing/browsing)
+        volumes?: [volumeName=string]: {}
+        configMaps?: [configMapName=string]: {}
+        secrets?: [secretName=string]: {}
+
+        // Restore procedure
+        requiresScaleDown: *true | bool
+
+        healthCheck?: {
+            path!: string   // HTTP path to check after restore
+            port!: int      // Port to check
+        }
+    }
+}
+```
+
+### Design Notes
+
+**Self-contained**: The restore directive carries its own repository connection info. It does not reference the backup directive. Both directives read from the same `#config.backup` values, but structurally they are independent.
+
+**`repository.format`**: The CLI needs to know whether to use `restic` or `kopia` to interact with the repository. K8up uses Restic. Velero defaults to Kopia (Restic deprecated in Velero 1.15+). Default is `"restic"`.
+
+**Definition order is restore order**: CUE preserves struct field order. If the module author writes `database` before `app` in `components`, the CLI restores in that order. No explicit ordering field needed.
+
+**`requiresScaleDown`**: Most stateful workloads need to be scaled to 0 during restore to avoid data corruption. Default is `true`.
+
+**`healthCheck`**: After restore and scale-up, the CLI polls this endpoint to verify the component is healthy. Optional — when absent, the CLI skips health verification.
+
+**No restore implementation details**: The directive describes *what* the CLI should do (scale down, restore volumes, verify health), not *how* (K8up Restore CR vs Velero Restore CR). The CLI chooses the mechanism based on what's available in the cluster.
 
 ---
 
 ## Module Integration Overview
 
-Module authors add backup directives to `#policies`. Release authors provide environment-specific values (S3 credentials, bucket names).
+Module authors add both directives to the same `#policies` entry. Release authors provide environment-specific values via `#config`.
 
 ```cue
 #Module & {
@@ -237,37 +324,51 @@ Module authors add backup directives to `#policies`. Release authors provide env
     }
 
     #policies: {
-        "jellyfin-backup": policy.#Policy & {
+        "backup": policy.#Policy & {
             appliesTo: components: [#components.jellyfin]
 
             #directives: {
-                (data_directives.#BackupDirective.metadata.fqn): data_directives.#BackupDirective & {
-                    #spec: backup: {
-                        targets: [{
-                            pvcName: "jellyfin-config"
-                            mountPath: "/config"
-                        }]
-                        backend: #config.backup.backend
+                // K8up transformer generates Schedule + PreBackupPod
+                (k8up_directives.#K8upBackupDirective.metadata.fqn): k8up_directives.#K8upBackupDirective & {
+                    #spec: k8upBackup: {
                         schedule: #config.backup.schedule
+                        backend:  #config.backup.backend
 
-                        preBackupHook: {
-                            image: "alpine:3.21"
-                            command: ["sh", "-c", """
-                                sqlite3 /config/data/library.db 'PRAGMA wal_checkpoint(TRUNCATE)' && \
-                                sqlite3 /config/data/jellyfin.db 'PRAGMA wal_checkpoint(TRUNCATE)'
-                                """]
-                            volumeMount: {
-                                pvcName: "jellyfin-config"
-                                mountPath: "/config"
+                        targets: {
+                            jellyfin: {
+                                volumes: {
+                                    config: { backupPath: "/data" }
+                                }
+                                preBackupHook: {
+                                    image: "alpine:3.21"
+                                    command: ["sh", "-c", "sqlite3 /config/data/library.db 'PRAGMA wal_checkpoint(TRUNCATE)'"]
+                                    volumeMount: {
+                                        volume:    "config"
+                                        mountPath: "/config"
+                                    }
+                                }
                             }
                         }
+                    }
+                }
 
-                        restore: {
-                            healthCheck: {
-                                path: "/health"
-                                port: 8096
+                // CLI reads this for browse/restore
+                (data_directives.#RestoreDirective.metadata.fqn): data_directives.#RestoreDirective & {
+                    #spec: restore: {
+                        repository: {
+                            format:       "restic"
+                            s3:           #config.backup.backend.s3
+                            repoPassword: #config.backup.backend.repoPassword
+                        }
+                        components: {
+                            jellyfin: {
+                                volumes: { config: {} }
+                                requiresScaleDown: true
+                                healthCheck: {
+                                    path: "/health"
+                                    port: 8096
+                                }
                             }
-                            requiresScaleDown: true
                         }
                     }
                 }
@@ -285,14 +386,12 @@ Detailed module and release integration patterns are covered in [04-module-integ
 
 ### Enhancement 004 (archived)
 
-Enhancement 004's component-level `#BackupTrait` + `#PreBackupHookTrait` design is correct mechanically but at the wrong scope. This enhancement moves backup to module-level `#Policy` where it belongs. The transformer output (K8up Schedule, PreBackupPod) is largely the same.
+Enhancement 004's component-level `#BackupTrait` + `#PreBackupHookTrait` design is correct mechanically but at the wrong scope. This enhancement moves backup to module-level `#Policy` where it belongs.
 
 ### Enhancement 006 (Draft, not superseded)
 
-Enhancement 006's `#Claim` + `#Orchestration` design is broader — it handles data dependencies (Postgres, Redis), Blueprint composition, and cross-component coordination. This enhancement extracts only the module-level operational behavior concept as `#Directive`. If 006 is implemented later, `#BackupDirective` could either remain as-is or migrate to a `#BackupClaim` + restore orchestration.
-
-The key difference: `#Directive` is simpler. No component-level placement, no Blueprint composition, no second rendering pipeline. It extends `#Policy` with a new map field and extends `#Transformer` with directive matching — minimal changes to existing infrastructure.
+Enhancement 006's `#Claim` + `#Orchestration` design is broader — it handles data dependencies (Postgres, Redis), Blueprint composition, and cross-component coordination. This enhancement extracts only the module-level operational behavior concept as `#Directive`. The two designs are compatible, not competing.
 
 ### Enhancement 007 (Draft, not superseded)
 
-Enhancement 007's `#Offer` design is the supply side of 006. Not relevant to this enhancement — `#Directive` does not need an offer/claim pairing because it describes what the module needs the platform to do, not what another module can provide.
+Enhancement 007's `#Offer` design is the supply side of 006. Not relevant to this enhancement.

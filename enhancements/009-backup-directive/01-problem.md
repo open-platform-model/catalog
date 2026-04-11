@@ -64,5 +64,5 @@ A module-level primitive that:
 2. Carries no enforcement semantics
 3. Can be read by transformers to generate platform resources (K8up Schedule, PreBackupPod)
 4. Can be read by the CLI to execute operations (browse snapshots, restore)
-5. Keeps the backup contract provider-agnostic (K8up is an implementation detail)
+5. Separates provider-specific backup (K8up, Velero) from provider-agnostic restore (CLI)
 6. Includes restore description from the start

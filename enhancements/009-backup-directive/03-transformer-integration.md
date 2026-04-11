@@ -1,4 +1,4 @@
-# Transformer Integration — `#Directive` Primitive: Backup & Restore
+# Transformer Integration — K8up Backup Directive
 
 | Field       | Value            |
 | ----------- | ---------------- |
@@ -10,7 +10,7 @@
 
 ## Overview
 
-Directives are consumed by Transformers via new matching fields: `requiredDirectives` and `optionalDirectives`. When a Transformer declares a required directive, the rendering pipeline checks whether any `#Policy` targeting the current component contains that directive FQN. This extends the existing matching logic (labels, resources, traits) with a fourth dimension.
+The `#K8upBackupDirective` is consumed by K8up-specific transformers via the `requiredDirectives` matching field. The `#RestoreDirective` is not consumed by transformers — it is read directly by the CLI.
 
 ---
 
@@ -46,62 +46,39 @@ A transformer matches a component when ALL of:
 3. ALL `requiredTraits` FQNs exist in `component.#traits` (unchanged)
 4. **NEW**: ALL `requiredDirectives` FQNs exist in any `#Policy.#directives` where `appliesTo` targets this component
 
-The rendering pipeline resolves directive matching by:
-
-1. Iterating all `#policies` in the module
-2. For each policy, checking if `appliesTo.components` or `appliesTo.matchLabels` matches the current component
-3. If matched, collecting the policy's `#directives` FQNs into the component's directive set
-4. Checking the transformer's `requiredDirectives` against this collected set
-
 ### Directive Data Access
 
-The transformer's `#transform` function receives directive data via the component's policy spec. Since `#Policy._allFields` merges directive specs into `Policy.spec`, and policies are associated with components via `appliesTo`, the directive values are accessible through the resolved component context.
-
-The exact mechanism depends on how the rendering pipeline passes policy data to transformers. Two options:
-
-**Option A: Via `#TransformerContext`** — Add a `#directives` field to `#TransformerContext` containing matched directive specs:
-
-```cue
-#TransformerContext: {
-    // ... existing fields ...
-    #directives?: [string]: _ // Directive specs from matched policies
-}
-```
-
-**Option B: Via `#component` enrichment** — The pipeline enriches the component with directive data before passing to the transformer. The transformer accesses `#component.spec.backup` directly.
-
-**Recommendation:** Option B — it mirrors how trait specs are accessed (`#component.spec.scaling`, `#component.spec.expose`). Directives contribute to the policy `spec`, which is associated with the component. The transformer accesses directive fields through the same `spec` path.
+**Recommendation:** The pipeline enriches the component with directive data before passing to the transformer. The transformer accesses `#component.spec.k8upBackup` directly, mirroring how trait specs are accessed (`#component.spec.scaling`, `#component.spec.expose`).
 
 ---
 
-## Backup Directive Transformer
+## K8up Schedule Transformer
 
 ```cue
-#BackupDirectiveTransformer: transformer.#Transformer & {
+#K8upScheduleTransformer: transformer.#Transformer & {
     metadata: {
         modulePath:  "opmodel.dev/opm/v1alpha1/providers/kubernetes/transformers"
         version:     "v0"
-        name:        "backup-directive-transformer"
-        description: "Converts BackupDirective to K8up Schedule and optional PreBackupPod"
+        name:        "k8up-schedule-transformer"
+        description: "Converts K8upBackupDirective to K8up Schedule CR"
     }
 
     requiredDirectives: {
-        (data_directives.#BackupDirective.metadata.fqn): data_directives.#BackupDirective
+        (k8up_directives.#K8upBackupDirective.metadata.fqn): k8up_directives.#K8upBackupDirective
     }
 
     #transform: {
         #component: _
         #context:   transformer.#TransformerContext
 
-        _backup: #component.spec.backup
-        _name:   "\(#context.#moduleReleaseMetadata.name)-\(#context.#componentMetadata.name)"
+        _backup: #component.spec.k8upBackup
+        _componentName: #context.#componentMetadata.name
+        _name: "\(#context.#moduleReleaseMetadata.name)-\(_componentName)"
 
         output: _schedule
     }
 }
 ```
-
-Note: The current transformer model produces a single output resource. The backup transformer generates a K8up Schedule. The PreBackupPod may require a second transformer or an extension to allow multiple outputs. This is consistent with the existing model where one component matches multiple transformers, each producing one resource.
 
 ### K8up Schedule Output
 
@@ -115,59 +92,63 @@ metadata:
 spec:
   backend:
     repoPasswordSecretRef:
-      name: "{resolved from backup.backend.repoPassword}"
+      name: "{resolved from k8upBackup.backend.repoPassword}"
       key: "{resolved key}"
     s3:
-      endpoint: "{backup.backend.s3.endpoint}"
-      bucket: "{backup.backend.s3.bucket}"
+      endpoint: "{k8upBackup.backend.s3.endpoint}"
+      bucket: "{k8upBackup.backend.s3.bucket}"
       accessKeyIDSecretRef:
-        name: "{resolved from backup.backend.s3.accessKeyID}"
+        name: "{resolved from k8upBackup.backend.s3.accessKeyID}"
         key: "{resolved key}"
       secretAccessKeySecretRef:
-        name: "{resolved from backup.backend.s3.secretAccessKey}"
+        name: "{resolved from k8upBackup.backend.s3.secretAccessKey}"
         key: "{resolved key}"
   backup:
-    schedule: "{backup.schedule}"
+    schedule: "{k8upBackup.schedule}"
   check:
-    schedule: "{backup.checkSchedule}"
+    schedule: "{k8upBackup.checkSchedule}"
   prune:
-    schedule: "{backup.pruneSchedule}"
+    schedule: "{k8upBackup.pruneSchedule}"
     retention:
-      keepDaily: "{backup.retention.keepDaily}"
-      keepWeekly: "{backup.retention.keepWeekly}"
-      keepMonthly: "{backup.retention.keepMonthly}"
+      keepDaily: "{k8upBackup.retention.keepDaily}"
+      keepWeekly: "{k8upBackup.retention.keepWeekly}"
+      keepMonthly: "{k8upBackup.retention.keepMonthly}"
 ```
 
-### K8up PreBackupPod Output (conditional)
+---
 
-Generated only when `backup.preBackupHook` is present. Requires a second transformer:
+## K8up PreBackupPod Transformer
+
+Generated only when `targets[component].preBackupHook` is present. Separate transformer — one output per transformer.
 
 ```cue
-#PreBackupHookTransformer: transformer.#Transformer & {
+#K8upPreBackupHookTransformer: transformer.#Transformer & {
     metadata: {
         modulePath:  "opmodel.dev/opm/v1alpha1/providers/kubernetes/transformers"
         version:     "v0"
-        name:        "pre-backup-hook-transformer"
-        description: "Converts BackupDirective preBackupHook to K8up PreBackupPod"
+        name:        "k8up-pre-backup-hook-transformer"
+        description: "Converts K8upBackupDirective preBackupHook to K8up PreBackupPod CR"
     }
 
     requiredDirectives: {
-        (data_directives.#BackupDirective.metadata.fqn): data_directives.#BackupDirective
+        (k8up_directives.#K8upBackupDirective.metadata.fqn): k8up_directives.#K8upBackupDirective
     }
 
     #transform: {
         #component: _
         #context:   transformer.#TransformerContext
 
-        // Only produces output when preBackupHook is set
-        // The pipeline handles conditional output
-        _backup: #component.spec.backup
-        _name:   "\(#context.#moduleReleaseMetadata.name)-\(#context.#componentMetadata.name)"
+        _backup: #component.spec.k8upBackup
+        _componentName: #context.#componentMetadata.name
+        _targets: _backup.targets[_componentName]
+        _name: "\(#context.#moduleReleaseMetadata.name)-\(_componentName)"
 
         output: _preBackupPod
     }
 }
 ```
+
+### K8up PreBackupPod Output
 
 ```yaml
 apiVersion: k8up.io/v1
@@ -177,23 +158,39 @@ metadata:
   namespace: "{release-namespace}"
   labels: "{context labels}"
 spec:
-  backupCommand: "{backup.preBackupHook.command joined}"
+  backupCommand: "{targets[component].preBackupHook.command joined}"
   pod:
     spec:
       containers:
         - name: pre-backup
-          image: "{backup.preBackupHook.image}"
-          command: "{backup.preBackupHook.command}"
+          image: "{targets[component].preBackupHook.image}"
+          command: "{targets[component].preBackupHook.command}"
           volumeMounts:
             # Only if volumeMount is set
             - name: data
-              mountPath: "{backup.preBackupHook.volumeMount.mountPath}"
+              mountPath: "{targets[component].preBackupHook.volumeMount.mountPath}"
       volumes:
         # Only if volumeMount is set
         - name: data
           persistentVolumeClaim:
-            claimName: "{backup.preBackupHook.volumeMount.pvcName}"
+            claimName: "{resolved PVC name from volume reference}"
 ```
+
+### Volume Name Resolution
+
+The transformer resolves volume names from `targets[component].volumes` and `preBackupHook.volumeMount.volume` to PVC names by looking up the component's `spec.volumes[volumeName]`. For a volume with `persistentClaim`, the PVC name is derived from the claim spec and the module release naming convention.
+
+---
+
+## Resource Type Handling
+
+| Resource type | Backup method | Transformer output |
+|--------------|--------------|-------------------|
+| `volumes` | File-level backup via Restic | K8up Schedule targeting the PVC |
+| `configMaps` | API object export | Implementation TBD (v2) |
+| `secrets` | API object export | Implementation TBD (v2) |
+
+For v1, the transformer focuses on volume backup via K8up. ConfigMap and Secret backup support is defined in the schema for forward compatibility.
 
 ---
 
@@ -214,8 +211,8 @@ Both transformers are registered in the Kubernetes provider:
 #Provider: provider.#Provider & {
     #transformers: {
         // ... existing transformers ...
-        (k8s_transformers.#BackupDirectiveTransformer.metadata.fqn): k8s_transformers.#BackupDirectiveTransformer
-        (k8s_transformers.#PreBackupHookTransformer.metadata.fqn):   k8s_transformers.#PreBackupHookTransformer
+        (k8s_transformers.#K8upScheduleTransformer.metadata.fqn):         k8s_transformers.#K8upScheduleTransformer
+        (k8s_transformers.#K8upPreBackupHookTransformer.metadata.fqn):    k8s_transformers.#K8upPreBackupHookTransformer
     }
 }
 ```
@@ -224,4 +221,10 @@ Both transformers are registered in the Kubernetes provider:
 
 ## PVC Annotation
 
-Same recommendation as enhancement 004: module author adds `k8up.io/backup=true` to the PVC definition, or the K8up operator is configured with `skipWithoutAnnotation: false`. Cross-component mutation (transformer modifying another component's PVC annotations) is not supported by the current transformer model.
+Same recommendation as enhancement 004: module author adds `k8up.io/backup=true` to the PVC definition, or the K8up operator is configured with `skipWithoutAnnotation: false`. Cross-component mutation is not supported by the transformer model.
+
+---
+
+## `#RestoreDirective` and Transformers
+
+The `#RestoreDirective` is **not consumed by transformers**. It generates no Kubernetes resources. It is a data contract read by the OPM CLI at runtime. No transformer registration needed.
