@@ -102,12 +102,12 @@ Decision log for all design choices in the `#Offer` primitive enhancement. This 
 
 ### D7: `#Platform` gains `#composedOffers`, `#declaredOffers`, and `#satisfiedClaims`
 
-**Decision:** Platform composes Offers from all Providers (like it composes Transformers) and computes `#satisfiedClaims` — the list of Claim FQNs that the Platform can fulfill via Offers.
+**Decision:** Platform composes Offers from all Providers (like it composes Transformers) and computes `#satisfiedClaims` — the list of Claim FQNs that the Platform can fulfill via Offers. These fields extend enhancement 008's `#Platform` definition.
 
 **Alternatives considered:**
 - No platform-level offer aggregation (leave it to CLI logic) — rejected: CUE-level computation enables validation at definition time, not just CLI time.
 
-**Rationale:** Follows the same composition pattern as `#composedTransformers`. CUE struct unification handles merging. `#satisfiedClaims` enables the capability report and pre-render validation.
+**Rationale:** Follows the same composition pattern as `#composedTransformers` (enhancement 008). CUE struct unification handles merging. `#satisfiedClaims` enables the capability report and pre-render validation.
 
 **Source:** Design discussion 2026-04-01.
 

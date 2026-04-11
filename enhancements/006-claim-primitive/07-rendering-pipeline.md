@@ -136,7 +136,10 @@ Claim transformers register alongside trait transformers in the composed provide
 
 ```cue
 // Platform composes all providers (enhancement 008)
-#Platform & {
+// Each platform is its own CUE package in .opm/platforms/<name>/
+#Platform: core.#Platform & {
+    metadata: name: "kind-opm-dev"
+    type: "kubernetes"
     #providers: [opm.#Provider, k8up.#Provider, kubernetes.#Provider]
     // #composedTransformers includes both trait and claim transformers
 }
