@@ -18,7 +18,8 @@ ModuleRelease (CUE)
   values: { ... }
 
   → #ContextBuilder computes _computedCtx from:
-      #env.#platform.#ctx (Layer 2) + #env.#ctx (Layer 3)
+      #env.#platform.#ctx (#PlatformContext, Layer 2)
+      + #env.#ctx (#EnvironmentContext, Layer 3)
       + metadata (Layer 4) + component keys
   → let unifiedModule = #module & {
         #config: values

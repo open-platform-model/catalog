@@ -79,6 +79,60 @@ The top-level context struct, defined in a new `context` package under `catalog/
 
 ---
 
+## `#PlatformContext`
+
+Defines the context shape that a `#Platform` contributes (Layer 2). Sets cluster-level defaults and platform-team extensions.
+
+```cue
+// catalog/core/v1alpha1/context/context.cue
+#PlatformContext: {
+    runtime: {
+        cluster: {
+            domain: *"cluster.local" | string
+        }
+        route?: {
+            domain: string
+        }
+    }
+    // Platform-team extensions — open struct for platform-specific fields.
+    // Not schema-validated by OPM; conventions left to platform teams.
+    platform: { ... }
+}
+```
+
+---
+
+## `#EnvironmentContext`
+
+Defines the context shape that an `#Environment` contributes (Layer 3). Sets namespace defaults and environment-specific overrides.
+
+```cue
+// catalog/core/v1alpha1/context/context.cue
+#EnvironmentContext: {
+    runtime: {
+        release: {
+            // Default namespace for releases in this environment.
+            // Individual ModuleReleases can override via metadata.namespace.
+            namespace: string
+        }
+        cluster?: {
+            // Override platform's cluster domain if this environment
+            // targets a cluster with a non-default domain.
+            domain: string
+        }
+        route?: {
+            // Environment-specific route domain.
+            // Typically varies per environment: "dev.example.com" vs "example.com".
+            domain: string
+        }
+    }
+    // Inherits platform extensions; can add env-specific extensions.
+    platform: { ... }
+}
+```
+
+---
+
 ## `#RuntimeContext`
 
 The OPM-owned layer. All fields are required to be concrete when the module is rendered.

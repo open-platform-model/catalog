@@ -1,36 +1,52 @@
-# Design Package: `#Platform`, `#Environment` & Provider Composition
+# Design Package: Module Context, Platform Composition, and Environment Targeting
 
 | Field       | Value            |
 | ----------- | ---------------- |
 | **Status**  | Draft            |
-| **Created** | 2026-03-29       |
+| **Created** | 2026-03-25       |
 | **Authors** | OPM Contributors |
 
 ## Summary
 
-Introduce `#Platform` as a core construct that composes a base provider with capability providers into a unified transformer registry. `#Platform` carries platform-level `#ctx` defaults (cluster domain, platform extensions) following the enhancement 003 `#ctx` pattern.
+Introduces `#ctx`, a well-known definition field on `#Module` that makes runtime and environment information available to components at definition time. Module authors can reference the release name, namespace, cluster domain, route domain, computed resource names, and DNS variations without hardcoding values or requiring manual user input for derived configuration.
 
-Introduce `#Environment` as the user-facing deployment target that references a `#Platform` and contributes environment-level `#ctx` overrides (namespace, route domain). `#ModuleRelease` targets an environment via `#env`, not a platform directly.
+Introduces `#Platform` as a core construct that composes a base provider with capability providers into a unified transformer registry. `#Platform` carries platform-level `#ctx` defaults (cluster domain, platform extensions) typed as `#PlatformContext`.
 
-Context resolution follows a layered hierarchy: CUE defaults → `#Platform.#ctx` → `#Environment.#ctx` → `#ModuleRelease` identity. This supersedes enhancement 003's inline `#environment` field on `#ModuleRelease`.
+Introduces `#Environment` as the user-facing deployment target that references a `#Platform` and contributes environment-level `#ctx` overrides (namespace, route domain) typed as `#EnvironmentContext`. `#ModuleRelease` targets an environment via `#env`, not a platform directly.
+
+Context resolution follows a layered hierarchy: `#Platform.#ctx` (`#PlatformContext`) → `#Environment.#ctx` (`#EnvironmentContext`) → `#ModuleRelease` identity → `#ModuleContext`.
 
 The existing matcher works unchanged — it receives the composed transformer map. CUE struct unification handles provider composition naturally.
 
 Claim/offer extensions to `#Transformer`, `#Provider`, and `#Platform` are owned by enhancements [006](../006-claim-primitive/) and [007](../007-offer-primitive/).
 
+> **Note:** This enhancement subsumes the former enhancement 003-module-context. All context schemas, pipeline changes, and design decisions from 003 are merged here. Enhancement 003 is archived with a pointer to this document.
+
 ## Documents
 
-1. [01-problem.md](01-problem.md) — Monolithic provider; no composition point for capability modules
-2. [02-design.md](02-design.md) — `#Platform` construct, context hierarchy, provider composition via CUE unification
-3. [03-module-integration.md](03-module-integration.md) — Platform operator, environment operator, release author, and capability module author experience
-4. [04-decisions.md](04-decisions.md) — All design decisions with rationale
-5. [05-environment.md](05-environment.md) — `#Environment` construct: schema, file layout, context hierarchy, `#ContextBuilder` changes, relationship to enhancement 003
+1. [01-problem.md](01-problem.md) — Module blindness to deployment context; monolithic provider with no composition point
+2. [02-design.md](02-design.md) — Architectural overview: `#ctx` two-layer design, context hierarchy, provider composition, before/after examples
+3. [03-schema.md](03-schema.md) — All schema definitions: `#ModuleContext`, `#PlatformContext`, `#EnvironmentContext`, `#RuntimeContext`, `#ComponentNames`, `#Platform`, `#Environment`, `#ContextBuilder`, `#ModuleRelease` changes
+4. [04-platform.md](04-platform.md) — `#Platform` construct: file layout, provider composition, ordering, capability module author experience
+5. [05-environment.md](05-environment.md) — `#Environment` construct: file layout, examples, sharing, context hierarchy resolution, CLI commands
+6. [06-module-integration.md](06-module-integration.md) — Pipeline integration: end-to-end flow, `#ModuleRelease` changes, Go pipeline changes, content hash injection, release author experience, CLI workflow
+7. [07-decisions.md](07-decisions.md) — All design decisions with rationale (D1-D30)
+8. [08-notes.md](08-notes.md) — Deferred discussions, open questions, and follow-up triggers
+
+## Open Questions and Deferred Items
+
+All items flagged during design as requiring further discussion are tracked in [08-notes.md](08-notes.md). The notes file distinguishes between:
+
+- **Deferred decisions** — topics explicitly considered and set aside for a follow-up design (e.g., `#TransformerContext` migration, bundle-level context)
+- **Implementation notes** — constraints the initial implementer must keep in mind to avoid closing off future options (e.g., override support, environment profile sharing)
+- **Follow-up design triggers** — conditions under which a deferred item should be revisited (e.g., Strategy A for content hashes, `platform` namespacing)
 
 ## Cross-References
 
 | Document | Purpose |
 | -------- | ------- |
-| `catalog/enhancements/003-module-context/` | Enhancement 003 — `#ctx`, `#RuntimeContext`, `#ContextBuilder`. This enhancement supersedes 003's inline `#environment` with the `#Environment` construct |
+| `catalog/enhancements/003-module-context/` | Archived — merged into this enhancement |
+| `catalog/enhancements/002-resource-name-override/` | Archived — resource name override subsumed by `metadata.resourceName` (D13) |
 | `catalog/enhancements/006-claim-primitive/` | `#Claim` primitive — owns `requiredClaims`/`optionalClaims` on `#Transformer`, `#declaredClaims` on `#Provider`, matcher claim matching |
 | `catalog/enhancements/007-offer-primitive/` | `#Offer` primitive — owns `#offers`/`#declaredOffers` on `#Provider`, `#composedOffers`/`#satisfiedClaims` on `#Platform` |
 | `catalog/core/v1alpha1/provider/provider.cue` | Existing `#Provider` definition — gains `metadata.type` from this enhancement |

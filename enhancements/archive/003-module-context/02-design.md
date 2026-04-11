@@ -31,7 +31,7 @@
 
 `#ctx` is a new definition field on `#Module`. It is a well-known struct whose schema is defined in the catalog. Components in `#components` reference it by name to access deployment identity, environment properties, computed resource names, and DNS addresses.
 
-`#ctx` is not authored by module developers. It is injected by the runtime — specifically by `#ModuleRelease` — during CUE unification. The injection uses the same `FillPath` pattern as `values` filling `#config`.
+`#ctx` is not authored by module developers. It is computed by `#ContextBuilder` and injected into the module by `#ModuleRelease` during CUE unification. The context inputs originate from `#Platform` (Layer 2) and `#Environment` (Layer 3) constructs defined in [enhancement 008](../008-platform-construct/02-design.md).
 
 ---
 
@@ -48,7 +48,7 @@
 
 ### `runtime`
 
-Defined and validated by the OPM catalog. Every field in `runtime` has a known schema and a known computation rule. The catalog guarantees that `runtime` is always fully populated before components are evaluated. Module authors can rely on every `runtime` field being present.
+Defined and validated by the OPM catalog. Every field in `runtime` has a known schema and a known computation rule. The `runtime` layer is populated from `#Platform.#ctx.runtime` (`#PlatformContext`) and `#Environment.#ctx.runtime` (`#EnvironmentContext`), with environment overriding platform defaults and release identity added last. The catalog guarantees that `runtime` is always fully populated before components are evaluated. Module authors can rely on every `runtime` field being present.
 
 ### `platform`
 
