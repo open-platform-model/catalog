@@ -208,7 +208,7 @@ opm environment list
 
 Output:
 
-```
+```text
 NAME      PLATFORM       NAMESPACE    ROUTE DOMAIN
 dev       kind-opm-dev   dev          dev.local
 staging   acme-prod-01      staging      staging.example.com
@@ -222,7 +222,7 @@ opm environment show prod
 
 Output:
 
-```
+```text
 Environment: prod
 Platform: acme-prod-01 (kubernetes)
 Namespace: production

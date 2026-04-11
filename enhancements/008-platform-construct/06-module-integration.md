@@ -10,7 +10,7 @@
 
 ## End-to-End Flow
 
-```
+```text
 ModuleRelease (CUE)
   metadata: { name, namespace, uuid }
   #module: <module definition>
@@ -112,7 +112,7 @@ The relationship between `#ctx` and `#TransformerContext` — whether to unify t
 
 `#ctx.runtime.components[name].hashes` is the intended home for immutable resource content hashes. The computation of these hashes requires the resolved component spec, which in turn requires `#config` to be filled with `values`. The order of operations is:
 
-```
+```text
 1. values fills #config
 2. #ctx (including resourceName, dns) is computed and fills #ctx
 3. Component specs are evaluated with concrete #config and #ctx
@@ -204,7 +204,7 @@ opm platform capabilities acme-prod-01
 
 Output:
 
-```
+```text
 Platform: acme-prod-01
 Type: kubernetes
 Providers (5):
@@ -223,7 +223,7 @@ opm environment list
 
 Output:
 
-```
+```text
 NAME      PLATFORM       NAMESPACE    ROUTE DOMAIN
 dev       kind-opm-dev   dev          dev.local
 staging   acme-prod-01   staging      staging.example.com

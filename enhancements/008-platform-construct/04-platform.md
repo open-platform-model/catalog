@@ -18,7 +18,7 @@
 
 ## File Layout
 
-```
+```text
 .opm/
   platforms/
     acme-prod-01/
