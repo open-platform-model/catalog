@@ -35,100 +35,9 @@ env:
   CUE_REGISTRY: 'opmodel.dev=ghcr.io/open-platform-model,registry.cue.works'
 
 jobs:
-  validate:
-    name: Validate
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: cue-lang/setup-cue@a93fa358375740cd8b0078f76355512b9208acb1 # v1.0.1
-        with:
-          version: ${{ env.CUE_VERSION }}
-
-      # Auth needed to pull opmodel.dev deps from GHCR during vet
-      - name: Login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Check formatting
-        run: |
-          set -euo pipefail
-          for dir in core/v1alpha1 opm/v1alpha1 gateway_api/v1alpha1 \
-                     cert_manager/v1alpha1 k8up/v1alpha1 kubernetes/v1; do
-            (cd "$dir" && cue fmt ./...)
-          done
-          if ! git diff --quiet; then
-            echo "::error::CUE files are not formatted. Run 'cue fmt ./...' locally."
-            git diff --name-only
-            exit 1
-          fi
-
-      - name: Vet modules
-        run: |
-          set -euo pipefail
-          echo "Vetting core/v1alpha1..."
-          (cd core/v1alpha1 && cue vet ./...)
-
-          echo "Vetting opm/v1alpha1..."
-          (cd opm/v1alpha1 && cue vet ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...)
-
-          echo "Vetting gateway_api/v1alpha1..."
-          (cd gateway_api/v1alpha1 && cue vet ./...)
-
-          echo "Vetting cert_manager/v1alpha1..."
-          (cd cert_manager/v1alpha1 && cue vet ./...)
-
-          echo "Vetting k8up/v1alpha1..."
-          (cd k8up/v1alpha1 && cue vet ./...)
-
-          echo "Vetting kubernetes/v1..."
-          (cd kubernetes/v1 && cue vet ./...)
-
-      - name: Run tests
-        run: |
-          set -euo pipefail
-
-          run_tests() {
-            local dir="$1"
-            local label="$2"
-            local output
-            if output=$(cd "$dir" && cue vet -t test ./... 2>&1); then
-              echo "  pass: ${label}"
-            elif echo "$output" | grep -q 'tag "test" not used in any file'; then
-              echo "  skip: ${label} (no tests)"
-            else
-              echo "$output" >&2
-              echo "  FAIL: ${label}"
-              return 1
-            fi
-          }
-
-          # opm tests use selective paths
-          run_tests_opm() {
-            local output
-            if output=$(cd opm/v1alpha1 && cue vet -t test \
-              ./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/... 2>&1); then
-              echo "  pass: opm/v1alpha1"
-            elif echo "$output" | grep -q 'tag "test" not used in any file'; then
-              echo "  skip: opm/v1alpha1 (no tests)"
-            else
-              echo "$output" >&2
-              echo "  FAIL: opm/v1alpha1"
-              return 1
-            fi
-          }
-
-          run_tests core/v1alpha1 core/v1alpha1
-          run_tests_opm
-          run_tests gateway_api/v1alpha1 gateway_api/v1alpha1
-          run_tests cert_manager/v1alpha1 cert_manager/v1alpha1
-          run_tests k8up/v1alpha1 k8up/v1alpha1
-          run_tests kubernetes/v1 kubernetes/v1
-
   publish:
-    name: Publish to GHCR
-    needs: validate
+    name: Validate and Publish
     runs-on: ubuntu-latest
-    if: ${{ !(inputs.dry_run || false) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -144,32 +53,114 @@ jobs:
         with:
           cmd: echo "yq installed"
 
-      - name: Publish modules
+      - name: Check formatting
+        run: |
+          set -euo pipefail
+          for dir in core/v1alpha1 opm/v1alpha1 gateway_api/v1alpha1 \
+                     cert_manager/v1alpha1 k8up/v1alpha1 kubernetes/v1; do
+            (cd "$dir" && cue fmt ./...)
+          done
+          if ! git diff --quiet; then
+            echo "::error::CUE files are not formatted. Run 'cue fmt ./...' locally."
+            git diff --name-only
+            exit 1
+          fi
+
+      - name: Validate and publish modules
         run: |
           set -euo pipefail
 
           MODULE="${{ inputs.module || 'all' }}"
+          DRY_RUN="${{ inputs.dry_run || 'false' }}"
+
+          should_process() {
+            [ "$MODULE" = "all" ] || [ "$MODULE" = "$1" ]
+          }
+
+          vet_module() {
+            local key="$1" dir="$2"
+            shift 2
+            local vet_paths=("$@")
+            echo "  vet: ${key}..."
+            (cd "$dir" && cue vet "${vet_paths[@]}")
+          }
+
+          test_module() {
+            local key="$1" dir="$2"
+            shift 2
+            local test_paths=("$@")
+            local output
+            if output=$(cd "$dir" && cue vet -t test "${test_paths[@]}" 2>&1); then
+              echo "  test: pass"
+            elif echo "$output" | grep -q 'tag "test" not used in any file'; then
+              echo "  test: skip (no tests)"
+            else
+              echo "$output" >&2
+              echo "  test: FAIL"
+              return 1
+            fi
+          }
 
           publish_module() {
             local key="$1" api_ver="$2" dir="$3"
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "  publish: skipped (dry run)"
+              return
+            fi
             local version
             version=$(yq ".${key}.${api_ver}.version" versions.yml)
-            echo "Publishing ${key}/${api_ver}@${version} to ghcr.io/open-platform-model..."
+            echo "  publish: ${key}/${api_ver}@${version}..."
             (cd "$dir" && cue mod publish "${version}")
             echo "  published: ${key}/${api_ver}@${version}"
           }
 
-          should_publish() {
-            [ "$MODULE" = "all" ] || [ "$MODULE" = "$1" ]
-          }
+          # Process each module in dependency order.
+          # Each module is validated then published before the next,
+          # so downstream modules can resolve deps from GHCR.
 
-          # Dependency order: core -> opm -> gateway_api, cert_manager, k8up, kubernetes
-          should_publish core         && publish_module core         v1alpha1 core/v1alpha1
-          should_publish opm          && publish_module opm          v1alpha1 opm/v1alpha1
-          should_publish gateway_api  && publish_module gateway_api  v1alpha1 gateway_api/v1alpha1
-          should_publish cert_manager && publish_module cert_manager v1alpha1 cert_manager/v1alpha1
-          should_publish k8up         && publish_module k8up         v1alpha1 k8up/v1alpha1
-          should_publish kubernetes   && publish_module kubernetes   v1       kubernetes/v1
+          OPM_PATHS=(./schemas/... ./resources/... ./traits/... ./blueprints/... ./providers/...)
+
+          if should_process core; then
+            echo "=== core/v1alpha1 ==="
+            vet_module core core/v1alpha1 ./...
+            test_module core core/v1alpha1 ./...
+            publish_module core v1alpha1 core/v1alpha1
+          fi
+
+          if should_process opm; then
+            echo "=== opm/v1alpha1 ==="
+            vet_module opm opm/v1alpha1 "${OPM_PATHS[@]}"
+            test_module opm opm/v1alpha1 "${OPM_PATHS[@]}"
+            publish_module opm v1alpha1 opm/v1alpha1
+          fi
+
+          if should_process gateway_api; then
+            echo "=== gateway_api/v1alpha1 ==="
+            vet_module gateway_api gateway_api/v1alpha1 ./...
+            test_module gateway_api gateway_api/v1alpha1 ./...
+            publish_module gateway_api v1alpha1 gateway_api/v1alpha1
+          fi
+
+          if should_process cert_manager; then
+            echo "=== cert_manager/v1alpha1 ==="
+            vet_module cert_manager cert_manager/v1alpha1 ./...
+            test_module cert_manager cert_manager/v1alpha1 ./...
+            publish_module cert_manager v1alpha1 cert_manager/v1alpha1
+          fi
+
+          if should_process k8up; then
+            echo "=== k8up/v1alpha1 ==="
+            vet_module k8up k8up/v1alpha1 ./...
+            test_module k8up k8up/v1alpha1 ./...
+            publish_module k8up v1alpha1 k8up/v1alpha1
+          fi
+
+          if should_process kubernetes; then
+            echo "=== kubernetes/v1 ==="
+            vet_module kubernetes kubernetes/v1 ./...
+            test_module kubernetes kubernetes/v1 ./...
+            publish_module kubernetes v1 kubernetes/v1
+          fi
 
           echo ""
           echo "Done."
