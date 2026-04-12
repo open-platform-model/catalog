@@ -3,8 +3,6 @@ name: Publish Catalog Modules
 on:
   push:
     branches: [main]
-    paths:
-      - 'versions.yml'
   workflow_dispatch:
     inputs:
       module:
@@ -41,19 +39,71 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: cue-lang/setup-cue@a93fa358375740cd8b0078f76355512b9208acb1 # v1.0.1
-        with:
-          version: ${{ env.CUE_VERSION }}
-
-      - name: Login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
       - name: Install yq
         uses: mikefarah/yq@master
         with:
           cmd: echo "yq installed"
 
+      - name: Check registry for unpublished versions
+        id: check
+        run: |
+          set -euo pipefail
+
+          # workflow_dispatch bypasses registry check — user controls via inputs
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "changed=all" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          version_published() {
+            local repo="$1" tag="$2"
+            curl -fsS --head \
+              -u "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.oci.image.manifest.v1+json,*/*" \
+              "https://ghcr.io/v2/open-platform-model/${repo}/manifests/${tag}" \
+              >/dev/null 2>&1
+          }
+
+          MODULES="core:v1alpha1 opm:v1alpha1 gateway_api:v1alpha1 cert_manager:v1alpha1 k8up:v1alpha1 kubernetes:v1"
+          CHANGED=""
+
+          for entry in $MODULES; do
+            key="${entry%%:*}"
+            api_ver="${entry##*:}"
+            version=$(yq ".${key}.${api_ver}.version" versions.yml)
+            oci_repo="opmodel.dev/${key}/${api_ver}"
+
+            if version_published "$oci_repo" "$version"; then
+              echo "  ${key}/${api_ver}@${version}: already published"
+            else
+              echo "  ${key}/${api_ver}@${version}: unpublished"
+              CHANGED="${CHANGED} ${key}"
+            fi
+          done
+
+          if [ -z "$CHANGED" ]; then
+            echo ""
+            echo "All modules at current versions already published. Nothing to do."
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo ""
+            echo "Modules to process:${CHANGED}"
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "changed=${CHANGED}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: cue-lang/setup-cue@a93fa358375740cd8b0078f76355512b9208acb1 # v1.0.1
+        if: steps.check.outputs.has_changes == 'true'
+        with:
+          version: ${{ env.CUE_VERSION }}
+
+      - name: Login to GHCR
+        if: steps.check.outputs.has_changes == 'true'
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
       - name: Check formatting
+        if: steps.check.outputs.has_changes == 'true'
         run: |
           set -euo pipefail
           for dir in core/v1alpha1 opm/v1alpha1 gateway_api/v1alpha1 \
@@ -67,14 +117,20 @@ jobs:
           fi
 
       - name: Validate and publish modules
+        if: steps.check.outputs.has_changes == 'true'
         run: |
           set -euo pipefail
 
           MODULE="${{ inputs.module || 'all' }}"
           DRY_RUN="${{ inputs.dry_run || 'false' }}"
+          CHANGED="${{ steps.check.outputs.changed }}"
 
           should_process() {
-            [ "$MODULE" = "all" ] || [ "$MODULE" = "$1" ]
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              [ "$MODULE" = "all" ] || [ "$MODULE" = "$1" ]
+            else
+              echo " $CHANGED " | grep -q " $1 "
+            fi
           }
 
           vet_module() {
