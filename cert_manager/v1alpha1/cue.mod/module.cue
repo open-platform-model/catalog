@@ -7,12 +7,12 @@ source: {
 }
 deps: {
 	"cue.dev/x/crd/cert-manager.io@v0": {
-		v: "v0.2.0"
+		v: "v0.3.0"
 	}
 	"opmodel.dev/core/v1alpha1@v1": {
-		v: "v1.0.0"
+		v: "v1.3.2"
 	}
 	"opmodel.dev/opm/v1alpha1@v1": {
-		v: "v1.0.0"
+		v: "v1.5.6"
 	}
 }
