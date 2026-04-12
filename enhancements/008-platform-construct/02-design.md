@@ -59,7 +59,7 @@ Layer 3: #ModuleRelease → #ModuleContext
 
 Each layer's `#ctx` is typed by a schema from [03-schema.md](03-schema.md): `#PlatformContext` (Layer 1), `#EnvironmentContext` (Layer 2), `#ModuleContext` (output). CUE unification merges them naturally — concrete values override defaults, later layers override earlier layers.
 
-See [context-flow.md](context-flow.md) for a full visual diagram of the information flow from `#Platform` down to rendered resources.
+See [09-context-flow.md](09-context-flow.md) for a full visual diagram of the information flow from `#Platform` down to rendered resources.
 
 ---
 
