@@ -106,13 +106,20 @@ import (
 		annotations?: t.#LabelsAnnotationsType
 	}
 
+	// Identity of the runtime that is executing this transform. Mandatory — CUE
+	// evaluation fails if the runtime forgets to fill this. The value is stamped
+	// verbatim onto every rendered resource as "app.kubernetes.io/managed-by".
+	// Runtimes are expected to fill this with their own identity (e.g. "opm-cli"
+	// for the CLI, "opm-controller" for the operator).
+	#runtimeName!: t.#NameType
+
 	// Labels and annotations. These are inherited from the component and module metadata.
-	// 
+	//
 	// - moduleLabels: labels from #moduleReleaseMetadata.labels (if defined)
 	// - moduleAnnotations: annotations from #moduleReleaseMetadata.annotations (if defined)
 	// - componentLabels: labels from #componentMetadata.labels (if defined) + "app.kubernetes.io/name" = component name
 	// - componentAnnotations: annotations from #componentMetadata.annotations (if defined)
-	// - controllerLabels: standard controller labels based on component and module metadata
+	// - controllerLabels: standard controller labels (including managed-by = #runtimeName)
 	moduleLabels: {
 		if #moduleReleaseMetadata.labels != _|_ {
 			for k, v in #moduleReleaseMetadata.labels {
@@ -152,7 +159,7 @@ import (
 	}
 
 	controllerLabels: {
-		"app.kubernetes.io/managed-by": "open-platform-model"
+		"app.kubernetes.io/managed-by": #runtimeName
 		"app.kubernetes.io/name":       #componentMetadata.name
 		"app.kubernetes.io/instance":   #componentMetadata.name
 	}
