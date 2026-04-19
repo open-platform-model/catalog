@@ -1,4 +1,4 @@
-module: "opmodel.dev/gateway_api/v1alpha1@v1"
+module: "opmodel.dev/opm_experiments/v1alpha1@v1"
 language: {
 	version: "v0.15.0"
 }
@@ -8,5 +8,8 @@ source: {
 deps: {
 	"opmodel.dev/core/v1alpha1@v1": {
 		v: "v1.3.5"
+	}
+	"opmodel.dev/opm/v1alpha1@v1": {
+		v: "v1.5.6"
 	}
 }

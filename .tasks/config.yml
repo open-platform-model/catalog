@@ -28,6 +28,7 @@ vars:
 
   CORE_DIR: core/v1alpha1
   OPM_DIR: opm/v1alpha1
+  OPM_EXPERIMENTS_DIR: opm_experiments/v1alpha1
   GATEWAY_API_DIR: gateway_api/v1alpha1
   CERT_MANAGER_DIR: cert_manager/v1alpha1
   K8UP_DIR: k8up/v1alpha1

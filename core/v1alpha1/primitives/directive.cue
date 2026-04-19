@@ -1,7 +1,6 @@
 package primitives
 
 import (
-	"strings"
 	t "opmodel.dev/core/v1alpha1/types@v1"
 )
 
@@ -16,7 +15,7 @@ import (
 	metadata: {
 		modulePath!: t.#ModulePathType   // Example: "opmodel.dev/opm/v1alpha1/directives/data"
 		version!:    t.#MajorVersionType // Example: "v1"
-		name!:       t.#NameType         // Example: "backup"
+		name!:       t.#NameType         // Example: "k8up-backup"
 		#definitionName: (t.#KebabToPascal & {"in": name}).out
 
 		fqn: t.#FQNType & "\(modulePath)/\(name)@\(version)" // Example: "opmodel.dev/opm/v1alpha1/directives/data/backup@v1"
@@ -28,8 +27,9 @@ import (
 	}
 
 	// MUST be an OpenAPIv3 compatible schema
-	// The field and schema exposed by this definition
-	#spec!: (strings.ToCamel(metadata.name)): _
+	// The field name is the camelCase of metadata.name (kebab-case names are
+	// converted: "k8up-backup" => "k8upBackup").
+	#spec!: ((t.#KebabToCamel & {"in": metadata.name}).out): _
 }
 
 #DirectiveMap: [string]: _

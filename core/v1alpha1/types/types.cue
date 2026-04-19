@@ -52,3 +52,18 @@ OPMNamespace: "11bc6112-a6e8-4021-bec9-b3ad246f9466"
 		strings.ToUpper(strings.SliceRunes(p, 0, 1)) + strings.SliceRunes(p, 1, len(_runes))
 	}], "")
 }
+
+// KebabToCamel converts a kebab-case string to camelCase.
+// Usage: (#KebabToCamel & {"in": "k8up-backup"}).out => "k8upBackup"
+// The first segment stays lowercase; every subsequent segment is capitalized.
+#KebabToCamel: {
+	X="in": string
+	let _parts = strings.Split(X, "-")
+	out: strings.Join([for i, p in _parts {
+		if i == 0 {p}
+		if i > 0 {
+			let _runes = strings.Runes(p)
+			strings.ToUpper(strings.SliceRunes(p, 0, 1)) + strings.SliceRunes(p, 1, len(_runes))
+		}
+	}], "")
+}

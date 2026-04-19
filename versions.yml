@@ -5,12 +5,16 @@
 
 core:
   v1alpha1:
-    version: v1.3.4
+    version: v1.3.5
     checksum: 0db99345d404a37b0c2e9b9c974117c35c521c3aeb86dff500e635d22a32e601
 opm:
   v1alpha1:
     version: v1.5.6
     checksum: ebffff936eac2ff1628e97d41033daeb8e205f33073dfe581756bc03f21a7237
+opm_experiments:
+  v1alpha1:
+    version: v0.1.0
+    checksum: ""
 gateway_api:
   v1alpha1:
     version: v1.3.5
