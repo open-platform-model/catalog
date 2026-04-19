@@ -1,17 +1,16 @@
-# Module Integration — Backup & Restore Directives
+# Module Integration — Unified K8up Backup Directive
 
 ## Responsibility Split
 
 | Concern | Owner | Where |
-|---------|-------|-------|
-| Which components to back up | Module author | `targets` keys in K8up directive |
-| Which resources to protect per component | Module author | `volumes`/`configMaps`/`secrets` in targets |
-| Pre-backup commands | Module author | `preBackupHook` per component target |
-| Restore order and procedures | Module author | `components` definition order in restore directive |
-| S3 endpoint & credentials | Release author | `release.cue` values |
-| S3 bucket name | Release author | `release.cue` values |
+|---|---|---|
+| Which components are backed up | Module author | `Policy.appliesTo.components` |
+| How to quiesce a component before backup | Module author | `#PreBackupHookTrait` on the component |
+| Restore order and per-component restore procedure | Module author | `restore` map in the directive (definition order) |
+| S3 endpoint, bucket, credentials | Release author | `release.cue` → `#config.backup` |
+| Restic/Kopia repo password | Release author | `release.cue` → `#config.backup` |
+| Backup schedule | Release author | `release.cue` → `#config.backup` |
 | Retention policy | Release author (with module defaults) | `release.cue` or module defaults |
-| Backup schedule | Release author | `release.cue` values |
 
 ---
 
@@ -22,8 +21,8 @@
 ```cue
 import (
     policy "opmodel.dev/core/v1alpha1/policy@v1"
-    k8up_directives "opmodel.dev/opm/v1alpha1/directives/data@v1"
-    data_directives "opmodel.dev/opm/v1alpha1/directives/data@v1"
+    exp_directives "opmodel.dev/opm_experiments/v1alpha1/directives@v1"
+    exp_traits "opmodel.dev/opm_experiments/v1alpha1/traits@v1"
     workload_blueprints "opmodel.dev/opm/v1alpha1/blueprints@v1"
 )
 
@@ -34,6 +33,23 @@ import (
                 image: repository: "linuxserver/jellyfin"
                 // ...
             }
+
+            // Component declares its quiescing procedure once
+            #traits: {
+                (exp_traits.#PreBackupHookTrait.metadata.fqn): exp_traits.#PreBackupHookTrait & {
+                    spec: preBackupHook: {
+                        image: "alpine:3.21"
+                        command: ["sh", "-c", """
+                            sqlite3 /config/data/library.db 'PRAGMA wal_checkpoint(TRUNCATE)' && \
+                            sqlite3 /config/data/jellyfin.db  'PRAGMA wal_checkpoint(TRUNCATE)'
+                            """]
+                        volumeMount: {
+                            volume:    "config"
+                            mountPath: "/config"
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -42,49 +58,15 @@ import (
             appliesTo: components: [#components.jellyfin]
 
             #directives: {
-                // K8up transformer generates Schedule + PreBackupPod
-                (k8up_directives.#K8upBackupDirective.metadata.fqn): k8up_directives.#K8upBackupDirective & {
+                (exp_directives.#K8upBackupDirective.metadata.fqn): exp_directives.#K8upBackupDirective & {
                     #spec: k8upBackup: {
                         schedule:  #config.backup.schedule
-                        backend:   #config.backup.backend
                         retention: #config.backup.retention
 
-                        targets: {
+                        repository: #config.backup.repository
+
+                        restore: {
                             jellyfin: {
-                                volumes: {
-                                    config: {
-                                        backupPath: "/data"
-                                    }
-                                }
-
-                                preBackupHook: {
-                                    image: "alpine:3.21"
-                                    command: ["sh", "-c", """
-                                        sqlite3 /config/data/library.db 'PRAGMA wal_checkpoint(TRUNCATE)' && \
-                                        sqlite3 /config/data/jellyfin.db 'PRAGMA wal_checkpoint(TRUNCATE)'
-                                        """]
-                                    volumeMount: {
-                                        volume:    "config"
-                                        mountPath: "/config"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // CLI reads this for browse/restore
-                (data_directives.#RestoreDirective.metadata.fqn): data_directives.#RestoreDirective & {
-                    #spec: restore: {
-                        repository: {
-                            format:       "restic"
-                            s3:           #config.backup.backend.s3
-                            repoPassword: #config.backup.backend.repoPassword
-                        }
-
-                        components: {
-                            jellyfin: {
-                                volumes: { config: {} }
                                 requiresScaleDown: true
                                 healthCheck: {
                                     path: "/health"
@@ -101,14 +83,15 @@ import (
     #config: {
         backup?: {
             schedule!: string
-            backend!: {
-                s3: {
+            repository!: {
+                format: *"restic" | "kopia"
+                s3!: {
                     endpoint!:        string
                     bucket!:          string
                     accessKeyID!:     _
                     secretAccessKey!: _
                 }
-                repoPassword!: _
+                password!: _
             }
             retention: {
                 keepDaily:   *7 | int
@@ -122,48 +105,41 @@ import (
 
 ### Minecraft — RCON hook, no volume mount
 
+Hook runs over the network; no mount needed. Same directive shape, different trait configuration.
+
 ```cue
+#components: {
+    minecraft: workload_blueprints.#StatefulWorkload & {
+        // ... workload spec ...
+        #traits: {
+            (exp_traits.#PreBackupHookTrait.metadata.fqn): exp_traits.#PreBackupHookTrait & {
+                spec: preBackupHook: {
+                    image: "itzg/mc-monitor:0.12"
+                    command: [
+                        "mc-monitor", "execute-rcon",
+                        "--host", "localhost",
+                        "--port", "25575",
+                        "--command", "save-all flush",
+                    ]
+                    // No volumeMount — RCON talks over the network
+                }
+            }
+        }
+    }
+}
+
 #policies: {
     "backup": policy.#Policy & {
         appliesTo: components: [#components.minecraft]
 
         #directives: {
-            (k8up_directives.#K8upBackupDirective.metadata.fqn): k8up_directives.#K8upBackupDirective & {
+            (exp_directives.#K8upBackupDirective.metadata.fqn): exp_directives.#K8upBackupDirective & {
                 #spec: k8upBackup: {
-                    schedule: #config.backup.schedule
-                    backend:  #config.backup.backend
+                    schedule:   #config.backup.schedule
+                    repository: #config.backup.repository
 
-                    targets: {
-                        minecraft: {
-                            volumes: {
-                                data: {}  // backupPath defaults to "/"
-                            }
-
-                            preBackupHook: {
-                                image: "itzg/mc-monitor:0.12"
-                                command: ["mc-monitor", "execute-rcon",
-                                    "--host", "localhost",
-                                    "--port", "25575",
-                                    "--command", "save-all flush",
-                                ]
-                                // No volumeMount — RCON talks to the app over network
-                            }
-                        }
-                    }
-                }
-            }
-
-            (data_directives.#RestoreDirective.metadata.fqn): data_directives.#RestoreDirective & {
-                #spec: restore: {
-                    repository: {
-                        s3:           #config.backup.backend.s3
-                        repoPassword: #config.backup.backend.repoPassword
-                    }
-                    components: {
-                        minecraft: {
-                            volumes: { data: {} }
-                            requiresScaleDown: true
-                        }
+                    restore: {
+                        minecraft: { requiresScaleDown: true }
                     }
                 }
             }
@@ -180,27 +156,13 @@ import (
         appliesTo: components: [#components.app]
 
         #directives: {
-            (k8up_directives.#K8upBackupDirective.metadata.fqn): k8up_directives.#K8upBackupDirective & {
+            (exp_directives.#K8upBackupDirective.metadata.fqn): exp_directives.#K8upBackupDirective & {
                 #spec: k8upBackup: {
-                    schedule: #config.backup.schedule
-                    backend:  #config.backup.backend
-                    targets: {
-                        app: {
-                            volumes: { uploads: {} }
-                        }
-                    }
-                }
-            }
+                    schedule:   #config.backup.schedule
+                    repository: #config.backup.repository
 
-            (data_directives.#RestoreDirective.metadata.fqn): data_directives.#RestoreDirective & {
-                #spec: restore: {
-                    repository: {
-                        s3:           #config.backup.backend.s3
-                        repoPassword: #config.backup.backend.repoPassword
-                    }
-                    components: {
+                    restore: {
                         app: {
-                            volumes: { uploads: {} }
                             requiresScaleDown: true
                             // No healthCheck — manual verification
                         }
@@ -212,55 +174,45 @@ import (
 }
 ```
 
-### Multi-component — app + database (restore order matters)
+### Multi-component — app + database, restore order matters
 
 ```cue
+#components: {
+    database: workload_blueprints.#StatefulWorkload & {
+        // ...
+        #traits: {
+            (exp_traits.#PreBackupHookTrait.metadata.fqn): exp_traits.#PreBackupHookTrait & {
+                spec: preBackupHook: {
+                    image: "postgres:16-alpine"
+                    command: ["pg_dump", "-U", "postgres", "-f", "/backup/dump.sql"]
+                    volumeMount: {
+                        volume:    "data"
+                        mountPath: "/var/lib/postgresql/data"
+                    }
+                }
+            }
+        }
+    }
+    app: workload_blueprints.#StatefulWorkload & { /* ... */ }
+}
+
 #policies: {
     "backup": policy.#Policy & {
         appliesTo: components: [#components.app, #components.database]
 
         #directives: {
-            (k8up_directives.#K8upBackupDirective.metadata.fqn): k8up_directives.#K8upBackupDirective & {
+            (exp_directives.#K8upBackupDirective.metadata.fqn): exp_directives.#K8upBackupDirective & {
                 #spec: k8upBackup: {
-                    schedule: #config.backup.schedule
-                    backend:  #config.backup.backend
+                    schedule:   #config.backup.schedule
+                    repository: #config.backup.repository
 
-                    targets: {
+                    // Definition order = restore order.
+                    // database restored first, then app.
+                    restore: {
                         database: {
-                            volumes: { data: {} }
-                            preBackupHook: {
-                                image: "postgres:16-alpine"
-                                command: ["pg_dump", "-U", "postgres", "-f", "/backup/dump.sql"]
-                                volumeMount: {
-                                    volume:    "data"
-                                    mountPath: "/var/lib/postgresql/data"
-                                }
-                            }
-                        }
-                        app: {
-                            volumes: { uploads: {} }
-                            configMaps: { "app-config": {} }
-                        }
-                    }
-                }
-            }
-
-            (data_directives.#RestoreDirective.metadata.fqn): data_directives.#RestoreDirective & {
-                #spec: restore: {
-                    repository: {
-                        s3:           #config.backup.backend.s3
-                        repoPassword: #config.backup.backend.repoPassword
-                    }
-                    // Definition order = restore order
-                    // Database restored first, then app
-                    components: {
-                        database: {
-                            volumes: { data: {} }
                             requiresScaleDown: true
                         }
                         app: {
-                            volumes: { uploads: {} }
-                            configMaps: { "app-config": {} }
                             requiresScaleDown: false
                             healthCheck: {
                                 path: "/healthz"
@@ -279,17 +231,18 @@ import (
 
 ## Release Author Experience
 
-The release author provides environment-specific values. Both directives reference `#config.backup`:
+One `#config.backup` block supplies all environment-specific values. Both the K8up Schedule transformer (via `repository`) and the CLI (via the same `repository`) read from it.
 
 ```cue
 // releases/kind_opm_dev/jellyfin/release.cue
 values: {
     backup: {
         schedule: "0 2 * * *"
-        backend: {
+        repository: {
+            format: "restic"
             s3: {
                 endpoint: "http://garage-garage.garage.svc:3900"
-                bucket: "jellyfin-backups"
+                bucket:   "jellyfin-backups"
                 accessKeyID: {
                     secretName: "jellyfin-backup-s3"
                     remoteKey:  "access-key-id"
@@ -299,7 +252,7 @@ values: {
                     remoteKey:  "secret-access-key"
                 }
             }
-            repoPassword: {
+            password: {
                 secretName: "jellyfin-backup-restic"
                 remoteKey:  "password"
             }
@@ -319,27 +272,26 @@ values: {
 
 For modules currently using direct K8up catalog imports:
 
-1. Add `#K8upBackupDirective` to `#policies` with K8up-specific config from current `#config.backup`
-2. Add `#RestoreDirective` to the same policy with repository connection and restore procedures
-3. Move pre-backup hook logic from K8up PreBackupPod component to per-component `preBackupHook`
-4. Map PVC names to volume names in `targets[component].volumes`
-5. Remove K8up Schedule and PreBackupPod component definitions from `#components`
-6. Remove K8up catalog dependency from `cue.mod/module.cue`
-7. Update release configs (add `schedule` to values, minor field name adjustments)
+1. Add `#K8upBackupDirective` to `#policies` using the unified schema. Pull schedule/retention/repository from existing `#config.backup`.
+2. Remove old K8up Schedule and PreBackupPod components from `#components`.
+3. Move pre-backup hook logic to a `#PreBackupHookTrait` on the component that needs quiescing.
+4. Add the restore procedure (`restore` block) alongside the backup fields in the same directive.
+5. Remove the K8up catalog dependency from `cue.mod/module.cue`; add `opmodel.dev/opm_experiments/v1alpha1@v1`.
+6. Update release configs: rename `backend` → `repository`, fold `repoPassword` → `password`.
 
-Migration is per-module, non-breaking, and incremental.
+Migration is per-module and incremental. A module with no backup policy is unaffected.
 
 ---
 
 ## Conditional Backup
 
-Backup is optional. When `#config.backup` is not provided in the release, no directives are present:
+Backup is optional. When the release omits `#config.backup`, the module does not emit the backup policy:
 
 ```cue
 #policies: {
     if #config.backup != _|_ {
         "backup": policy.#Policy & {
-            // ... both directives ...
+            // ... directive ...
         }
     }
 }

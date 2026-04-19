@@ -230,3 +230,96 @@ Decision log for enhancement 009. The design evolved through several iterations:
 - Default to `"0 2 * * *"` (2 AM daily) — rejected: backup frequency is a conscious decision; silent defaults risk either too-frequent backups (wasting resources) or insufficient coverage
 
 **Rationale:** Unlike retention (where sensible defaults exist), schedule depends on the workload's data change rate and RPO requirements. The module or release author must make this choice.
+
+---
+
+## Revision 2026-04-19 — Unified directive + experimental sandbox
+
+A second design pass followed a brainstorm that surfaced flaws in the D4/D11/D14/D16 shape: drift risk between the split directives, the `targets[]` typo trap, poor scope for per-component hooks, and no story for the CLI-vs-controller reconcile race during restore. D20–D25 below supersede the affected prior decisions. Original decisions remain in place so the evolution is traceable.
+
+### Supersession summary
+
+| Prior | Superseded by | Reason |
+|---|---|---|
+| D4: Two separate directives (backup + restore) | D20 | Split produced drift between parallel `repository`/`backend` blocks |
+| D11: Per-component `targets` map | D21 | Reintroduced the string-key typo failure D6 claimed to fix |
+| D12: Three resource types (volumes, configMaps, secrets) | D21 (partial) | ConfigMap/Secret backup drops from v1 scope |
+| D14: `preBackupHook` per-component in directive | D22 | Hooks are component-scoped concerns, not policy-scoped |
+| D16: Explicit duplication between directives | D20 | Moot after unification |
+
+---
+
+### D20: Single unified `#K8upBackupDirective` — backup + restore blocks
+
+**Decision:** One directive with three sub-blocks:
+
+- `schedule`, `checkSchedule`, `pruneSchedule`, `retention` — backup-only (K8up Schedule transformer).
+- `repository` — shared; both consumers read it.
+- `restore.<componentName>` — CLI-only; describes per-component restore procedure.
+
+**Supersedes:** D4, D16.
+
+**Rationale:** The prior split forced the module author to keep two parallel `repository` blocks in sync. The provider-specific-backup / provider-agnostic-restore insight from D15 is preserved: the directive remains K8up-specific overall, but the `restore` sub-block's shape is provider-agnostic and can be copied verbatim into a future `#VeleroBackupDirective`.
+
+---
+
+### D21: Drop `targets[]` — rely on `Policy.appliesTo`
+
+**Decision:** The directive no longer enumerates PVCs, ConfigMaps, or Secrets per component. Backup scope is fully defined by `Policy.appliesTo`. K8up backs up PVCs belonging to the components named there.
+
+**Supersedes:** D11, and D12 (partial — ConfigMap/Secret export drops from v1 scope).
+
+**Rationale:** The `targets[componentName]` map reintroduced the exact failure mode D6 claimed to fix: a string-key typo silently omits a component. Since `appliesTo` already scopes the policy to components by CUE reference, duplicating that list in `targets` is redundant and unsafe.
+
+**Open:** the concrete PVC annotation strategy (see 07-open-questions.md Q1).
+
+---
+
+### D22: `preBackupHook` lifted to `#PreBackupHookTrait`
+
+**Decision:** Pre-backup hooks become a component trait, not a directive field. The PreBackupPod transformer consumes the trait. Hooks travel with the component.
+
+**Supersedes:** D14.
+
+**Rationale:** A SQLite checkpoint or `pg_dump` is a component property ("this workload needs quiescing before any backup"), not a backup-policy property. Trait scope means a component declares its quiescing procedure once, and any backup policy that targets it picks it up automatically.
+
+---
+
+### D23: Experimental directives live in `opm_experiments/v1alpha1`
+
+**Decision:** `#K8upBackupDirective` and `#PreBackupHookTrait` ship in `opmodel.dev/opm_experiments/v1alpha1@v1`. Graduation to `opm/v1alpha1` is gated on 07-open-questions.md Q4.
+
+**Rationale:** Sandboxes shape-iteration without locking the main `opm` catalog into unproven designs.
+
+**Boundary:** the `#Directive` primitive itself — along with `#Policy.#directives` and `#Transformer.requiredDirectives` — remains in `core/v1alpha1`. Those are structural additions to the type system, not experiments on top of it. (Sequencing trade-off tracked in Q5.)
+
+---
+
+### D24: Lease-based pause for `opm restore run`
+
+**Decision:** The CLI acquires a `coordination.k8s.io/v1` Lease per ModuleRelease during restore. The controller's reconciler checks the Lease and skips reconcile while it is held and unexpired.
+
+**Scope:** per-ModuleRelease. Matches the controller's current whole-MR reconcile granularity. Per-component locking is a future optimization.
+
+**Alternatives considered:**
+- `spec.suspend: bool` on ModuleRelease (Flux pattern) — rejected: manual suspend flags get stuck on after a CLI crash; a Lease auto-expires.
+- Suspend annotation — same failure mode as `spec.suspend`.
+
+**Rationale:** Kubernetes-native, self-healing (expires if the CLI crashes), auditable via `kubectl get leases`. Same primitive `kube-controller-manager` uses for leader election.
+
+**Open:** lease name, namespace, duration, renewal cadence, override mechanism (07-open-questions.md Q2).
+
+---
+
+### D25: CLI is the restore executor (v1)
+
+**Decision:** Restore remains a CLI-driven, human-in-the-loop operation. The controller does not orchestrate restore in v1.
+
+**Alternatives considered:**
+- `RestoreJob` CRD owned by the controller — rejected for v1: adds a state machine and operator complexity for a rare, high-stakes operation where a human should stay in the loop.
+
+**Rationale:** Restore is infrequent, irreversible, and benefits from explicit confirmation. Moving it to the controller is viable later if usage patterns change.
+
+**Consequences:**
+- CLI gains real cluster-mutation responsibility: Lease management, workload scale patching, Restic/Kopia invocation, S3 auth.
+- The execution race with the controller is resolved via D24.

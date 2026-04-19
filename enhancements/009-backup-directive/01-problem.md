@@ -56,5 +56,7 @@ A module-level primitive that:
 2. Carries no enforcement semantics
 3. Can be read by transformers to generate platform resources (K8up Schedule, PreBackupPod)
 4. Can be read by the CLI to execute operations (browse snapshots, restore)
-5. Separates provider-specific backup (K8up, Velero) from provider-agnostic restore (CLI)
+5. Keeps backup scheduling provider-specific (K8up, Velero) while exposing a provider-agnostic restore shape the CLI can consume unchanged across providers
 6. Includes restore description from the start
+
+The initial design answered these with two separate directives (backup + restore). A second pass collapsed them into one directive with a `restore` sub-block, after that split proved to produce drift between parallel repository blocks and to be safer to keep unified. See `06-decisions.md` D20–D25 for the revision.
