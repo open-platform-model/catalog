@@ -5,6 +5,7 @@
 package directives
 
 import (
+	policy "opmodel.dev/core/v1alpha1/policy@v1"
 	prim "opmodel.dev/core/v1alpha1/primitives@v1"
 	schemas "opmodel.dev/opm/v1alpha1/schemas@v1"
 )
@@ -29,6 +30,10 @@ import (
 	}
 
 	#spec: close({k8upBackup: #K8upBackupDirectiveSchema})
+}
+
+#K8upBackup: policy.#Policy & {
+	#directives: {(#K8upBackupDirective.metadata.fqn): #K8upBackupDirective}
 }
 
 // #K8upBackupDirectiveSchema:
@@ -65,7 +70,7 @@ import (
 	repository!: {
 		// Backup tool format. Determines which tool the CLI uses to browse
 		// snapshots and run restores. K8up writes Restic repos.
-		format: *"restic" | "kopia"
+		format: "restic"
 
 		// S3 storage backend (MinIO, Garage, AWS S3, etc.).
 		s3!: {
@@ -75,7 +80,7 @@ import (
 			secretAccessKey!: schemas.#Secret
 		}
 
-		// Restic/Kopia repository encryption key.
+		// Restic repository encryption key.
 		password!: schemas.#Secret
 	}
 

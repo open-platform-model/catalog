@@ -13,8 +13,8 @@ opm:
     checksum: ebffff936eac2ff1628e97d41033daeb8e205f33073dfe581756bc03f21a7237
 opm_experiments:
   v1alpha1:
-    version: v0.1.0
-    checksum: ""
+    version: v1.1.1
+    checksum: "722bfa0a326d855e6f58ea8dc204a5d8a331ca4225507d6aa7fcb72386f9702c"
 gateway_api:
   v1alpha1:
     version: v1.3.5
