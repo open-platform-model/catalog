@@ -58,6 +58,25 @@ Options:
 - Constrained enum: `type: "kubernetes" | "docker-compose"` (closed list, maintained in core)
 - Staged rollout: ship field as optional, flip to required in a follow-up
 
+### F21 — `#ctx.platform` override is CUE unification, not override
+
+`#ContextBuilder` (`03-schema.md:380`) merges platform extensions as `platform: #platform.#ctx.platform & #environment.#ctx.platform`. CUE `&` is unification. If `#Platform.#ctx.platform.defaultStorageClass: "standard"` and `#Environment.#ctx.platform.defaultStorageClass: "fast"` both set concrete values, unification fails — it does not override. The context hierarchy documented in `02-design.md:42-60`, `09-context-flow.md:78-92`, and D24 repeatedly promises "later layers override earlier" but the merge operator in `#ContextBuilder` cannot deliver that for any concrete field. Only fields declared as `*default | T` disjunction (currently only `cluster.domain` in `#PlatformContext.runtime.cluster`) actually support override. Every field the docs imply environments can override silently inherits the platform value or produces a CUE conflict.
+
+Options:
+
+- Define an explicit override merge helper instead of `&` (e.g., a `#OverrideMerge` taking `base` and `override`)
+- Require all platform-layer fields to use `*default | T` disjunction; document the constraint
+- Rewrite the override narrative: platform layer is *defaults only*; any field that might be env-specific must never be set concretely on `#Platform`
+
+### F22 — Provider homogeneity (D29) is prose-only, not schema-enforced
+
+D29 declares all providers inside a `#Platform` must share the same `type`. Schema at `03-schema.md:246` is `#providers!: [...provider.#Provider]` — no constraint linking `#Platform.type` to `#providers[].metadata.type`. Nothing stops composing a Kubernetes provider with a Docker Compose provider in the same platform. The rule exists only as documentation. CUE can express this constraint in one line (`for p in #providers { p.metadata.type: type }`) but the schema omits it.
+
+Options:
+
+- Add the constraint explicitly in `#Platform` schema
+- Replace homogeneity with per-provider scoping in a future design (see F17)
+
 ### F5 — CLI `--environment` flag vs. hardcoded `#env` import
 
 `06-module-integration.md` shows `opm release apply ... --environment prod` and `opm bundle apply ... --environment prod`. Release file declares `#env: env.#Environment` via CUE import. There is no mechanism for the CLI flag to override the import. Either:
@@ -104,6 +123,26 @@ Alternatives:
 ### F9 — Namespace override mechanics are unspecified
 
 Current `#ModuleRelease.metadata.namespace!: string` is required. Environment contributes `release.namespace`. For the release to inherit the environment default, `metadata.namespace` must become optional with env-side fallback. The change to `#ModuleRelease.metadata` is not described in `03-schema.md`. Small but load-bearing.
+
+### F23 — Component name typos in `#ctx.runtime.components` silently produce broken output
+
+`#RuntimeContext.components: [compName=string]: #ComponentNames` (`03-schema.md:164`) is an open pattern constraint. A module author who writes `#ctx.runtime.components.jellyfon.dns.fqdn` (typo: `jellyfon` instead of `jellyfin`) produces a valid CUE expression typed as `string`. At release time, `#ContextBuilder` iterates only real component keys from `#module.#components` and never populates `_releaseName` / `_compName` for the typo. The typo'd expression still evaluates — to `"-jellyfon..svc.cluster.local"` or similar malformed garbage — and renders into the output. No vet-time error, no render-time error. The bug only surfaces when the resulting Kubernetes resource misbehaves.
+
+Options:
+
+- Close `#RuntimeContext.components` to the exact set of component keys via `for` comprehension at `#ContextBuilder` output (replace the pattern constraint with explicit keys)
+- Add a module-level validator that rejects unknown component references in `#ctx.runtime.components.*`
+- Accept the footgun; document clearly and rely on downstream linting
+
+### F24 — Release import pulls full Platform + Providers transitive closure into every release
+
+Release files import `#env`, which imports `#platform`, which embeds `#providers: [...]` — the full list of provider values with all their `#transformers` maps. Every `#ModuleRelease` CUE evaluation now pulls the entire platform capability graph into scope, even for a release that uses a handful of resources. Evaluation cost scales with platform size, not with module size. Error blast radius expands: a bad transformer in one capability provider breaks release evaluation for every module targeting that platform. Today a release only pulls the module it deploys.
+
+Options:
+
+- Split `#Platform` into an authoring-time manifest (light) and a render-time bundle (heavy); releases import only the manifest, CLI loads the bundle separately
+- Cache composed provider at platform-build time and import a thin reference from releases
+- Accept the cost; measure eval time on a realistic platform (20+ providers) before shipping
 
 ### F10 — `resourceName` uniqueness is not enforced
 
@@ -176,6 +215,9 @@ Current CLI loader resolves `#module`. New `#env` path adds a second import reso
 | `#TransformerContext` vs `#ctx` | unify now | defer (D15) | ships two vocabularies |
 | Environment selection | imported package in release file | CLI flag at deploy time | mechanism missing for bundles |
 | `hashes` location | module-level `#ctx` (D11) | transformer-level only | D11 + D12 in conflict |
+| Platform extension override | documented override (D24) | CUE `&` unification (03-schema:380) | override claim not expressible with chosen operator |
+| Provider type homogeneity | enforced (D29) | unconstrained list (03-schema:246) | rule is prose, not schema |
+| Release evaluation scope | module-only (today) | module + full platform graph (008) | transitive pull not acknowledged |
 
 ---
 
@@ -220,3 +262,19 @@ F16. Declaring this as an explicit non-goal would clarify where platform/environ
 ### Q10 — Should `route.domain` be platform-level, environment-level, or both?
 
 F18. D24 allows either. Practical guidance is missing: when does a platform set `route.domain` and when does it belong on the environment? A convention would reduce confusion.
+
+### Q11 — How does `#ctx.platform` actually override across layers?
+
+F21. The design promises override semantics but the `#ContextBuilder` uses CUE unification. Either the merge operator changes, or the override narrative is retracted, or platform-layer fields must be restricted to defaulted disjunctions only. Pick one and document it.
+
+### Q12 — Should provider-type homogeneity be schema-enforced?
+
+F22. One-line CUE constraint closes the gap. Omitting it leaves D29 as prose. Ship with the constraint, or document that homogeneity is advisory and tooling-enforced.
+
+### Q13 — Should `#ctx.runtime.components` be closed to the module's component set?
+
+F23. Open pattern produces silent typo bugs. Closing via `for`-generated keys tightens the contract at the cost of slightly more complex `#ContextBuilder` output.
+
+### Q14 — What is the evaluation-cost budget for `#ModuleRelease`?
+
+F24. Measure CUE eval time on a platform with 20+ providers before shipping. If the transitive pull is unacceptable, split manifest from render bundle.
