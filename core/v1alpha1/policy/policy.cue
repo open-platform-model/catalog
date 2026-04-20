@@ -22,18 +22,10 @@ import (
 	}
 
 	// PolicyRules grouped by this policy (governance)
-	#rules: [RuleFQN=string]: prim.#PolicyRule & {
-		metadata: {
-			name: RuleFQN
-		}
-	}
+	#rules: [RuleFQN=string]: prim.#PolicyRule
 
 	// Directives grouped by this policy (operational behavior)
-	#directives?: [DirectiveFQN=string]: prim.#Directive & {
-		metadata: {
-			name: DirectiveFQN
-		}
-	}
+	#directives?: [DirectiveFQN=string]: prim.#Directive
 
 	// Which components this policy applies to
 	// At least one of matchLabels or components must be specified
