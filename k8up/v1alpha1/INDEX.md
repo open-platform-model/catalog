@@ -32,6 +32,7 @@ CUE module: `opmodel.dev/k8up/v1alpha1@v1`
 | `#BackupTransformer` | `providers/kubernetes/transformers/backup_transformer.cue` | #BackupTransformer passes K8up Backup resources through with OPM context applied (name prefix, namespace, labels) |
 | `#PreBackupPodTransformer` | `providers/kubernetes/transformers/pre_backup_pod_transformer.cue` | #PreBackupPodTransformer passes K8up PreBackupPod resources through with OPM context applied (name prefix, namespace, labels) |
 | `#RestoreTransformer` | `providers/kubernetes/transformers/restore_transformer.cue` | #RestoreTransformer passes K8up Restore resources through with OPM context applied (name prefix, namespace, labels) |
+| `#ResolveSecretRef` | `providers/kubernetes/transformers/schedule_transformer.cue` | #ResolveSecretRef resolves a schemas |
 | `#ScheduleTransformer` | `providers/kubernetes/transformers/schedule_transformer.cue` | #ScheduleTransformer passes K8up Schedule resources through with OPM context applied (name prefix, namespace, labels) |
 
 ---

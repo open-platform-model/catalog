@@ -94,7 +94,7 @@ CUE module: `opmodel.dev/core/v1alpha1@v1`
 
 | Definition | File | Description |
 |---|---|---|
-| `#Policy` | `policy/policy.cue` | #Policy: Groups PolicyRules and targets them to a set of components via label matching or explicit references |
+| `#Policy` | `policy/policy.cue` | #Policy: Groups PolicyRules and Directives and targets them to a set of components via label matching or explicit references |
 | `#PolicyMap` | `policy/policy.cue` |  |
 
 ---
@@ -105,6 +105,8 @@ CUE module: `opmodel.dev/core/v1alpha1@v1`
 |---|---|---|
 | `#Blueprint` | `primitives/blueprint.cue` | #Blueprint: Defines a reusable blueprint that composes resources and traits into a higher-level abstraction |
 | `#BlueprintMap` | `primitives/blueprint.cue` |  |
+| `#Directive` | `primitives/directive.cue` | #Directive: Describes operational behavior that the platform should execute on behalf of the module author |
+| `#DirectiveMap` | `primitives/directive.cue` |  |
 | `#PolicyRule` | `primitives/policy_rule.cue` | #PolicyRule: Encodes governance rules, security requirements, compliance controls, and operational guardrails |
 | `#PolicyRuleMap` | `primitives/policy_rule.cue` |  |
 | `#Resource` | `primitives/resource.cue` | #Resource: Defines a resource of deployment within the system |
@@ -158,6 +160,7 @@ CUE module: `opmodel.dev/core/v1alpha1@v1`
 |---|---|---|
 | `#BundleFQNType` | `types/types.cue` | BundleFQNType: FQN for #Bundle — path/name:vN (major version) Example: "opmodel |
 | `#FQNType` | `types/types.cue` | FQNType: primitive definition FQN — path/name@version Example: "opmodel |
+| `#KebabToCamel` | `types/types.cue` | KebabToCamel converts a kebab-case string to camelCase |
 | `#KebabToPascal` | `types/types.cue` | KebabToPascal converts a kebab-case string to PascalCase |
 | `#LabelsAnnotationsType` | `types/types.cue` |  |
 | `#MajorVersionType` | `types/types.cue` | MajorVersionType: major version prefix used in primitive FQNs Example: "v1", "v0" |

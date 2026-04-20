@@ -110,17 +110,6 @@ CUE module: `opmodel.dev/gateway_api/v1alpha1@v1`
 
 ## Schemas
 
-| Definition | File | Description |
-|---|---|---|
-| `#BackendTrafficPolicySchema` | `schemas/network.cue` | #BackendTrafficPolicySchema accepts the full Gateway API BackendTrafficPolicy spec |
-| `#GatewayClassSchema` | `schemas/network.cue` | #GatewayClassSchema accepts the full Gateway API GatewayClass spec |
-| `#GatewaySchema` | `schemas/network.cue` | #GatewaySchema accepts the full Gateway API Gateway spec |
-| `#GrpcRouteSchema` | `schemas/network.cue` | #GrpcRouteSchema accepts the full Gateway API GRPCRoute spec |
-| `#HttpRouteSchema` | `schemas/network.cue` | #HttpRouteSchema accepts the full Gateway API HTTPRoute spec |
-| `#ReferenceGrantSchema` | `schemas/network.cue` | #ReferenceGrantSchema accepts the full Gateway API ReferenceGrant spec |
-| `#TcpRouteSchema` | `schemas/network.cue` | #TcpRouteSchema accepts the full Gateway API TCPRoute spec |
-| `#TlsRouteSchema` | `schemas/network.cue` | #TlsRouteSchema accepts the full Gateway API TLSRoute spec |
-
 ### gateway/gateway.networking.k8s.io/backendtlspolicy/v1
 
 | Definition | File | Description |
