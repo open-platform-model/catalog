@@ -14,6 +14,7 @@ on:
           - all
           - core
           - opm
+          - opm_experiments
           - gateway_api
           - cert_manager
           - k8up
@@ -37,10 +38,10 @@ jobs:
     name: Validate and Publish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install yq
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@751d8ad57b84f1794661bc70c0afb92a22ad7b3c # v4.53.2
         with:
           cmd: echo "yq installed"
 
@@ -65,7 +66,7 @@ jobs:
               >/dev/null 2>&1
           }
 
-          MODULES="core:v1alpha1 opm:v1alpha1 gateway_api:v1alpha1 cert_manager:v1alpha1 k8up:v1alpha1 kubernetes:v1"
+          MODULES="core:v1alpha1 opm:v1alpha1 opm_experiments:v1alpha1 gateway_api:v1alpha1 cert_manager:v1alpha1 k8up:v1alpha1 kubernetes:v1"
           CHANGED=""
 
           for entry in $MODULES; do
@@ -106,8 +107,8 @@ jobs:
         if: steps.check.outputs.has_changes == 'true'
         run: |
           set -euo pipefail
-          for dir in core/v1alpha1 opm/v1alpha1 gateway_api/v1alpha1 \
-                     cert_manager/v1alpha1 k8up/v1alpha1 kubernetes/v1; do
+          for dir in core/v1alpha1 opm/v1alpha1 opm_experiments/v1alpha1 \
+                     gateway_api/v1alpha1 cert_manager/v1alpha1 k8up/v1alpha1 kubernetes/v1; do
             (cd "$dir" && cue fmt ./...)
           done
           if ! git diff --quiet; then
@@ -188,6 +189,13 @@ jobs:
             vet_module opm opm/v1alpha1 "${OPM_PATHS[@]}"
             test_module opm opm/v1alpha1 "${OPM_PATHS[@]}"
             publish_module opm v1alpha1 opm/v1alpha1
+          fi
+
+          if should_process opm_experiments; then
+            echo "=== opm_experiments/v1alpha1 ==="
+            vet_module opm_experiments opm_experiments/v1alpha1 ./...
+            test_module opm_experiments opm_experiments/v1alpha1 ./...
+            publish_module opm_experiments v1alpha1 opm_experiments/v1alpha1
           fi
 
           if should_process gateway_api; then
