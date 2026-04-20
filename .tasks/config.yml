@@ -33,5 +33,6 @@ vars:
   CERT_MANAGER_DIR: cert_manager/v1alpha1
   K8UP_DIR: k8up/v1alpha1
   KUBERNETES_DIR: kubernetes/v1
+  CH_VMM_DIR: ch_vmm/v1alpha1
 
   VERSION_FILE: versions.yml

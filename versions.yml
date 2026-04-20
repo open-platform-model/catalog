@@ -5,8 +5,8 @@
 
 core:
   v1alpha1:
-    version: v1.3.6
-    checksum: 42e3f201a65daf9c281a67d1364c719d490819564617dd88f799f2617b6312bd
+    version: v1.3.9
+    checksum: 9e2ddbc13af73807b77f011e564eabe156aed3ce17f77c453aa08f8fa33d951b
 opm:
   v1alpha1:
     version: v1.5.6
@@ -31,3 +31,7 @@ kubernetes:
   v1:
     version: v1.0.1
     checksum: 8deea377650b6ffbd5669be04606e5e76e361ac68654d99a846e61d142e08261
+ch_vmm:
+  v1alpha1:
+    version: v1.0.1
+    checksum: "b294324b7bdaca9982b8ef459e85b3475956178b52ce7c0729d6a7c7923e3730"
