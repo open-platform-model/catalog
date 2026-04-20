@@ -5,8 +5,8 @@
 
 core:
   v1alpha1:
-    version: v1.3.5
-    checksum: 0db99345d404a37b0c2e9b9c974117c35c521c3aeb86dff500e635d22a32e601
+    version: v1.3.6
+    checksum: 42e3f201a65daf9c281a67d1364c719d490819564617dd88f799f2617b6312bd
 opm:
   v1alpha1:
     version: v1.5.6

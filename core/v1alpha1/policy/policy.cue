@@ -24,14 +24,14 @@ import (
 	// PolicyRules grouped by this policy (governance)
 	#rules: [RuleFQN=string]: prim.#PolicyRule & {
 		metadata: {
-			name: string | *RuleFQN
+			name: RuleFQN
 		}
 	}
 
 	// Directives grouped by this policy (operational behavior)
 	#directives?: [DirectiveFQN=string]: prim.#Directive & {
 		metadata: {
-			name: string | *DirectiveFQN
+			name: DirectiveFQN
 		}
 	}
 
