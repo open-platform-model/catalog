@@ -37,5 +37,6 @@ vars:
   MONGODB_OPERATOR_DIR: mongodb_operator/v1alpha1
   CLICKHOUSE_OPERATOR_DIR: clickhouse_operator/v1alpha1
   OTEL_COLLECTOR_DIR: otel_collector/v1alpha1
+  ISTIO_DIR: istio/v1alpha1
 
   VERSION_FILE: versions.yml

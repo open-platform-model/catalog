@@ -47,3 +47,7 @@ otel_collector:
   v1alpha1:
     version: v1.0.0
     checksum: "eb152ce87b65403443ffe8074b09eeea432523b7c8efd87fa92ed637bf88103d"
+istio:
+  v1alpha1:
+    version: v1.0.1
+    checksum: "dd5b9d511da4826666115db058490ec0529b129b2416dcfddb46b1ea3bf0da30"

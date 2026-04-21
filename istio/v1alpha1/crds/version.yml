@@ -1,0 +1,4 @@
+istio:
+  version: 1.28.3
+  source: https://raw.githubusercontent.com/istio/istio/1.28.3/manifests/charts/base/files/crd-all.gen.yaml
+  downloaded: 2026-04-21

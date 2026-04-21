@@ -42,7 +42,7 @@ tasks:
     desc: Format CUE files across all domain modules
     cmds:
       - |
-        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.OPM_EXPERIMENTS_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.K8UP_DIR}}" "{{.KUBERNETES_DIR}}" "{{.CH_VMM_DIR}}" "{{.MONGODB_OPERATOR_DIR}}" "{{.CLICKHOUSE_OPERATOR_DIR}}" "{{.OTEL_COLLECTOR_DIR}}"; do
+        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.OPM_EXPERIMENTS_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.K8UP_DIR}}" "{{.KUBERNETES_DIR}}" "{{.CH_VMM_DIR}}" "{{.MONGODB_OPERATOR_DIR}}" "{{.CLICKHOUSE_OPERATOR_DIR}}" "{{.OTEL_COLLECTOR_DIR}}" "{{.ISTIO_DIR}}"; do
           echo "Formatting ${dir}..."
           (cd "{{.TASKFILE_DIR}}/${dir}" && cue fmt ./...)
         done
@@ -73,6 +73,7 @@ tasks:
       - task: vet:mongodb_operator
       - task: vet:clickhouse_operator
       - task: vet:otel_collector
+      - task: vet:istio
 
   vet:core:
     desc: Validate core/v1alpha1 CUE module
@@ -196,6 +197,17 @@ tasks:
         cd "{{.TASKFILE_DIR}}/{{.OTEL_COLLECTOR_DIR}}" && cue vet {{.VET_FLAGS}} ./...
         echo "  ✔ otel_collector/v1alpha1"
 
+  vet:istio:
+    desc: Validate istio/v1alpha1 CUE module
+    vars:
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
+    cmds:
+      - |
+        echo "Validating {{.ISTIO_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.ISTIO_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "  ✔ istio/v1alpha1"
+
   # ============================================================================
   # Testing
   # ============================================================================
@@ -226,6 +238,7 @@ tasks:
       - task: test:mongodb_operator
       - task: test:clickhouse_operator
       - task: test:otel_collector
+      - task: test:istio
 
   test:core:
     desc: Run core/v1alpha1 structural tests (@if(test) files)
@@ -454,6 +467,24 @@ tasks:
           fi
         }
 
+  test:istio:
+    desc: Run istio/v1alpha1 transformer structural tests (@if(test) files)
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
+        echo "Testing opmodel.dev/istio/v1alpha1 (structural)..."
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.ISTIO_DIR}}" && cue vet -t test ./... 2>&1) && {
+          echo -e "${GREEN}✔ istio/v1alpha1 — Successful${NC}"
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ istio/v1alpha1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ istio/v1alpha1 — Failed${NC}"
+            exit 1
+          fi
+        }
+
   test:strict:
     desc: Run opm/v1alpha1 tests with full concreteness checks (-c flag)
     summary: |
@@ -488,7 +519,7 @@ tasks:
     desc: Tidy dependencies across all domain modules
     cmds:
       - |
-        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.OPM_EXPERIMENTS_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.K8UP_DIR}}" "{{.KUBERNETES_DIR}}" "{{.CH_VMM_DIR}}" "{{.MONGODB_OPERATOR_DIR}}" "{{.CLICKHOUSE_OPERATOR_DIR}}" "{{.OTEL_COLLECTOR_DIR}}"; do
+        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.OPM_EXPERIMENTS_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.K8UP_DIR}}" "{{.KUBERNETES_DIR}}" "{{.CH_VMM_DIR}}" "{{.MONGODB_OPERATOR_DIR}}" "{{.CLICKHOUSE_OPERATOR_DIR}}" "{{.OTEL_COLLECTOR_DIR}}" "{{.ISTIO_DIR}}"; do
           echo "Tidying ${dir}..."
           (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod tidy)
         done
@@ -519,8 +550,9 @@ tasks:
           mongodb_operator)    DIR="{{.MONGODB_OPERATOR_DIR}}" ;;
           clickhouse_operator) DIR="{{.CLICKHOUSE_OPERATOR_DIR}}" ;;
           otel_collector)      DIR="{{.OTEL_COLLECTOR_DIR}}" ;;
+          istio)               DIR="{{.ISTIO_DIR}}" ;;
           *)
-            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, opm_experiments, gateway_api, cert_manager, k8up, kubernetes, ch_vmm, mongodb_operator, clickhouse_operator, or otel_collector."
+            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, opm_experiments, gateway_api, cert_manager, k8up, kubernetes, ch_vmm, mongodb_operator, clickhouse_operator, otel_collector, or istio."
             exit 1
             ;;
         esac
@@ -560,6 +592,7 @@ tasks:
       - bash .tasks/generate-index.sh mongodb_operator/v1alpha1 > mongodb_operator/v1alpha1/INDEX.md
       - bash .tasks/generate-index.sh clickhouse_operator/v1alpha1 > clickhouse_operator/v1alpha1/INDEX.md
       - bash .tasks/generate-index.sh otel_collector/v1alpha1 > otel_collector/v1alpha1/INDEX.md
+      - bash .tasks/generate-index.sh istio/v1alpha1 > istio/v1alpha1/INDEX.md
 
   generate:index:check:
     desc: Verify INDEX.md files match generated output (exits non-zero if any differ)
@@ -602,6 +635,7 @@ tasks:
         check_module mongodb_operator/v1alpha1    || FAILED=1
         check_module clickhouse_operator/v1alpha1 || FAILED=1
         check_module otel_collector/v1alpha1      || FAILED=1
+        check_module istio/v1alpha1               || FAILED=1
 
         if [[ "$FAILED" -eq 1 ]]; then
           echo ""
@@ -634,6 +668,7 @@ tasks:
         echo "mongodb_operator/v1alpha1:    $(yq '.mongodb_operator.v1alpha1.version' {{.VERSION_FILE}})"
         echo "clickhouse_operator/v1alpha1: $(yq '.clickhouse_operator.v1alpha1.version' {{.VERSION_FILE}})"
         echo "otel_collector/v1alpha1:      $(yq '.otel_collector.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "istio/v1alpha1:               $(yq '.istio.v1alpha1.version' {{.VERSION_FILE}})"
 
   version:bump:
     desc: Bump version for a domain module (DOMAIN=core|opm|gateway_api|cert_manager|kubernetes TYPE=patch/minor/major)
@@ -653,9 +688,9 @@ tasks:
     cmds:
       - |
         case "{{.DOMAIN}}" in
-          core|opm|opm_experiments|gateway_api|cert_manager|k8up|kubernetes|ch_vmm|mongodb_operator|clickhouse_operator|otel_collector) ;;
+          core|opm|opm_experiments|gateway_api|cert_manager|k8up|kubernetes|ch_vmm|mongodb_operator|clickhouse_operator|otel_collector|istio) ;;
           *)
-            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, opm_experiments, gateway_api, cert_manager, k8up, kubernetes, ch_vmm, mongodb_operator, clickhouse_operator, or otel_collector."
+            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, opm_experiments, gateway_api, cert_manager, k8up, kubernetes, ch_vmm, mongodb_operator, clickhouse_operator, otel_collector, or istio."
             exit 1
             ;;
         esac
@@ -896,6 +931,24 @@ tasks:
         cd "{{.TASKFILE_DIR}}/{{.OTEL_COLLECTOR_DIR}}" && cue mod publish "${VERSION}"
         echo "Published otel_collector/v1alpha1@${VERSION}"
 
+  publish:istio:
+    desc: Publish istio/v1alpha1 to local registry
+    vars:
+      VERSION: '{{.VERSION | default ""}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+    cmds:
+      - |
+        if [ -z "{{.VERSION}}" ]; then
+          VERSION=$(yq '.istio.v1alpha1.version' {{.VERSION_FILE}})
+        else
+          VERSION="{{.VERSION}}"
+        fi
+        echo "Publishing istio/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.ISTIO_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published istio/v1alpha1@${VERSION}"
+
   publish:kubernetes:
     desc: Publish kubernetes/v1 to local registry
     summary: |
@@ -972,6 +1025,7 @@ tasks:
         publish_module "mongodb_operator"    "v1alpha1" "{{.MONGODB_OPERATOR_DIR}}"
         publish_module "clickhouse_operator" "v1alpha1" "{{.CLICKHOUSE_OPERATOR_DIR}}"
         publish_module "otel_collector"      "v1alpha1" "{{.OTEL_COLLECTOR_DIR}}"
+        publish_module "istio"               "v1alpha1" "{{.ISTIO_DIR}}"
 
         echo ""
         echo -e "${BOLD}${GREEN}Done.${RESET} All domain modules published."
@@ -1076,6 +1130,7 @@ tasks:
         check_module "mongodb_operator"    "v1alpha1" "{{.MONGODB_OPERATOR_DIR}}"
         check_module "clickhouse_operator" "v1alpha1" "{{.CLICKHOUSE_OPERATOR_DIR}}"
         check_module "otel_collector"      "v1alpha1" "{{.OTEL_COLLECTOR_DIR}}"
+        check_module "istio"               "v1alpha1" "{{.ISTIO_DIR}}"
 
         if [ ${#CHANGED_KEYS[@]} -eq 0 ]; then
           echo ""
