@@ -18,6 +18,10 @@ on:
           - gateway_api
           - cert_manager
           - k8up
+          - ch_vmm
+          - mongodb_operator
+          - clickhouse_operator
+          - otel_collector
           - kubernetes
       dry_run:
         description: 'Validate only, skip publish'
@@ -66,7 +70,7 @@ jobs:
               >/dev/null 2>&1
           }
 
-          MODULES="core:v1alpha1 opm:v1alpha1 opm_experiments:v1alpha1 gateway_api:v1alpha1 cert_manager:v1alpha1 k8up:v1alpha1 kubernetes:v1"
+          MODULES="core:v1alpha1 opm:v1alpha1 opm_experiments:v1alpha1 gateway_api:v1alpha1 cert_manager:v1alpha1 k8up:v1alpha1 ch_vmm:v1alpha1 mongodb_operator:v1alpha1 clickhouse_operator:v1alpha1 otel_collector:v1alpha1 kubernetes:v1"
           CHANGED=""
 
           for entry in $MODULES; do
@@ -108,7 +112,10 @@ jobs:
         run: |
           set -euo pipefail
           for dir in core/v1alpha1 opm/v1alpha1 opm_experiments/v1alpha1 \
-                     gateway_api/v1alpha1 cert_manager/v1alpha1 k8up/v1alpha1 kubernetes/v1; do
+                     gateway_api/v1alpha1 cert_manager/v1alpha1 k8up/v1alpha1 \
+                     ch_vmm/v1alpha1 mongodb_operator/v1alpha1 \
+                     clickhouse_operator/v1alpha1 otel_collector/v1alpha1 \
+                     kubernetes/v1; do
             (cd "$dir" && cue fmt ./...)
           done
           if ! git diff --quiet; then
@@ -217,6 +224,34 @@ jobs:
             vet_module k8up k8up/v1alpha1 ./...
             test_module k8up k8up/v1alpha1 ./...
             publish_module k8up v1alpha1 k8up/v1alpha1
+          fi
+
+          if should_process ch_vmm; then
+            echo "=== ch_vmm/v1alpha1 ==="
+            vet_module ch_vmm ch_vmm/v1alpha1 ./...
+            test_module ch_vmm ch_vmm/v1alpha1 ./...
+            publish_module ch_vmm v1alpha1 ch_vmm/v1alpha1
+          fi
+
+          if should_process mongodb_operator; then
+            echo "=== mongodb_operator/v1alpha1 ==="
+            vet_module mongodb_operator mongodb_operator/v1alpha1 ./...
+            test_module mongodb_operator mongodb_operator/v1alpha1 ./...
+            publish_module mongodb_operator v1alpha1 mongodb_operator/v1alpha1
+          fi
+
+          if should_process clickhouse_operator; then
+            echo "=== clickhouse_operator/v1alpha1 ==="
+            vet_module clickhouse_operator clickhouse_operator/v1alpha1 ./...
+            test_module clickhouse_operator clickhouse_operator/v1alpha1 ./...
+            publish_module clickhouse_operator v1alpha1 clickhouse_operator/v1alpha1
+          fi
+
+          if should_process otel_collector; then
+            echo "=== otel_collector/v1alpha1 ==="
+            vet_module otel_collector otel_collector/v1alpha1 ./...
+            test_module otel_collector otel_collector/v1alpha1 ./...
+            publish_module otel_collector v1alpha1 otel_collector/v1alpha1
           fi
 
           if should_process kubernetes; then

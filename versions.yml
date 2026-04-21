@@ -35,3 +35,15 @@ ch_vmm:
   v1alpha1:
     version: v1.0.1
     checksum: "b294324b7bdaca9982b8ef459e85b3475956178b52ce7c0729d6a7c7923e3730"
+mongodb_operator:
+  v1alpha1:
+    version: v1.0.0
+    checksum: "bc785450f4fe55cbd2ac4bbee585a482750ca053ea031afbf66045d16e55f37b"
+clickhouse_operator:
+  v1alpha1:
+    version: v1.0.0
+    checksum: "11c322002454ce36f249bac9ed75ef069bda8ce6c306ee3e435c936c378fe64a"
+otel_collector:
+  v1alpha1:
+    version: v1.0.0
+    checksum: "eb152ce87b65403443ffe8074b09eeea432523b7c8efd87fa92ed637bf88103d"

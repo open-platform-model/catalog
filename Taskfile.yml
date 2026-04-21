@@ -42,7 +42,7 @@ tasks:
     desc: Format CUE files across all domain modules
     cmds:
       - |
-        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.OPM_EXPERIMENTS_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.K8UP_DIR}}" "{{.KUBERNETES_DIR}}" "{{.CH_VMM_DIR}}"; do
+        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.OPM_EXPERIMENTS_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.K8UP_DIR}}" "{{.KUBERNETES_DIR}}" "{{.CH_VMM_DIR}}" "{{.MONGODB_OPERATOR_DIR}}" "{{.CLICKHOUSE_OPERATOR_DIR}}" "{{.OTEL_COLLECTOR_DIR}}"; do
           echo "Formatting ${dir}..."
           (cd "{{.TASKFILE_DIR}}/${dir}" && cue fmt ./...)
         done
@@ -70,6 +70,9 @@ tasks:
       - task: vet:k8up
       - task: vet:kubernetes
       - task: vet:ch_vmm
+      - task: vet:mongodb_operator
+      - task: vet:clickhouse_operator
+      - task: vet:otel_collector
 
   vet:core:
     desc: Validate core/v1alpha1 CUE module
@@ -160,6 +163,39 @@ tasks:
         cd "{{.TASKFILE_DIR}}/{{.CH_VMM_DIR}}" && cue vet {{.VET_FLAGS}} ./...
         echo "  ✔ ch_vmm/v1alpha1"
 
+  vet:mongodb_operator:
+    desc: Validate mongodb_operator/v1alpha1 CUE module
+    vars:
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
+    cmds:
+      - |
+        echo "Validating {{.MONGODB_OPERATOR_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.MONGODB_OPERATOR_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "  ✔ mongodb_operator/v1alpha1"
+
+  vet:clickhouse_operator:
+    desc: Validate clickhouse_operator/v1alpha1 CUE module
+    vars:
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
+    cmds:
+      - |
+        echo "Validating {{.CLICKHOUSE_OPERATOR_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.CLICKHOUSE_OPERATOR_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "  ✔ clickhouse_operator/v1alpha1"
+
+  vet:otel_collector:
+    desc: Validate otel_collector/v1alpha1 CUE module
+    vars:
+      CONCRETE: '{{.CONCRETE | default "false"}}'
+      VET_FLAGS: '{{if eq .CONCRETE "true"}}-c{{end}}'
+    cmds:
+      - |
+        echo "Validating {{.OTEL_COLLECTOR_DIR}}{{if eq .CONCRETE "true"}} (concrete){{end}}..."
+        cd "{{.TASKFILE_DIR}}/{{.OTEL_COLLECTOR_DIR}}" && cue vet {{.VET_FLAGS}} ./...
+        echo "  ✔ otel_collector/v1alpha1"
+
   # ============================================================================
   # Testing
   # ============================================================================
@@ -187,6 +223,9 @@ tasks:
       - task: test:k8up
       - task: test:kubernetes
       - task: test:ch_vmm
+      - task: test:mongodb_operator
+      - task: test:clickhouse_operator
+      - task: test:otel_collector
 
   test:core:
     desc: Run core/v1alpha1 structural tests (@if(test) files)
@@ -361,6 +400,60 @@ tasks:
           fi
         }
 
+  test:mongodb_operator:
+    desc: Run mongodb_operator/v1alpha1 transformer structural tests (@if(test) files)
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
+        echo "Testing opmodel.dev/mongodb_operator/v1alpha1 (structural)..."
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.MONGODB_OPERATOR_DIR}}" && cue vet -t test ./... 2>&1) && {
+          echo -e "${GREEN}✔ mongodb_operator/v1alpha1 — Successful${NC}"
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ mongodb_operator/v1alpha1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ mongodb_operator/v1alpha1 — Failed${NC}"
+            exit 1
+          fi
+        }
+
+  test:clickhouse_operator:
+    desc: Run clickhouse_operator/v1alpha1 transformer structural tests (@if(test) files)
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
+        echo "Testing opmodel.dev/clickhouse_operator/v1alpha1 (structural)..."
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.CLICKHOUSE_OPERATOR_DIR}}" && cue vet -t test ./... 2>&1) && {
+          echo -e "${GREEN}✔ clickhouse_operator/v1alpha1 — Successful${NC}"
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ clickhouse_operator/v1alpha1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ clickhouse_operator/v1alpha1 — Failed${NC}"
+            exit 1
+          fi
+        }
+
+  test:otel_collector:
+    desc: Run otel_collector/v1alpha1 transformer structural tests (@if(test) files)
+    cmds:
+      - |
+        GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; NC='\033[0m'
+        echo "Testing opmodel.dev/otel_collector/v1alpha1 (structural)..."
+        OUTPUT=$(cd "{{.TASKFILE_DIR}}/{{.OTEL_COLLECTOR_DIR}}" && cue vet -t test ./... 2>&1) && {
+          echo -e "${GREEN}✔ otel_collector/v1alpha1 — Successful${NC}"
+        } || {
+          if echo "$OUTPUT" | grep -q 'tag "test" not used in any file'; then
+            echo -e "${DIM}○ otel_collector/v1alpha1 — No tests found, skipping${NC}"
+          else
+            echo "$OUTPUT" >&2
+            echo -e "${RED}✗ otel_collector/v1alpha1 — Failed${NC}"
+            exit 1
+          fi
+        }
+
   test:strict:
     desc: Run opm/v1alpha1 tests with full concreteness checks (-c flag)
     summary: |
@@ -395,7 +488,7 @@ tasks:
     desc: Tidy dependencies across all domain modules
     cmds:
       - |
-        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.OPM_EXPERIMENTS_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.K8UP_DIR}}" "{{.KUBERNETES_DIR}}" "{{.CH_VMM_DIR}}"; do
+        for dir in "{{.CORE_DIR}}" "{{.OPM_DIR}}" "{{.OPM_EXPERIMENTS_DIR}}" "{{.GATEWAY_API_DIR}}" "{{.CERT_MANAGER_DIR}}" "{{.K8UP_DIR}}" "{{.KUBERNETES_DIR}}" "{{.CH_VMM_DIR}}" "{{.MONGODB_OPERATOR_DIR}}" "{{.CLICKHOUSE_OPERATOR_DIR}}" "{{.OTEL_COLLECTOR_DIR}}"; do
           echo "Tidying ${dir}..."
           (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod tidy)
         done
@@ -415,16 +508,19 @@ tasks:
     cmds:
       - |
         case "{{.DOMAIN}}" in
-          core)             DIR="{{.CORE_DIR}}" ;;
-          opm)              DIR="{{.OPM_DIR}}" ;;
-          opm_experiments)  DIR="{{.OPM_EXPERIMENTS_DIR}}" ;;
-          gateway_api)      DIR="{{.GATEWAY_API_DIR}}" ;;
-          cert_manager)     DIR="{{.CERT_MANAGER_DIR}}" ;;
-          k8up)             DIR="{{.K8UP_DIR}}" ;;
-          kubernetes)       DIR="{{.KUBERNETES_DIR}}" ;;
-          ch_vmm)           DIR="{{.CH_VMM_DIR}}" ;;
+          core)                DIR="{{.CORE_DIR}}" ;;
+          opm)                 DIR="{{.OPM_DIR}}" ;;
+          opm_experiments)     DIR="{{.OPM_EXPERIMENTS_DIR}}" ;;
+          gateway_api)         DIR="{{.GATEWAY_API_DIR}}" ;;
+          cert_manager)        DIR="{{.CERT_MANAGER_DIR}}" ;;
+          k8up)                DIR="{{.K8UP_DIR}}" ;;
+          kubernetes)          DIR="{{.KUBERNETES_DIR}}" ;;
+          ch_vmm)              DIR="{{.CH_VMM_DIR}}" ;;
+          mongodb_operator)    DIR="{{.MONGODB_OPERATOR_DIR}}" ;;
+          clickhouse_operator) DIR="{{.CLICKHOUSE_OPERATOR_DIR}}" ;;
+          otel_collector)      DIR="{{.OTEL_COLLECTOR_DIR}}" ;;
           *)
-            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, opm_experiments, gateway_api, cert_manager, k8up, kubernetes, or ch_vmm."
+            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, opm_experiments, gateway_api, cert_manager, k8up, kubernetes, ch_vmm, mongodb_operator, clickhouse_operator, or otel_collector."
             exit 1
             ;;
         esac
@@ -461,6 +557,9 @@ tasks:
       - bash .tasks/generate-index.sh k8up/v1alpha1 > k8up/v1alpha1/INDEX.md
       - bash .tasks/generate-index.sh kubernetes/v1 > kubernetes/v1/INDEX.md
       - bash .tasks/generate-index.sh ch_vmm/v1alpha1 > ch_vmm/v1alpha1/INDEX.md
+      - bash .tasks/generate-index.sh mongodb_operator/v1alpha1 > mongodb_operator/v1alpha1/INDEX.md
+      - bash .tasks/generate-index.sh clickhouse_operator/v1alpha1 > clickhouse_operator/v1alpha1/INDEX.md
+      - bash .tasks/generate-index.sh otel_collector/v1alpha1 > otel_collector/v1alpha1/INDEX.md
 
   generate:index:check:
     desc: Verify INDEX.md files match generated output (exits non-zero if any differ)
@@ -492,14 +591,17 @@ tasks:
         }
 
         FAILED=0
-        check_module core/v1alpha1             || FAILED=1
-        check_module opm/v1alpha1              || FAILED=1
-        check_module opm_experiments/v1alpha1  || FAILED=1
-        check_module gateway_api/v1alpha1      || FAILED=1
-        check_module cert_manager/v1alpha1 || FAILED=1
-        check_module k8up/v1alpha1         || FAILED=1
-        check_module kubernetes/v1         || FAILED=1
-        check_module ch_vmm/v1alpha1       || FAILED=1
+        check_module core/v1alpha1                || FAILED=1
+        check_module opm/v1alpha1                 || FAILED=1
+        check_module opm_experiments/v1alpha1     || FAILED=1
+        check_module gateway_api/v1alpha1         || FAILED=1
+        check_module cert_manager/v1alpha1        || FAILED=1
+        check_module k8up/v1alpha1                || FAILED=1
+        check_module kubernetes/v1                || FAILED=1
+        check_module ch_vmm/v1alpha1              || FAILED=1
+        check_module mongodb_operator/v1alpha1    || FAILED=1
+        check_module clickhouse_operator/v1alpha1 || FAILED=1
+        check_module otel_collector/v1alpha1      || FAILED=1
 
         if [[ "$FAILED" -eq 1 ]]; then
           echo ""
@@ -521,14 +623,17 @@ tasks:
         msg: "yq is required. Install: brew install yq"
     cmds:
       - |
-        echo "core/v1alpha1:             $(yq '.core.v1alpha1.version' {{.VERSION_FILE}})"
-        echo "opm/v1alpha1:              $(yq '.opm.v1alpha1.version' {{.VERSION_FILE}})"
-        echo "opm_experiments/v1alpha1:  $(yq '.opm_experiments.v1alpha1.version' {{.VERSION_FILE}})"
-        echo "gateway_api/v1alpha1:      $(yq '.gateway_api.v1alpha1.version' {{.VERSION_FILE}})"
-        echo "cert_manager/v1alpha1: $(yq '.cert_manager.v1alpha1.version' {{.VERSION_FILE}})"
-        echo "k8up/v1alpha1:         $(yq '.k8up.v1alpha1.version' {{.VERSION_FILE}})"
-        echo "kubernetes/v1:         $(yq '.kubernetes.v1.version' {{.VERSION_FILE}})"
-        echo "ch_vmm/v1alpha1:       $(yq '.ch_vmm.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "core/v1alpha1:                $(yq '.core.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "opm/v1alpha1:                 $(yq '.opm.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "opm_experiments/v1alpha1:     $(yq '.opm_experiments.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "gateway_api/v1alpha1:         $(yq '.gateway_api.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "cert_manager/v1alpha1:        $(yq '.cert_manager.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "k8up/v1alpha1:                $(yq '.k8up.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "kubernetes/v1:                $(yq '.kubernetes.v1.version' {{.VERSION_FILE}})"
+        echo "ch_vmm/v1alpha1:              $(yq '.ch_vmm.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "mongodb_operator/v1alpha1:    $(yq '.mongodb_operator.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "clickhouse_operator/v1alpha1: $(yq '.clickhouse_operator.v1alpha1.version' {{.VERSION_FILE}})"
+        echo "otel_collector/v1alpha1:      $(yq '.otel_collector.v1alpha1.version' {{.VERSION_FILE}})"
 
   version:bump:
     desc: Bump version for a domain module (DOMAIN=core|opm|gateway_api|cert_manager|kubernetes TYPE=patch/minor/major)
@@ -548,9 +653,9 @@ tasks:
     cmds:
       - |
         case "{{.DOMAIN}}" in
-          core|opm|opm_experiments|gateway_api|cert_manager|k8up|kubernetes|ch_vmm) ;;
+          core|opm|opm_experiments|gateway_api|cert_manager|k8up|kubernetes|ch_vmm|mongodb_operator|clickhouse_operator|otel_collector) ;;
           *)
-            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, opm_experiments, gateway_api, cert_manager, k8up, kubernetes, or ch_vmm."
+            echo "Unknown DOMAIN: {{.DOMAIN}}. Use core, opm, opm_experiments, gateway_api, cert_manager, k8up, kubernetes, ch_vmm, mongodb_operator, clickhouse_operator, or otel_collector."
             exit 1
             ;;
         esac
@@ -737,6 +842,60 @@ tasks:
         cd "{{.TASKFILE_DIR}}/{{.CH_VMM_DIR}}" && cue mod publish "${VERSION}"
         echo "Published ch_vmm/v1alpha1@${VERSION}"
 
+  publish:mongodb_operator:
+    desc: Publish mongodb_operator/v1alpha1 to local registry
+    vars:
+      VERSION: '{{.VERSION | default ""}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+    cmds:
+      - |
+        if [ -z "{{.VERSION}}" ]; then
+          VERSION=$(yq '.mongodb_operator.v1alpha1.version' {{.VERSION_FILE}})
+        else
+          VERSION="{{.VERSION}}"
+        fi
+        echo "Publishing mongodb_operator/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.MONGODB_OPERATOR_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published mongodb_operator/v1alpha1@${VERSION}"
+
+  publish:clickhouse_operator:
+    desc: Publish clickhouse_operator/v1alpha1 to local registry
+    vars:
+      VERSION: '{{.VERSION | default ""}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+    cmds:
+      - |
+        if [ -z "{{.VERSION}}" ]; then
+          VERSION=$(yq '.clickhouse_operator.v1alpha1.version' {{.VERSION_FILE}})
+        else
+          VERSION="{{.VERSION}}"
+        fi
+        echo "Publishing clickhouse_operator/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.CLICKHOUSE_OPERATOR_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published clickhouse_operator/v1alpha1@${VERSION}"
+
+  publish:otel_collector:
+    desc: Publish otel_collector/v1alpha1 to local registry
+    vars:
+      VERSION: '{{.VERSION | default ""}}'
+    preconditions:
+      - sh: command -v yq >/dev/null 2>&1
+        msg: "yq is required. Install: brew install yq"
+    cmds:
+      - |
+        if [ -z "{{.VERSION}}" ]; then
+          VERSION=$(yq '.otel_collector.v1alpha1.version' {{.VERSION_FILE}})
+        else
+          VERSION="{{.VERSION}}"
+        fi
+        echo "Publishing otel_collector/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
+        cd "{{.TASKFILE_DIR}}/{{.OTEL_COLLECTOR_DIR}}" && cue mod publish "${VERSION}"
+        echo "Published otel_collector/v1alpha1@${VERSION}"
+
   publish:kubernetes:
     desc: Publish kubernetes/v1 to local registry
     summary: |
@@ -802,14 +961,17 @@ tasks:
           fi
         }
 
-        publish_module "core"            "v1alpha1" "{{.CORE_DIR}}"
-        publish_module "opm"             "v1alpha1" "{{.OPM_DIR}}"
-        publish_module "opm_experiments" "v1alpha1" "{{.OPM_EXPERIMENTS_DIR}}"
-        publish_module "gateway_api"     "v1alpha1" "{{.GATEWAY_API_DIR}}"
-        publish_module "cert_manager"    "v1alpha1" "{{.CERT_MANAGER_DIR}}"
-        publish_module "k8up"            "v1alpha1" "{{.K8UP_DIR}}"
-        publish_module "kubernetes"      "v1"       "{{.KUBERNETES_DIR}}"
-        publish_module "ch_vmm"          "v1alpha1" "{{.CH_VMM_DIR}}"
+        publish_module "core"                "v1alpha1" "{{.CORE_DIR}}"
+        publish_module "opm"                 "v1alpha1" "{{.OPM_DIR}}"
+        publish_module "opm_experiments"     "v1alpha1" "{{.OPM_EXPERIMENTS_DIR}}"
+        publish_module "gateway_api"         "v1alpha1" "{{.GATEWAY_API_DIR}}"
+        publish_module "cert_manager"        "v1alpha1" "{{.CERT_MANAGER_DIR}}"
+        publish_module "k8up"                "v1alpha1" "{{.K8UP_DIR}}"
+        publish_module "kubernetes"          "v1"       "{{.KUBERNETES_DIR}}"
+        publish_module "ch_vmm"              "v1alpha1" "{{.CH_VMM_DIR}}"
+        publish_module "mongodb_operator"    "v1alpha1" "{{.MONGODB_OPERATOR_DIR}}"
+        publish_module "clickhouse_operator" "v1alpha1" "{{.CLICKHOUSE_OPERATOR_DIR}}"
+        publish_module "otel_collector"      "v1alpha1" "{{.OTEL_COLLECTOR_DIR}}"
 
         echo ""
         echo -e "${BOLD}${GREEN}Done.${RESET} All domain modules published."
@@ -903,14 +1065,17 @@ tasks:
           fi
         }
 
-        check_module "core"            "v1alpha1" "{{.CORE_DIR}}"
-        check_module "opm"             "v1alpha1" "{{.OPM_DIR}}"
-        check_module "opm_experiments" "v1alpha1" "{{.OPM_EXPERIMENTS_DIR}}"
-        check_module "gateway_api"     "v1alpha1" "{{.GATEWAY_API_DIR}}"
-        check_module "cert_manager"    "v1alpha1" "{{.CERT_MANAGER_DIR}}"
-        check_module "k8up"            "v1alpha1" "{{.K8UP_DIR}}"
-        check_module "kubernetes"      "v1"       "{{.KUBERNETES_DIR}}"
-        check_module "ch_vmm"          "v1alpha1" "{{.CH_VMM_DIR}}"
+        check_module "core"                "v1alpha1" "{{.CORE_DIR}}"
+        check_module "opm"                 "v1alpha1" "{{.OPM_DIR}}"
+        check_module "opm_experiments"     "v1alpha1" "{{.OPM_EXPERIMENTS_DIR}}"
+        check_module "gateway_api"         "v1alpha1" "{{.GATEWAY_API_DIR}}"
+        check_module "cert_manager"        "v1alpha1" "{{.CERT_MANAGER_DIR}}"
+        check_module "k8up"                "v1alpha1" "{{.K8UP_DIR}}"
+        check_module "kubernetes"          "v1"       "{{.KUBERNETES_DIR}}"
+        check_module "ch_vmm"              "v1alpha1" "{{.CH_VMM_DIR}}"
+        check_module "mongodb_operator"    "v1alpha1" "{{.MONGODB_OPERATOR_DIR}}"
+        check_module "clickhouse_operator" "v1alpha1" "{{.CLICKHOUSE_OPERATOR_DIR}}"
+        check_module "otel_collector"      "v1alpha1" "{{.OTEL_COLLECTOR_DIR}}"
 
         if [ ${#CHANGED_KEYS[@]} -eq 0 ]; then
           echo ""
