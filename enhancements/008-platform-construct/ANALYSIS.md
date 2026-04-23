@@ -200,10 +200,6 @@ Options:
 
 Current CLI loader resolves `#module`. New `#env` path adds a second import resolution surface. Could share resolver logic cleanly; could also diverge if not deliberately unified. Call out in implementation tasks.
 
-### F20 — 006 / 007 / 008 merge ordering is unstated
-
-008 reserves `#declaredClaims`, `#composedOffers`, `#satisfiedClaims` on `#Platform` but delegates implementation to 006 and 007. If 008 ships first, `#Platform` ships with reserved-but-unimplemented fields. If 006/007 ship first, they modify a construct that does not yet exist. Not a design flaw, but a sequencing risk that deserves an explicit merge order in the proposal.
-
 ---
 
 ## Tensions worth naming
@@ -238,10 +234,6 @@ F5. Release-bound environments are simpler but break bundle parameterization. De
 ### Q4 — Ship 008 with dual context or block on `#TransformerContext` design?
 
 F6 and N2. The drift between `#ctx.runtime.release.name` and `#context.#moduleReleaseMetadata.name` is guaranteed once both ship. Blocking 008 on a `#TransformerContext` design delays the main feature. Shipping as-is locks in the drift pattern.
-
-### Q5 — What is the intended merge order of 006 / 007 / 008?
-
-F20. 008 reserves fields for 006 and 007. Which enhancement merges first? Proposal should state the order and specify what happens to the reserved fields in 008 if 006/007 slip.
 
 ### Q6 — Is `.opm/` workspace-wide or per-repo, and is it a published CUE module?
 

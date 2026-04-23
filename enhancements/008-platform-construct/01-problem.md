@@ -88,8 +88,6 @@ The platform "knows" it has K8up (as a label) but cannot automatically include K
 
 K8up has its own provider with 4 backup transformers. The cluster has K8up installed. Today there is no way to compose the K8up provider with the base Kubernetes provider and pass the composed transformer set to the matcher.
 
-Claim/offer-specific gaps (`#declaredClaims`, matcher claim matching) are addressed by enhancements [006](../006-claim-primitive/) and [007](../007-offer-primitive/).
-
 ### Why Existing Workarounds Fail
 
 Manual provider merging works in CUE but is fragile, undocumented, and invisible to the CLI. The CLI cannot reason about platform capabilities or which providers are composed for a given deployment target.

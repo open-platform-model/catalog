@@ -263,7 +263,6 @@ New file: `catalog/core/v1alpha1/platform/platform.cue`
     // Auto-computed from composed transformers
     #declaredResources: #provider.#declaredResources
     #declaredTraits:    #provider.#declaredTraits
-    // #declaredClaims, #composedOffers, #satisfiedClaims added by enhancements 006/007
 }
 ```
 

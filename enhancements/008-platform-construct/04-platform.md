@@ -125,7 +125,7 @@ Example: both `opm.#Provider` and `kubernetes.#Provider` may include a `Deployme
 
 ## Different Capabilities per Environment
 
-The same module deploys unchanged to platforms with different provider sets. A module deployed to a platform that includes `k8up.#Provider` receives backup transformers; deployed to a platform without K8up, those transformers are absent from `#composedTransformers` and are never matched. Claim fulfillment and capability warnings are covered by [enhancement 006](../006-claim-primitive/).
+The same module deploys unchanged to platforms with different provider sets. A module deployed to a platform that includes `k8up.#Provider` receives backup transformers; deployed to a platform without K8up, those transformers are absent from `#composedTransformers` and are never matched.
 
 ---
 
@@ -150,8 +150,6 @@ No new pattern is required. Providers already export a `#transformers` map. The 
     }
 }
 ```
-
-Claim/offer integration for capability modules is covered by enhancements [006](../006-claim-primitive/) and [007](../007-offer-primitive/).
 
 ---
 

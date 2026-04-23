@@ -27,7 +27,6 @@
 - Runtime provider discovery (auto-detecting what is installed on the cluster)
 - Runtime connection details (kubeContext, kubeConfig) — these belong to a separate runtime config mechanism
 - `#Environment` overriding `#config` (values) — environments only contribute to `#ctx`
-- Claim/offer changes to `#Transformer`, `#Provider`, and matcher — owned by enhancements [006](../006-claim-primitive/) and [007](../007-offer-primitive/)
 
 ---
 

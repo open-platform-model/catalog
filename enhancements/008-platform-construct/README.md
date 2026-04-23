@@ -18,8 +18,6 @@ Context resolution follows a layered hierarchy: `#Platform.#ctx` (`#PlatformCont
 
 The existing matcher works unchanged — it receives the composed transformer map. CUE struct unification handles provider composition naturally.
 
-Claim/offer extensions to `#Transformer`, `#Provider`, and `#Platform` are owned by enhancements [006](../006-claim-primitive/) and [007](../007-offer-primitive/).
-
 > **Note:** This enhancement subsumes the former enhancement 003-module-context. All context schemas, pipeline changes, and design decisions from 003 are merged here. Enhancement 003 is archived with a pointer to this document.
 
 ## Documents
@@ -47,8 +45,6 @@ All items flagged during design as requiring further discussion are tracked in [
 | -------- | ------- |
 | `catalog/enhancements/003-module-context/` | Archived — merged into this enhancement |
 | `catalog/enhancements/002-resource-name-override/` | Archived — resource name override subsumed by `metadata.resourceName` (D13) |
-| `catalog/enhancements/006-claim-primitive/` | `#Claim` primitive — owns `requiredClaims`/`optionalClaims` on `#Transformer`, `#declaredClaims` on `#Provider`, matcher claim matching |
-| `catalog/enhancements/007-offer-primitive/` | `#Offer` primitive — owns `#offers`/`#declaredOffers` on `#Provider`, `#composedOffers`/`#satisfiedClaims` on `#Platform` |
 | `catalog/core/v1alpha1/provider/provider.cue` | Existing `#Provider` definition — gains `metadata.type` from this enhancement |
 | `catalog/opm/v1alpha1/providers/kubernetes/provider.cue` | Base Kubernetes provider (16 transformers) |
 | `catalog/k8up/v1alpha1/providers/kubernetes/provider.cue` | Existing capability provider (K8up, 4 transformers) |
