@@ -21,7 +21,7 @@ Proven on backup:
 1. [01-problem.md](01-problem.md) — Two-level concern split that backup actually needs; why existing primitives leave a gap at the module-orchestration layer
 2. [02-design.md](02-design.md) — `#Directive` primitive, broadened `#Policy`, `#PolicyTransformer` scope, validation rules, platform-ctx namespacing convention
 3. [03-backup-example.md](03-backup-example.md) — First worked example: `#BackupTrait`, `#BackupPolicy`, K8up `#BackupScheduleTransformer` (single-output cardinality)
-4. [04-tls-example.md](04-tls-example.md) — Second worked example: `#TLSCertTrait`, `#CertificatePolicy`, cert-manager `#CertificateTransformer` (per-component cardinality)
+4. [04-tls-example.md](04-tls-example.md) — Second worked example: `#CertificateResource`, `#CertificatePolicy`, cert-manager `#CertificateTransformer` (per-component cardinality; establishes the Resource-vs-Trait rule in D15)
 5. [05-routing-example.md](05-routing-example.md) — Third worked example: Gateway API routes (`HTTPRoute` + siblings); cross-commodity decoupling observations
 6. [06-policy-transformer.md](06-policy-transformer.md) — `#PolicyTransformer` schema, matching rules, provider registration
 7. [07-rendering-pipeline.md](07-rendering-pipeline.md) — How policy-scope transformers fit into the render flow

@@ -185,3 +185,27 @@ Without a convention, each commodity would invent its own path layout, leading t
 - Let commodity authors pick any subtree name they want. Rejected: authors would invent inconsistent names; reviewers would have no basis for rejection.
 
 **Not enforced by schema.** The convention is documented and reviewed, not CUE-constrained. Commodities that violate it are still functional; they are merely awkward and will be flagged in review.
+
+## D15 — Choose `#Resource` vs `#Trait` by whether the primitive extends existing behavior or declares a standalone entity
+
+**Decision.** When authoring the component-level primitive for a commodity:
+
+- Use `#Trait` when the primitive *extends or modifies existing resource behavior* on the component (scaling replicas on a Deployment, setting a security context, declaring health probes, describing how existing data participates in an ongoing operation).
+- Use `#Resource` when the primitive *declares that a standalone Kubernetes entity should exist* alongside the component — one with its own reconciliation lifecycle, its own status, and independent of any fields on the component's workload.
+
+**Examples.**
+
+- **Trait:** `#BackupTrait` — extends the component's data-persistence behavior. The component author is declaring "my data participates in a backup schedule" — an operational characteristic of the component, not a new independent entity. The K8up `Schedule` CR is the rendered artifact, but the authoring semantics are a modifier on the component.
+- **Resource:** `#CertificateResource` (TLS) — declares a standalone `cert-manager.io/v1.Certificate` entity with its own renewal lifecycle. The component is a consumer of the cert's resulting Secret, not a thing the cert extends.
+
+**Rationale.** `#Trait` means "extend functionality of something." If the primitive has nothing to extend — if it's a new first-class thing that happens to reference the component — then `#Resource` is the honest choice. Mislabeling a resource-shaped primitive as a trait obscures the authoring model and produces awkward mixins.
+
+**Diagnostic question for new commodities:** *What does this primitive extend?* If the answer is "nothing — it's a new k8s entity with its own reconciler," choose `#Resource`. If the answer is "this component's existing behavior in area X (scaling, persistence, networking exposure)," choose `#Trait`.
+
+**Alternatives considered.**
+
+- Always use `#Trait` for commodity component-local schemas. Rejected: misrepresents commodities like TLS where there is no host resource being extended; forces awkward trait-wrapping of standalone entities.
+- Always use `#Resource` for commodity component-local schemas. Rejected: misrepresents commodities like backup where the author is genuinely declaring a modifier on existing data-persistence behavior rather than a new entity.
+- Introduce a third primitive type for "standalone entities the component causes." Rejected: `#Resource` already fits cleanly; no need for a new type.
+
+**Note on backup.** The K8up `Schedule` CR is a first-class entity with its own reconciler — by the mechanical test (separate k8s resource? own lifecycle?) backup could also be a resource. The authoring semantics pull the other way: the module author writes "my data has backup-behavior," which reads as a modifier on the component, not as "declare a Schedule entity." Backup is kept as `#Trait` on those semantic grounds. If practice reveals the modifier-framing is inadequate (for example, if authors find themselves wanting multiple independent Schedules per component), revisit.

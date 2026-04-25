@@ -234,12 +234,15 @@ What goes where:
 
 | Concern | Location | Carried by |
 | ------- | -------- | ---------- |
-| Per-component local fact (e.g. "which of my volumes to back up") | Component | `#Trait` in `#components[x].spec.<name>` |
+| Per-component behavior modifier (e.g. "which of my volumes to back up") | Component | `#Trait` in `#components[x].spec.<name>` |
+| Per-component standalone entity (e.g. "I need a TLS certificate with these hostnames") | Component | `#Resource` in `#components[x].#resources` |
 | Cross-component orchestration (e.g. "backup schedule + backend + retention") | Module | `#Directive` in `#policies[y].#directives` |
 | Platform mandate (e.g. "all stateful workloads MUST have `#BackupTrait`") | Module | `#Rule` in `#policies[y].#rules` |
 | Render (component-scope) | Provider | `#Transformer` |
 | Render (policy-scope) | Provider | `#PolicyTransformer` |
 | Platform-wide configuration (e.g. backup backends with credentials) | Platform | `#Platform.#ctx.platform.<commodity>.*` (see convention below) |
+
+See [D15](08-decisions.md) for the rule that distinguishes when to use `#Trait` (extends existing behavior) vs `#Resource` (declares a standalone entity) for a commodity's component-level primitive.
 
 ---
 

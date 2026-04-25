@@ -2,69 +2,84 @@
 
 This document walks TLS certificate issuance (cert-manager) through the same pattern as [03-backup-example.md](03-backup-example.md). It is a second data point for OQ-5 (does the pattern generalize?) and drives the optional per-component provenance annotation in [D11 / D13](08-decisions.md).
 
+## A Note on Primitive Choice: `#Resource`, Not `#Trait`
+
+A `#Trait` extends the functionality of an existing resource on a component (scaling, restart policy, security context). A TLS certificate doesn't extend anything about the workload — it's a standalone k8s entity (`cert-manager.io/v1.Certificate`) that happens to live alongside the component. It has its own lifecycle (renewal, reconciliation), its own status, and could in principle be authored without a consuming workload.
+
+TLS certificates therefore fit `#Resource` — "what must exist?" — rather than `#Trait`. The component declares "I need a Certificate resource with these hostnames" the same way it declares "I need a Container resource with this image." See [D15](08-decisions.md) for the decision rationale.
+
 ## Layer Split
 
 | Layer | Belongs to | Examples |
 | --- | --- | --- |
-| Component-local | `#TLSCertTrait` | hostnames the component needs covered, secret name hint, key usages, per-component key algorithm override |
+| Component-local | `#CertificateResource` | hostnames the component needs covered, secret name hint, key usages, per-component key algorithm override |
 | Module-level | `#CertificatePolicy` (Directive) | issuer reference, renewal window, default key algorithm, subject fields, private-key rotation |
 | Platform-level | `#Platform.#ctx.platform.tls.issuers` | pre-configured `Issuer` / `ClusterIssuer` references (name + kind + namespace) |
 
-Same three-layer shape as backup. The only structural difference is output cardinality — see [Cardinality Finding](#cardinality-finding) below.
+Same three-layer shape as backup. Differs in which component-level primitive carries the local facts (Resource here vs. Trait in backup) and in output cardinality — see [Cardinality Finding](#cardinality-finding) below.
 
 ## File Layout
 
-Co-located trait + directive, matching the convention established by backup:
+Co-located resource + directive, matching the convention established by backup:
 
 ```text
 catalog/opm/v1alpha1/operations/tls/
-├── trait.cue         — #TLSCertTrait + #KeyAlgorithm
-├── directive.cue     — #CertificatePolicy
-├── trait_tests.cue
+├── resource.cue          — #CertificateResource + #Certificate (component wrapper) + #KeyAlgorithm
+├── directive.cue         — #CertificatePolicy
+├── resource_tests.cue
 └── directive_tests.cue
 ```
 
 Import path: `opmodel.dev/opm/v1alpha1/operations/tls@v1`.
 
-## `#TLSCertTrait` — Component-Local Facts
+## `#CertificateResource` — Component-Local Facts
 
 ```cue
-// catalog/opm/v1alpha1/operations/tls/trait.cue
+// catalog/opm/v1alpha1/operations/tls/resource.cue
 package tls
 
 import (
     prim "opmodel.dev/core/v1alpha1/primitives@v1"
+    component "opmodel.dev/core/v1alpha1/component@v1"
 )
 
-#TLSCertTrait: prim.#Trait & {
+#CertificateResource: prim.#Resource & {
     metadata: {
         modulePath:  "opmodel.dev/opm/v1alpha1/operations/tls"
         version:     "v1"
-        name:        "tls-cert"
-        description: "Declares the component needs a TLS certificate for the given hostnames"
+        name:        "certificate"
+        description: "A TLS certificate that should be issued for the component"
         labels: {
-            "trait.opmodel.dev/category": "security"
+            "resource.opmodel.dev/category": "security"
         }
     }
 
-    #spec: tlsCert: {
-        // DNS names the certificate must cover. At least one required.
-        // Typically references #ctx.runtime.route.domain for the environment domain.
-        hostnames!: [...string] & list.MinItems(1)
+    spec: close({
+        certificate: {
+            // DNS names the certificate must cover. At least one required.
+            // Typically references #ctx.runtime.route.domain for the environment domain.
+            hostnames!: [...string] & list.MinItems(1)
 
-        // Secret name where cert-manager should place the resulting certificate + key.
-        // Defaults to "{resourceName}-tls" — resolved via #ctx.runtime.components[x].resourceName.
-        secretName?: string
+            // Secret name where cert-manager should place the resulting certificate + key.
+            // Defaults to "{resourceName}-tls" — resolved via #ctx.runtime.components[x].resourceName.
+            secretName?: string
 
-        // Key usages. "server auth" is the common default.
-        usages?: [...("server auth" | "client auth" | "code signing" | "email protection" |
-                      "s/mime" | "ipsec end system" | "ipsec tunnel" | "ipsec user" |
-                      "timestamping" | "ocsp signing" | "microsoft sgc" | "netscape sgc")]
+            // Key usages. "server auth" is the common default.
+            usages?: [...("server auth" | "client auth" | "code signing" | "email protection" |
+                          "s/mime" | "ipsec end system" | "ipsec tunnel" | "ipsec user" |
+                          "timestamping" | "ocsp signing" | "microsoft sgc" | "netscape sgc")]
 
-        // Optional — override module-level key algorithm per-component (rare).
-        // Absent → inherit from the policy.
-        keyAlgorithm?: #KeyAlgorithm
-    }
+            // Optional — override module-level key algorithm per-component (rare).
+            // Absent → inherit from the policy.
+            keyAlgorithm?: #KeyAlgorithm
+        }
+    })
+}
+
+// Component wrapper for ergonomic composition — matches the convention used
+// by #CRDs and other existing resource wrappers in the catalog.
+#Certificate: component.#Component & {
+    #resources: {(#CertificateResource.metadata.fqn): #CertificateResource}
 }
 
 #KeyAlgorithm: close({
@@ -83,6 +98,7 @@ Observations:
 - Hostnames are typically computed from `#ctx.runtime.route.domain`. No duplicated authoring.
 - `secretName` defaults to a function of `resourceName`; the component's own workload can reference the same default when mounting the cert as a TLS volume.
 - Per-component key algorithm override exists for rare cases (e.g., an API service wanting ECDSA for TLS handshake performance while the rest of the module uses RSA).
+- `#Certificate` is the ergonomic component-wrapper that authors import. The underlying `#CertificateResource` is the primitive a transformer matches against.
 
 ## `#CertificatePolicy` — Module-Level Orchestration
 
@@ -117,7 +133,7 @@ import (
         })
 
         // Default key algorithm for certs produced by this policy.
-        // Components may override individually via #TLSCertTrait.keyAlgorithm.
+        // Components may override individually via #CertificateResource.spec.certificate.keyAlgorithm.
         keyAlgorithm?: #KeyAlgorithm & {
             type: *"RSA" | _
             if type == "RSA"   { size: *2048 | _ }
@@ -161,17 +177,19 @@ import (
     }
 
     requiredDirectives: [tls.#CertificatePolicy.metadata.fqn]
-    requiredTraits:     [tls.#TLSCertTrait.metadata.fqn]
+    requiredResources:  [tls.#CertificateResource.metadata.fqn]
 
     readsContext: ["tls.issuers"]   // see platform-context convention in 02-design.md
 
     producesKinds: ["cert-manager.io/v1.Certificate"]
 
     // Cardinality: N outputs per directive. Transformer iterates appliesTo
-    // components, reads each component's #TLSCertTrait, emits one Certificate CR
+    // components, reads each component's #CertificateResource, emits one Certificate CR
     // tagged with opm.opmodel.dev/owner-component per D11 / D13 (08-decisions.md).
 }
 ```
+
+Note the match predicate: `requiredResources` (was `requiredTraits` before 011's D15 clarification). `#PolicyTransformer` already supports both; see [06-policy-transformer.md](06-policy-transformer.md).
 
 Provider registration:
 
@@ -204,20 +222,20 @@ metadata: {
 }
 
 #components: {
-    "web": #StatelessWorkload & tls.#TLSCertTrait & {
+    "web": #StatelessWorkload & tls.#Certificate & {
         spec: {
             container: { image: "strix-web:latest" }
-            tlsCert: {
+            certificate: {
                 hostnames: ["strix.\(#ctx.runtime.route.domain)"]
                 usages:    ["server auth"]
             }
         }
     }
 
-    "api": #StatelessWorkload & tls.#TLSCertTrait & {
+    "api": #StatelessWorkload & tls.#Certificate & {
         spec: {
             container: { image: "strix-api:latest" }
-            tlsCert: {
+            certificate: {
                 hostnames:    ["api.strix.\(#ctx.runtime.route.domain)"]
                 usages:       ["server auth"]
                 keyAlgorithm: { type: "ECDSA", size: 256 }   // override
@@ -227,7 +245,7 @@ metadata: {
 
     "db": #StatefulWorkload & {
         spec: container: { image: "postgres:16" }
-        // no TLS trait — db is internal only
+        // no certificate resource — db is internal only
     }
 }
 
@@ -250,6 +268,8 @@ metadata: {
     }
 }
 ```
+
+Authoring shape: `#StatelessWorkload & tls.#Certificate & { ... }` — the workload mixin + the certificate mixin, both component-wrappers, intersected. Spec fields from each mixin land in the component's `spec` via CUE unification.
 
 ### Platform Side (platform-team authored)
 
@@ -331,7 +351,7 @@ This is the shape that motivated the refinement in [D11](08-decisions.md) (optio
 
 ## Version Pairing
 
-Both `#TLSCertTrait` and `#CertificatePolicy` live in `opmodel.dev/opm/v1alpha1/operations/tls@v1`. The K8up-style safety net applies: the cert-manager transformer pins both FQNs in its match predicate, so a misaligned import fails at render time rather than producing inconsistent output.
+Both `#CertificateResource` and `#CertificatePolicy` live in `opmodel.dev/opm/v1alpha1/operations/tls@v1`. The K8up-style safety net applies: the cert-manager transformer pins both FQNs in its match predicate, so a misaligned import fails at render time rather than producing inconsistent output.
 
 No explicit `pairsWith` field. Same convention as backup. See [D8](08-decisions.md) and [OQ-2](09-open-questions.md).
 

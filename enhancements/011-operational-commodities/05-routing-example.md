@@ -2,6 +2,10 @@
 
 This document walks Gateway API routing (HTTPRoute and siblings) through the same pattern as backup and TLS. It is the third data point for OQ-5 and closes the question of whether the pattern generalizes across commodities with different output cardinalities and inter-entity coupling.
 
+## Primitive Choice: `#Resource` for All Five Route Kinds
+
+Per [D15](08-decisions.md), Gateway API routes are modeled as `#Resource` (not `#Trait`). Each `HTTPRoute` / `TLSRoute` / `GRPCRoute` / `TCPRoute` / `UDPRoute` is a first-class Kubernetes entity reconciled by the Gateway controller, with its own status and lifecycle, referencing the component's Service via `backendRefs` rather than modifying the workload's own resources. Same reasoning as `#CertificateResource` in [04-tls-example.md](04-tls-example.md).
+
 ## Scope
 
 Five route kinds in Gateway API:
@@ -14,100 +18,109 @@ Five route kinds in Gateway API:
 | TCP | `TCPRoute` | Port-based only (no content routing) |
 | UDP | `UDPRoute` | Port-based only |
 
-All five share the same Trait + Directive + PolicyTransformer skeleton. This document shows HTTPRoute in full and summarizes the siblings.
+All five share the same `#Resource` + `#Directive` + `#PolicyTransformer` skeleton. This document shows HTTPRoute in full and summarizes the siblings.
 
 ## Layer Split
 
 | Layer | Belongs to | Examples |
 | --- | --- | --- |
-| Component-local | `#HTTPRouteTrait` | paths/methods/headers to match, backend port on *me*, per-rule filters, per-rule timeouts, per-component hostname override (rare) |
+| Component-local | `#HTTPRouteResource` | paths/methods/headers to match, backend port on *me*, per-rule filters, per-rule timeouts, per-component hostname override (rare) |
 | Module-level | `#HTTPRoutePolicy` (Directive) | Gateway ref, listener section, hostnames, default filters, default timeouts |
 | Platform-level | `#Platform.#ctx.platform.routing.gateways` | available Gateways with their listeners (port, protocol) |
 
-**Hostname lives at the policy, not the trait.** Hostname is a module-level contract — "this module serves `strix.example.com`." Components declare only the paths they handle. A per-component hostname override remains possible as an escape hatch on the trait.
+**Hostname lives at the policy, not the resource.** Hostname is a module-level contract — "this module serves `strix.example.com`." Components declare only the paths they handle. A per-component hostname override remains possible as an escape hatch on the resource spec.
 
 ## File Layout
 
-A single CUE package exports all five trait/directive pairs plus shared helpers:
+A single CUE package exports all five resource/directive pairs plus shared helpers:
 
 ```text
 catalog/opm/v1alpha1/operations/routing/
-├── common.cue               — shared #HTTPRouteFilter, #HeaderMatch, etc.
-├── http_route_trait.cue     — #HTTPRouteTrait
-├── http_route_directive.cue — #HTTPRoutePolicy
-├── tls_route_trait.cue      — #TLSRouteTrait
-├── tls_route_directive.cue  — #TLSRoutePolicy
-├── grpc_route_trait.cue     — #GRPCRouteTrait
-├── grpc_route_directive.cue — #GRPCRoutePolicy
-├── tcp_route_trait.cue      — #TCPRouteTrait
-├── tcp_route_directive.cue  — #TCPRoutePolicy
-├── udp_route_trait.cue      — #UDPRouteTrait
-└── udp_route_directive.cue  — #UDPRoutePolicy
+├── common.cue                  — shared #HTTPRouteFilter, #HeaderMatch, etc.
+├── http_route_resource.cue     — #HTTPRouteResource + #HTTPRoute (component wrapper)
+├── http_route_directive.cue    — #HTTPRoutePolicy
+├── tls_route_resource.cue      — #TLSRouteResource + #TLSRoute
+├── tls_route_directive.cue     — #TLSRoutePolicy
+├── grpc_route_resource.cue     — #GRPCRouteResource + #GRPCRoute
+├── grpc_route_directive.cue    — #GRPCRoutePolicy
+├── tcp_route_resource.cue      — #TCPRouteResource + #TCPRoute
+├── tcp_route_directive.cue     — #TCPRoutePolicy
+├── udp_route_resource.cue      — #UDPRouteResource + #UDPRoute
+└── udp_route_directive.cue     — #UDPRoutePolicy
 ```
 
 Import path: `opmodel.dev/opm/v1alpha1/operations/routing@v1`. Single import fixes versions for all five.
 
-## `#HTTPRouteTrait`
+## `#HTTPRouteResource`
 
 ```cue
-// catalog/opm/v1alpha1/operations/routing/http_route_trait.cue
+// catalog/opm/v1alpha1/operations/routing/http_route_resource.cue
 package routing
 
 import (
     prim "opmodel.dev/core/v1alpha1/primitives@v1"
+    component "opmodel.dev/core/v1alpha1/component@v1"
 )
 
-#HTTPRouteTrait: prim.#Trait & {
+#HTTPRouteResource: prim.#Resource & {
     metadata: {
         modulePath:  "opmodel.dev/opm/v1alpha1/operations/routing"
         version:     "v1"
         name:        "http-route"
-        description: "Declares HTTP routing rules this component handles"
+        description: "An HTTPRoute entity that attaches a component's Service to a Gateway under matching HTTP rules"
         labels: {
-            "trait.opmodel.dev/category": "networking"
+            "resource.opmodel.dev/category": "networking"
         }
     }
 
-    #spec: httpRoute: {
-        rules!: [...close({
-            matches?: [...close({
-                path?: close({
-                    type:  *"PathPrefix" | "Exact" | "RegularExpression"
-                    value: string
+    spec: close({
+        httpRoute: {
+            rules!: [...close({
+                matches?: [...close({
+                    path?: close({
+                        type:  *"PathPrefix" | "Exact" | "RegularExpression"
+                        value: string
+                    })
+                    method?: "GET" | "HEAD" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "CONNECT" | "TRACE"
+                    headers?: [...close({
+                        type:  *"Exact" | "RegularExpression"
+                        name:  string
+                        value: string
+                    })]
+                    queryParams?: [...close({
+                        type:  *"Exact" | "RegularExpression"
+                        name:  string
+                        value: string
+                    })]
+                })]
+
+                // Port on this component's Service to receive matched traffic.
+                backendPort!: int & >=1 & <=65535
+
+                // Optional weight — meaningful only if multiple components share a match.
+                weight?: int & >=0 & <=1000000
+
+                // Per-rule filters. Prepended to policy-level defaultFilters at render time.
+                filters?: [...#HTTPRouteFilter]
+
+                // Per-rule timeouts — override policy defaults.
+                timeouts?: close({
+                    request?:        string
+                    backendRequest?: string
                 })
-                method?: "GET" | "HEAD" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "CONNECT" | "TRACE"
-                headers?: [...close({
-                    type:  *"Exact" | "RegularExpression"
-                    name:  string
-                    value: string
-                })]
-                queryParams?: [...close({
-                    type:  *"Exact" | "RegularExpression"
-                    name:  string
-                    value: string
-                })]
-            })]
+            })] & list.MinItems(1)
 
-            // Port on this component's Service to receive matched traffic.
-            backendPort!: int & >=1 & <=65535
+            // Escape hatch — component-local hostname override. Unified with policy.hostnames
+            // at render time. Rare; most modules set hostnames only on the policy.
+            hostnames?: [...string]
+        }
+    })
+}
 
-            // Optional weight — meaningful only if multiple components share a match.
-            weight?: int & >=0 & <=1000000
-
-            // Per-rule filters. Prepended to policy-level defaultFilters at render time.
-            filters?: [...#HTTPRouteFilter]
-
-            // Per-rule timeouts — override policy defaults.
-            timeouts?: close({
-                request?:        string
-                backendRequest?: string
-            })
-        })] & list.MinItems(1)
-
-        // Escape hatch — component-local hostname override. Unified with policy.hostnames
-        // at render time. Rare; most modules set hostnames only on the policy.
-        hostnames?: [...string]
-    }
+// Component wrapper for ergonomic composition — matches the convention used
+// by #Certificate and other resource wrappers in the catalog.
+#HTTPRoute: component.#Component & {
+    #resources: {(#HTTPRouteResource.metadata.fqn): #HTTPRouteResource}
 }
 ```
 
@@ -229,11 +242,11 @@ import (
         modulePath:  "opmodel.dev/gateway_api/v1alpha1/transformers"
         version:     "v1"
         name:        "http-route-transformer"
-        description: "Renders a #HTTPRoutePolicy + components' #HTTPRouteTrait into Gateway API HTTPRoute CRs"
+        description: "Renders a #HTTPRoutePolicy + components' #HTTPRouteResource into Gateway API HTTPRoute CRs"
     }
 
     requiredDirectives: [routing.#HTTPRoutePolicy.metadata.fqn]
-    requiredTraits:     [routing.#HTTPRouteTrait.metadata.fqn]
+    requiredResources:  [routing.#HTTPRouteResource.metadata.fqn]
 
     readsContext: ["routing.gateways"]
 
@@ -260,7 +273,7 @@ Provider registration:
 
 ```cue
 #components: {
-    "web": #StatelessWorkload & routing.#HTTPRouteTrait & {
+    "web": #StatelessWorkload & routing.#HTTPRoute & {
         spec: {
             container: { image: "strix-web:latest", ports: [{name: "http", containerPort: 3000}] }
             httpRoute: rules: [{
@@ -270,7 +283,7 @@ Provider registration:
         }
     }
 
-    "api": #StatelessWorkload & routing.#HTTPRouteTrait & {
+    "api": #StatelessWorkload & routing.#HTTPRoute & {
         spec: {
             container: { image: "strix-api:latest", ports: [{name: "http", containerPort: 8080}] }
             httpRoute: rules: [{
@@ -304,6 +317,8 @@ Provider registration:
     }
 }
 ```
+
+Authoring shape: `#StatelessWorkload & routing.#HTTPRoute & { ... }` — the workload mixin + the HTTPRoute mixin, both component-wrappers, intersected. The `httpRoute` field in spec comes from `#HTTPRouteResource.spec.httpRoute`.
 
 Platform side:
 
@@ -390,28 +405,28 @@ spec:
 
 ## Siblings — TLSRoute, GRPCRoute, TCPRoute, UDPRoute
 
-Each protocol follows the same trait + directive + transformer pattern. Summary of specializations:
+Each protocol follows the same resource + directive + transformer pattern. Summary of specializations:
 
-### `#TLSRouteTrait` / `#TLSRoutePolicy`
+### `#TLSRouteResource` / `#TLSRoute` + `#TLSRoutePolicy`
 
-- Trait carries only `backendPort` + optional `weight`. No filters (TLS passthrough has no visibility into content).
+- Resource carries only `backendPort` + optional `weight`. No filters (TLS passthrough has no visibility into content).
 - Directive carries `gateway`, `listener`, `hostnames` (SNI list), and optionally `mode: "Passthrough" | "Terminate"`. For Terminate mode the Gateway terminates TLS and the route handles cleartext — effectively a TCP route after termination.
 - Transformer emits one `TLSRoute` CR per covered component.
 
-### `#GRPCRouteTrait` / `#GRPCRoutePolicy`
+### `#GRPCRouteResource` / `#GRPCRoute` + `#GRPCRoutePolicy`
 
-- Trait `rules[]` carries `matches` of shape `{method: {service: string, method: string}}` and `headers` (gRPC metadata).
+- Resource `spec.grpcRoute.rules[]` carries `matches` of shape `{method: {service: string, method: string}}` and `headers` (gRPC metadata).
 - Filters are HTTP-ish: header modification, mirroring. No URL rewrite.
 - Directive shape identical to `#HTTPRoutePolicy` except filter types are `#GRPCRouteFilter`.
 - Transformer emits one `GRPCRoute` CR per covered component.
 
-### `#TCPRouteTrait` / `#TCPRoutePolicy`
+### `#TCPRouteResource` / `#TCPRoute` + `#TCPRoutePolicy`
 
-- Trait carries only `backendPort` + optional `weight`. No matches (routing is entirely at the listener's `port`).
+- Resource carries only `backendPort` + optional `weight`. No matches (routing is entirely at the listener's `port`).
 - Directive carries `gateway` + `listener`. Hostnames field is absent — TCP routing is connection-level, not content-level.
 - Transformer emits one `TCPRoute` CR per covered component.
 
-### `#UDPRouteTrait` / `#UDPRoutePolicy`
+### `#UDPRouteResource` / `#UDPRoute` + `#UDPRoutePolicy`
 
 - Same shape as TCP. Exists because Gateway API distinguishes TCP and UDP at the CR type level.
 
@@ -431,14 +446,14 @@ This reinforces the principle that cross-commodity coupling **defaults to decoup
 
 | Aspect | Backup | TLS | Routing | Consistent? |
 | --- | --- | --- | --- | --- |
-| Trait + Directive split | ✓ | ✓ | ✓ | yes |
+| Component primitive + Directive split | `#Trait` (extends data-persistence behavior) | `#Resource` (standalone Certificate entity) | `#Resource` (standalone route entities, one per protocol) | shape yes; primitive choice per [D15](08-decisions.md) |
 | `#PolicyTransformer` scope | ✓ | ✓ | ✓ | yes |
 | Platform-ctx subtree for provider config | `backup.backends` | `tls.issuers` | `routing.gateways` | yes (see [D14](08-decisions.md) for convention) |
 | Output cardinality | 1 per policy | N per policy | N per policy | supported by optional `owner-component` annotation |
 | Version pairing via shared package | ✓ | ✓ | ✓ | yes |
 | Cross-commodity coupling via platform, not output | n/a (standalone) | n/a (standalone) | ✓ (decoupled from TLS) | yes |
 
-Three data points agree. [OQ-5](09-open-questions.md) is closed with this example: the pattern generalizes.
+Three data points agree. Two use `#Resource` (TLS, routing — both declare standalone Kubernetes entities). One uses `#Trait` (backup — extends component behavior). The `#PolicyTransformer` scope accommodates both primitives uniformly via its `requiredResources` and `requiredTraits` match fields. [OQ-5](09-open-questions.md) is closed with this example: the pattern generalizes.
 
 ## What This Example Does Not Address
 
