@@ -128,11 +128,11 @@ Then from the workspace root:
 
 ```bash
 cd ~/Dev/open-platform-model
-task update-deps
+task deps:update
 ```
 
 This refreshes pins across all dependent modules. **Never edit version pins
-manually** — always use `task update-deps`.
+manually** — always use `task deps:update`.
 
 ### 3.2 Replace direct K8up catalog imports
 
@@ -481,7 +481,7 @@ curl -sI http://localhost:8096/health
 
   ```bash
   cd catalog && task publish:core
-  cd ../ && task update-deps
+  cd ../ && task deps:update
   ```
 
 ### "Another restore is in progress"

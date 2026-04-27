@@ -106,7 +106,7 @@ myMigration: db.#DBMigration & {
 
 **Shell scripts alongside modules:** No schema validation, no composition, no reuse across modules. A migration script in one module cannot be adapted for another without copy-paste.
 
-**Helm hooks / K8s Jobs:** Tightly coupled to Kubernetes. OPM aims for runtime agnosticism — operations should be declarable in CUE and executable by any OPM-compatible runtime.
+**Helm hooks / K8s Jobs:** Tightly coupled to a single resource shape. OPM keeps runtime concerns in providers — operations should be declarable in CUE and translated by the active provider's transformers, not hard-pinned to one resource kind.
 
 **Manual kubectl procedures:** The restore procedure documented in the K8up backup work (2026-03-28) is 12+ manual steps. These steps are precisely the kind of sequenced operations that `#Action` should capture as a typed, composable declaration.
 

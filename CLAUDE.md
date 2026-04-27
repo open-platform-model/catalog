@@ -165,7 +165,7 @@ cue vet -d '#DefinitionName' ./... path/to/testdata/example_valid_case.yaml
 - Compose via unification, not copying fields
 - Keep module/resource/trait/blueprint boundaries clear
 - Express intent as schemas+constraints, not procedural validation
-- Preserve runtime agnosticism except in provider-specific transformers
+- Keep runtime details out of resource/trait/blueprint schemas; runtime specifics belong in provider transformers
 
 ### Types and Constraints
 

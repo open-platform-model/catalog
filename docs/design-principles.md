@@ -8,7 +8,7 @@ The Open Platform Model is governed by eight core principles defined in [openspe
 | **II** | [Separation of Concerns](#ii-separation-of-concerns) | Developers own Modules, Platform owns Policies, Consumers own Releases |
 | **III** | [Composability](#iii-composability) | Definitions compose via unification without implicit coupling |
 | **IV** | [Declarative Intent](#iv-declarative-intent) | Express WHAT, not HOW — no imperative scripts |
-| **V** | [Portability by Design](#v-portability-by-design) | Runtime-agnostic definitions work on K8s, Docker, future platforms |
+| **V** | [Portability by Design](#v-portability-by-design) | Runtime-agnostic definitions; runtime concerns isolated in providers |
 | **VI** | [Semantic Versioning](#vi-semantic-versioning) | SemVer 2.0.0 + Conventional Commits for all artifacts |
 | **VII** | [Simplicity & YAGNI](#vii-simplicity--yagni) | Justified complexity only — start simple, compose for power |
 | **VIII** | [Self-Describing Distribution](#viii-self-describing-distribution) | CUE structure carries all dependency, schema, and version info |
@@ -116,21 +116,15 @@ Providers CAN contain imperative logic (if/else, field extraction, transformatio
 
 ## V. Portability by Design
 
-The same Module MUST be deployable to multiple providers (Kubernetes, Docker Compose, future orchestrators) without rewriting. Provider-specific concerns belong in ProviderDefinitions.
+Modules MUST stay declarative and decoupled from any specific runtime. Provider-specific concerns belong in ProviderDefinitions, so any provider that implements the catalog's primitives can render a module without the module being rewritten.
 
 **Runtime-agnostic primitives:**
 
-| OPM Primitive | K8s | Docker Compose | Nomad |
-|---------------|-----|----------------|-------|
-| `#Container` | Deployment | service | task |
-| `#Scaling` | replicas | deploy.replicas | job.count |
-| `#Expose` | Service | ports | service |
-| `#HealthCheck` | liveness/readinessProbe | healthcheck | check |
-| `#Volume` | Volume + PVC | volumes | volume |
+OPM primitives describe intent — workload, scaling, exposure, health, storage — without naming platform-specific resource kinds. Each provider translates these primitives to its own platform resources.
 
-OPM targets **semantic portability** ("same intent, different implementation"), not feature parity. Core primitives work everywhere; advanced features may not have direct equivalents. Providers document their capability matrix.
+OPM targets **semantic portability** ("same intent, different implementation"), not feature parity. Core primitives describe common intent; advanced features may not have direct equivalents in every provider. Providers document the primitives they support and their capability matrix.
 
-**Modules CAN'T contain**: platform-specific resource types (`apiVersion: apps/v1`), platform-specific field names (`livenessProbe` instead of `healthCheck`), or platform-specific config formats. Use portable OPM primitives; providers handle translation.
+**Modules CAN'T contain**: platform-specific resource types (`apiVersion: apps/v1`), platform-specific field names (`livenessProbe` instead of `healthCheck`), or platform-specific config formats. Use OPM primitives; providers handle translation.
 
 **Escape hatch**: `#customResources` for explicitly non-portable, provider-namespaced extensions.
 

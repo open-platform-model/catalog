@@ -345,7 +345,7 @@ A **BundleRelease** is the concrete deployment instance of a Bundle. It binds a 
 
 ### Provider
 
-A **Provider** maps OPM definitions to a specific platform by registering Transformers. It is the bridge between OPM's runtime-agnostic definitions and a concrete platform like Kubernetes, Docker Compose, or a future orchestrator.
+A **Provider** maps OPM definitions to a specific platform by registering Transformers. It is the bridge between OPM's runtime-agnostic definitions and a concrete platform.
 
 A Provider declares its capabilities through its transformer registry. The render pipeline uses `#MatchTransformers` to compute which transformers handle which components, producing a matching plan that drives the rendering phase.
 

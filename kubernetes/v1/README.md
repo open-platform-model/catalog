@@ -16,7 +16,7 @@ resources. It is a **supplementary** path alongside OPM's portable abstractions.
 
 **When NOT to use this module:**
 
-- You want portability across platforms — use the `opm` module instead
+- You want runtime-agnostic definitions that other providers can render — use the `opm` module instead
 - The OPM `opm` module already provides the abstraction you need
 
 ## Contents

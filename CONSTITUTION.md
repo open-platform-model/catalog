@@ -12,7 +12,7 @@ This document is the reader-friendly reference for the principles that shape des
 | **II** | [Separation of Concerns](#ii-separation-of-concerns) | Developers, platform teams, and consumers have distinct ownership boundaries |
 | **III** | [Composability](#iii-composability) | Resources, Traits, and Blueprints compose without implicit coupling |
 | **IV** | [Declarative Intent](#iv-declarative-intent) | Definitions express WHAT, not HOW |
-| **V** | [Portability by Design](#v-portability-by-design) | Definitions stay runtime-agnostic and provider concerns stay in providers |
+| **V** | [Portability by Design](#v-portability-by-design) | Definitions stay declarative; runtime concerns live in providers |
 | **VI** | [Semantic Versioning](#vi-semantic-versioning) | Artifacts use SemVer and commits use Conventional Commits |
 | **VII** | [Simplicity & YAGNI](#vii-simplicity--yagni) | Complexity must be justified; prefer direct, composable solutions |
 | **VIII** | [Self-Describing Distribution](#viii-self-describing-distribution) | CUE structure carries dependency, schema, and compatibility information |
@@ -86,13 +86,13 @@ This keeps modules portable, reviewable, and predictable under evaluation.
 
 ### V. Portability by Design
 
-Definitions MUST be runtime-agnostic. The same Module MUST be deployable to multiple providers, including Kubernetes, Docker Compose, and future orchestrators, without rewriting. Provider-specific concerns belong in ProviderDefinitions.
+Definitions MUST stay declarative and decoupled from runtime details. Provider-specific concerns belong in ProviderDefinitions, so any provider that implements the catalog's primitives can render a module without the module being rewritten.
 
-- Application definitions use portable OPM primitives
+- Application definitions use OPM primitives, not platform-specific resource types
 - Provider implementations translate those primitives to platform-specific output
 - Portability is achieved by keeping platform details out of modules
 
-The goal is semantic portability: preserve the same intent even when the implementation differs by runtime.
+The goal is to keep modules independent of runtime details. Feature parity across providers is not promised — providers document the primitives they support.
 
 ---
 
