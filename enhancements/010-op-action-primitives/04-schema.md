@@ -4,10 +4,10 @@
 
 ### `#Op` — base type
 
-**File:** `v1alpha1/core/primitives/op.cue`
+**File:** `catalog/core/v1alpha2/op.cue`
 
 ```cue
-package primitives
+package v1alpha2
 
 // #Op: Base constraint for atomic operations.
 // Concrete ops extend this with @op("...") and their input schema.
@@ -23,14 +23,13 @@ package primitives
 
 ### `#Action` — full primitive
 
-**File:** `v1alpha1/core/primitives/action.cue`
+**File:** `catalog/core/v1alpha2/action.cue`
 
 ```cue
-package primitives
+package v1alpha2
 
 import (
 	"strings"
-	t "opmodel.dev/core/v1alpha1/types@v1"
 )
 
 // #Action: A composed operation built from Ops and other Actions.
@@ -39,20 +38,20 @@ import (
 // Steps are ordered via $after declarations (explicit DAG).
 #Action: {
 	$type:      "action"
-	apiVersion: "opmodel.dev/core/v1alpha1"
+	apiVersion: "opmodel.dev/core/v1alpha2"
 	kind:       "Action"
 
 	metadata: {
-		modulePath!: t.#ModulePathType
-		version!:    t.#MajorVersionType
-		name!:       t.#NameType
-		#definitionName: (t.#KebabToPascal & {"in": name}).out
+		modulePath!: #ModulePathType
+		version!:    #MajorVersionType
+		name!:       #NameType
+		#definitionName: (#KebabToPascal & {"in": name}).out
 
-		fqn: t.#FQNType & "\(modulePath)/\(name)@\(version)"
+		fqn: #FQNType & "\(modulePath)/\(name)@\(version)"
 
 		description?: string
-		labels?:      t.#LabelsAnnotationsType
-		annotations?: t.#LabelsAnnotationsType
+		labels?:      #LabelsAnnotationsType
+		annotations?: #LabelsAnnotationsType
 	}
 
 	#steps: #StepMap
@@ -72,7 +71,7 @@ import (
 
 ## Well-Known Ops
 
-**Package:** `opmodel.dev/opm/v1alpha1/ops`
+**Package:** `opmodel.dev/opm/v1alpha2/ops`
 
 These are the initial set of Ops shipped with OPM. Published as a CUE module for import by Action authors.
 
@@ -81,7 +80,7 @@ These are the initial set of Ops shipped with OPM. Published as a CUE module for
 ```cue
 package ops
 
-import prim "opmodel.dev/core/v1alpha1/primitives@v1"
+import prim "opmodel.dev/core/v1alpha2"
 
 #Exec: prim.#Op & {
 	@op("exec")
@@ -102,7 +101,7 @@ import prim "opmodel.dev/core/v1alpha1/primitives@v1"
 ```cue
 package ops
 
-import prim "opmodel.dev/core/v1alpha1/primitives@v1"
+import prim "opmodel.dev/core/v1alpha2"
 
 #HttpGet: prim.#Op & {
 	@op("http.get")
@@ -122,7 +121,7 @@ import prim "opmodel.dev/core/v1alpha1/primitives@v1"
 ```cue
 package ops
 
-import prim "opmodel.dev/core/v1alpha1/primitives@v1"
+import prim "opmodel.dev/core/v1alpha2"
 
 #HttpPost: prim.#Op & {
 	@op("http.post")
@@ -143,7 +142,7 @@ import prim "opmodel.dev/core/v1alpha1/primitives@v1"
 ```cue
 package ops
 
-import prim "opmodel.dev/core/v1alpha1/primitives@v1"
+import prim "opmodel.dev/core/v1alpha2"
 
 #WaitFor: prim.#Op & {
 	@op("wait")
@@ -162,7 +161,7 @@ import prim "opmodel.dev/core/v1alpha1/primitives@v1"
 ```cue
 package ops
 
-import prim "opmodel.dev/core/v1alpha1/primitives@v1"
+import prim "opmodel.dev/core/v1alpha2"
 
 #CueEval: prim.#Op & {
 	@op("cue.eval")
@@ -184,13 +183,13 @@ import prim "opmodel.dev/core/v1alpha1/primitives@v1"
 package database
 
 import (
-	prim "opmodel.dev/core/v1alpha1/primitives@v1"
-	ops "opmodel.dev/opm/v1alpha1/ops@v1"
+	prim "opmodel.dev/core/v1alpha2"
+	ops "opmodel.dev/opm/v1alpha2/ops"
 )
 
 #DBMigration: prim.#Action & {
 	metadata: {
-		modulePath:  "opmodel.dev/opm/v1alpha1/actions/database"
+		modulePath:  "opmodel.dev/opm/v1alpha2/actions/database"
 		version:     "v1"
 		name:        "db-migration"
 		description: "Runs database migration with pre-check and post-verify"
@@ -219,7 +218,7 @@ import (
 ### Module author fills in
 
 ```cue
-import db "opmodel.dev/opm/v1alpha1/actions/database@v1"
+import db "opmodel.dev/opm/v1alpha2/actions/database"
 
 myMigration: db.#DBMigration & {
 	#steps: {

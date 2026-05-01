@@ -79,14 +79,14 @@ Everything unresolved as of the first brainstorm. Each item carries the current 
 
 ## OQ-6 — Does the renamed-or-replaced primitive break existing code?
 
-**Question.** `#PolicyRule` is named in the current codebase (`core/v1alpha1/primitives/policy_rule.cue`, `core/v1alpha1/policy/policy.cue`, `core/v1alpha1/INDEX.md`). A rename to `#Rule` is mechanical; replacing it with a new shape is not.
+**Question.** `#PolicyRule` is named in the current codebase (`core/v1alpha2/policy_rule.cue`, `core/v1alpha2/policy.cue`, `core/v1alpha2/INDEX.md`). A rename to `#Rule` is mechanical; replacing it with a new shape is not.
 
 **Current disposition.** Not a blocker for the design exploration, but the convergence doc must include a migration plan.
 
 **What would move the needle.**
 
-- Inventory of all current `#PolicyRule` usage in the catalog and `opm_experiments`. The `opm_experiments/v1alpha1/directives/k8up_backup.cue` uses `#Directive`; no actual `#PolicyRule` uses found during initial search.
-- Decide whether the `#PolicyRuleSchema` RBAC schema (at `catalog/opm/v1alpha1/schemas/security.cue`) should be renamed in passing to avoid continued confusion with the primitive. It is a separate, unrelated thing.
+- Inventory of all current `#PolicyRule` usage in the catalog and `opm_experiments`. The `opm_experiments/v1alpha2/directives/k8up_backup.cue` uses `#Directive`; no actual `#PolicyRule` uses found during initial search.
+- Decide whether the `#PolicyRuleSchema` RBAC schema (at `catalog/opm/v1alpha2/schemas/security.cue`) should be renamed in passing to avoid continued confusion with the primitive. It is a separate, unrelated thing.
 
 ---
 

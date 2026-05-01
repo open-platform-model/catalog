@@ -111,7 +111,7 @@ Refinements crystallized during validation:
 
 **Triggers for revisit.**
 
-- CRD-lifecycle work lands and introduces module-level `#apis` declarations. At that point the K8up module will declare its CRDs as `#apis`, and the `#BackupScheduleTransformer` can reference API FQNs for cross-validation (does the transformer write to a kind that this platform actually has registered?).
+- CRD-lifecycle work lands and introduces module-level capability declarations via `#defines` (see enhancement 015). At that point the K8up module will declare its CRDs in `#components` (existing `#CRDsResource`) and publish any new Claim types it introduces under `#defines.claims`; the `#BackupScheduleTransformer` can reference Claim FQNs for cross-validation (does the transformer write to a kind that this platform actually has registered?).
 - 011 proposes any module-level field that overlaps with what CRD-lifecycle research reserves.
 
 **Action.** Cross-link once CRD-lifecycle lands. No structural changes expected to 011 primitives.

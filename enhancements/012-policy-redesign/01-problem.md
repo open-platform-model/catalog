@@ -10,7 +10,7 @@ Previous iterations of OPM also had `#Scope`, whose purpose was specifically to 
 
 ## Current State
 
-`#Policy` lives at `catalog/core/v1alpha1/policy/policy.cue` and carries:
+`#Policy` lives at `catalog/core/v1alpha2/policy.cue` and carries:
 
 - `appliesTo` — label match or explicit component references.
 - `#rules: [fqn]: #PolicyRule` — governance rules (what MUST be true).

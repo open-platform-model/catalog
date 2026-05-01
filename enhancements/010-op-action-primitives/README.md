@@ -36,5 +36,5 @@ Together, `#Op` and `#Action` complete the operational side of OPM's type system
 | `catalog/docs/core/constructs.md` | Lifecycle and Workflow constructs that consume Actions |
 | `catalog/enhancements/006-claim-primitive/` | `#Claim` primitive — parallel composition model for platform needs |
 | `catalog/enhancements/006-claim-primitive/04-operational-claims.md` | Operational claims (backup/restore) that Actions would execute |
-| `catalog/core/v1alpha1/component/component.cue` | `#Component` — composition pattern that `#Action` adapts for ordered execution |
-| `catalog/core/v1alpha1/primitives/` | Existing primitive definitions — `#Op` base type would live here |
+| `catalog/core/v1alpha2/component.cue` | `#Component` — composition pattern that `#Action` adapts for ordered execution |
+| `catalog/core/v1alpha2/` | Existing primitive definitions (flat package) — `#Op` base type would live here |

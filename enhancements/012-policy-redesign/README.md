@@ -38,9 +38,9 @@ This enhancement is an exploration, not a landed design. It catches up the recor
 
 | Document | Purpose |
 | -------- | ------- |
-| `catalog/enhancements/011-operational-commodities/` | Prior enhancement — introduced `#Directive` + `#PolicyTransformer` for the verb flavor; does not address the noun flavor |
-| `catalog/core/v1alpha1/policy/policy.cue` | Current `#Policy` construct — carries `#rules` + `#directives` |
-| `catalog/core/v1alpha1/primitives/policy_rule.cue` | Current `#PolicyRule` primitive (governance; half-baked enforcement) |
-| `catalog/core/v1alpha1/primitives/directive.cue` | Current `#Directive` primitive (operational orchestration) |
+| `catalog/enhancements/archive/011-operational-commodities/` | Archived — introduced `#Directive` + `#PolicyTransformer` for the verb flavor; does not address the noun flavor |
+| `catalog/core/v1alpha2/policy.cue` | `#Policy` construct — carries `#rules` + `#directives` (target file under v1alpha2 rewrite) |
+| `catalog/core/v1alpha2/policy_rule.cue` | `#PolicyRule` primitive (governance; half-baked enforcement) — target file under v1alpha2 |
+| `catalog/core/v1alpha2/directive.cue` | `#Directive` primitive (operational orchestration) — target file under v1alpha2 |
 | `catalog/enhancements/006-claim-primitive/` (archived/draft) | Earlier attempt at a component-level primitive + `#Rule` + `#Orchestration` split |
-| `catalog/enhancements/008-platform-construct/` | `#Platform.#ctx.platform` — where some shared nouns already live for commodities |
+| `catalog/enhancements/archive/008-platform-construct/` | Archived — `#Platform.#ctx.platform` open-struct location for shared nouns (the `#ctx` design itself is inherited unchanged into 014) |

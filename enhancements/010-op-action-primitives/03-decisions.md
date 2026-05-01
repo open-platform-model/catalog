@@ -96,7 +96,7 @@ Decision log for all architectural and design choices made during this enhanceme
 
 **Rationale:** Actions parallel Blueprints — both are composed units that module authors publish and others import. Blueprints have full primitive metadata; Actions should too.
 
-**Source:** Design discussion 2026-04-11. Follows OPM primitive conventions established in `catalog/core/v1alpha1/primitives/`.
+**Source:** Design discussion 2026-04-11. Follows OPM primitive conventions established in `catalog/core/v1alpha2/`.
 
 ---
 

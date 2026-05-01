@@ -32,14 +32,14 @@ One primitive per flavor. Clean ontology.
 Module author lists members on the policy. Scope is a field inside the policy.
 
 ```cue
-// catalog/opm/v1alpha1/network/shared_network.cue
+// catalog/opm/v1alpha2/network/shared_network.cue
 package network
 
-import prim "opmodel.dev/core/v1alpha1/primitives@v1"
+import prim "opmodel.dev/core/v1alpha2"
 
 #SharedNetworkScope: prim.#Scope & {
     metadata: {
-        modulePath: "opmodel.dev/opm/v1alpha1/network"
+        modulePath: "opmodel.dev/opm/v1alpha2/network"
         version:    "v1"
         name:       "shared-network"
         description: "A shared intra-module network boundary that components partake in"
@@ -55,9 +55,9 @@ import prim "opmodel.dev/core/v1alpha1/primitives@v1"
 ```cue
 // module author
 import (
-    net  "opmodel.dev/opm/v1alpha1/network@v1"
-    sec  "opmodel.dev/opm/v1alpha1/security@v1"
-    policy "opmodel.dev/core/v1alpha1/policy@v1"
+    net  "opmodel.dev/opm/v1alpha2/network"
+    sec  "opmodel.dev/opm/v1alpha2/security"
+    policy "opmodel.dev/core/v1alpha2"
 )
 
 #components: {
@@ -95,7 +95,7 @@ import (
 Components opt in via a member-mixin wrapper. The policy's `appliesTo` is derived from membership.
 
 ```cue
-// catalog/opm/v1alpha1/network/member.cue
+// catalog/opm/v1alpha2/network/member.cue
 #Member: {
     // mixin metadata that tells the matcher this component joins a named scope
     #membership: network: string   // references a #SharedNetworkScope instance
@@ -135,7 +135,7 @@ metadata:
   namespace: media
   annotations:
     opm.opmodel.dev/owner-policy: app-net
-    opm.opmodel.dev/owner-scope:  opmodel.dev/opm/v1alpha1/network/shared-network@v1
+    opm.opmodel.dev/owner-scope:  opmodel.dev/opm/v1alpha2/network/shared-network@v1
 spec:
   podSelector:
     matchExpressions:
@@ -167,10 +167,10 @@ Cross-component *things* are resources — lifted one scope up from component-lo
 The noun lives at module scope, authored once. Components reference it by name. Lifecycle tied to the module, independent of any policy.
 
 ```cue
-// catalog/opm/v1alpha1/network/shared_network.cue
+// catalog/opm/v1alpha2/network/shared_network.cue
 #SharedNetworkResource: prim.#Resource & {
     metadata: {
-        modulePath: "opmodel.dev/opm/v1alpha1/network"
+        modulePath: "opmodel.dev/opm/v1alpha2/network"
         version:    "v1"
         name:       "shared-network"
     }
@@ -240,10 +240,10 @@ Components are nodes. Relations are typed edges and hyperedges with a payload. S
 ### Variant D.1 — Symmetric hyperedge (Scope-flavored)
 
 ```cue
-// catalog/opm/v1alpha1/relations/network.cue
+// catalog/opm/v1alpha2/relations/network.cue
 #SharedNetwork: prim.#Relation & {
     metadata: {
-        modulePath: "opmodel.dev/opm/v1alpha1/relations"
+        modulePath: "opmodel.dev/opm/v1alpha2/relations"
         version:    "v1"
         name:       "shared-network"
     }
@@ -268,7 +268,7 @@ Components are nodes. Relations are typed edges and hyperedges with a payload. S
 ```cue
 #LogFlow: prim.#Relation & {
     metadata: {
-        modulePath: "opmodel.dev/opm/v1alpha1/relations"
+        modulePath: "opmodel.dev/opm/v1alpha2/relations"
         version:    "v1"
         name:       "log-flow"
     }

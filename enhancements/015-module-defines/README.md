@@ -1,0 +1,67 @@
+# Design Package: `#Module` Flat Shape with `#Claim` Primitive and `#defines` Channel
+
+| Field       | Value            |
+| ----------- | ---------------- |
+| **Status**  | Draft            |
+| **Created** | 2026-04-28       |
+| **Authors** | OPM Contributors |
+
+## Summary
+
+Restructures `#Module` into a flat, bounded set of eight fields and introduces the `#Claim` primitive plus a `#defines` publication channel. Together these provide the demand and ecosystem-publication surfaces for OPM's commodity and specialty service ecosystem. A Module ships type definitions (`resources`, `traits`, `claims`) and rendering extensions (`transformers`) through `#defines`, alongside its instance-level slot for needs (`#claims`). `#Blueprint` is intentionally not a `#defines` sub-kind — Blueprints are CUE-import sugar with no platform-level consumer (DEF-D6).
+
+`#Module` keeps a small nucleus (`metadata`, `#config`, `debugValues`, `#components`), two inward slots (`#lifecycles`, `#workflows`), one outward instance slot (`#claims`), and one outward publication slot (`#defines`). `#Action` is removed from the top level since it is consumed by Lifecycle and Workflow internally. `#policies` is removed — `#Policy`, `#PolicyRule`, and `#Directive` are deferred to the policy redesign (enhancement 012). `#apis` is removed — capability fulfilment now flows through transformer `requiredClaims`. There is no `#requires` slot — platform compatibility is detected by the matcher (014 D8).
+
+`#Claim` is a primitive that defines the shape of a need (`#spec`) and the resolution channel that flows back from the fulfilling transformer (`#status`). The same primitive serves as the type definition (when authored in a catalog or vendor package), the request (when used inside `#claims`), and the published vocabulary entry (when listed in `#defines.claims`) via CUE unification. `#Claim` carries `apiVersion` and `path` metadata for traceability across module boundaries. There is no `type` string field — identity is structural through CUE references plus the metadata FQN. `#status` is the cross-runtime portability surface — same module, different fulfillers, target-appropriate resolution data.
+
+Capability fulfilment is registered by transformers, not by a wrapper primitive. Two transformer kinds (`#ComponentTransformer` for component-level Claims, `#ModuleTransformer` for module-level Claims) carry a `requiredClaims` field declaring which Claim FQNs they fulfil. The platform's render pipeline matches consumer `#claims` requests to fulfilling transformers via that field, then injects the transformer's `#statusWrites` back into the Claim's `#status` for downstream consumption. There is no separate `#Api` primitive — APIs in OPM are expressed either as a set of `#Resource`/`#Trait` definitions (consumed via component composition) or as a `#Claim` definition (resolved at deploy time by a fulfilling transformer). Both forms are shipped via `#defines`.
+
+`#defines` is the platform-facing publication channel. Map keys are FQNs and are bound to the value's `metadata.fqn` by CUE unification (DEF-D2). Consumer Modules still import CUE packages directly to reference definitions; `#defines` is the discovery surface, not the consumption surface. The OPM core catalog (`opmodel.dev/opm/v1alpha2`) becomes a single `#Module` whose `#defines` aggregates every primitive the catalog ships.
+
+This enhancement targets `catalog/core/v1alpha2/` and `catalog/opm/v1alpha2/`. The existing `v1alpha1` tree is frozen; nothing in this enhancement modifies it.
+
+CRDs remain part of `#components` via the existing `#CRDsResource` pattern — operators ship CRDs through their `#components` slot exactly as they do today.
+
+## Documents
+
+The enhancement is split into high-level overview docs (`01`–`03`), four topical narrative files (`04`–`07`), a cross-cutting examples file (`08`), litmus updates (`09`), and the central decision/question logs (`10`–`11`).
+
+1. [01-problem.md](01-problem.md) — Module field-bloat risk; Resource/Claim litmus overlap; missing publication channel for ecosystem participants
+2. [02-design.md](02-design.md) — High-level overview pointing at topical narratives
+3. [03-schema.md](03-schema.md) — CUE definitions for `#Module`, `#Claim`, two transformer primitives, plus field documentation tables
+4. [04-module-shape.md](04-module-shape.md) — The eight-slot flat `#Module` shape: rationale, what was removed, why no `#requires`
+5. [05-defines-channel.md](05-defines-channel.md) — `#defines` publication channel: shape, FQN binding, transformer publication, what's excluded
+6. [06-claim-primitive.md](06-claim-primitive.md) — `#Claim` primitive: identity, placement, triplet/quartet pattern, `#status` resolution, capability fulfilment, supersession history of `#Api`
+7. [07-transformer-redesign.md](07-transformer-redesign.md) — `#ComponentTransformer` / `#ModuleTransformer` schema, runtime guarantee, matcher pseudocode, dual-scope `requiresComponents` gate, status writeback channel
+8. [08-examples.md](08-examples.md) — Seven worked Modules: app-with-claim, module-level-claim, operator-with-transformer, specialty-vendor, claim-only, OPM-core publication-only, operational-commodity (backup)
+9. [09-litmus-updates.md](09-litmus-updates.md) — Updates to `docs/core/definition-types.md` litmus questions and decision flowchart
+10. [10-decisions.md](10-decisions.md) — All design decisions, grouped by topic (`MS-`, `DEF-`, `CL-`, `TR-` prefixes); `(was D#)` cross-refs to the prior chronological numbering
+11. [11-open-questions.md](11-open-questions.md) — Unresolved items, grouped by topic, with revisit triggers
+
+## Applicability Checklist
+
+- [x] `03-schema.md` — New CUE definitions for `#Claim` and the revised `#Module`
+- [x] `08-examples.md` — Worked examples for App, Operator, Specialty, Claim-only, OPM-core Modules, operational commodity
+- [x] `09-litmus-updates.md` — Documentation updates to `definition-types.md`
+- [x] `11-open-questions.md` — Deferred items and open questions
+- [ ] `NN-pipeline-changes.md` — Go pipeline modifications (deferred until design accepted)
+- [ ] `NN-module-integration.md` — Migration guidance for existing modules
+
+## Cross-References
+
+| Document | Purpose |
+| -------- | ------- |
+| `CONSTITUTION.md` (repo root) | Core design principles governing all changes in this repository |
+| `catalog/core/v1alpha2/module.cue` | `#Module` definition — restructured by this enhancement (no `#policies` slot in v1alpha2) |
+| `catalog/core/v1alpha2/transformer.cue` | `#ComponentTransformer` + `#ModuleTransformer` — two-primitive split (see 07-transformer-redesign.md) |
+| `catalog/core/v1alpha2/resource.cue` | `#Resource` primitive — sibling primitive whose litmus is sharpened here |
+| `catalog/core/v1alpha1/primitives/directive.cue` | `#Directive` primitive (v1alpha1) — pattern followed by `#Claim` (apiVersion + metadata + `#spec`); `#Directive` itself is deferred to policy redesign |
+| `catalog/opm/v1alpha2/resources/extension/crd.cue` | `#CRDsResource` — canonical CRD-shipping path for operator Modules |
+| `catalog/docs/core/definition-types.md` | Litmus test and decision flowchart updated by this enhancement |
+| `catalog/docs/core/primitives.md` | Primitive reference — gains `#Claim` entry |
+| `catalog/enhancements/006-claim-primitive/` | Archived predecessor — initial `#Claim` exploration; informs the demand-side shape |
+| `catalog/enhancements/007-offer-primitive/` | Archived predecessor — earlier supply-side `#Offer` exploration; supply side now expressed via transformer `requiredClaims` rather than a wrapper primitive |
+| `catalog/enhancements/archive/011-operational-commodities/` | Archived — `#Directive` + `#PolicyTransformer` verb-flavor commodity pattern; deferred to the policy redesign (012). Worked examples (backup, TLS, Gateway routing) remain useful reference material; portions are reframed under this enhancement's `#Claim` model in `08-examples.md`. |
+| `catalog/enhancements/012-policy-redesign/` | Concurrent exploration of cross-component noun grammar; this enhancement provides the noun answer at module/component scope |
+| `catalog/enhancements/014-platform-construct/` | Sibling — `#Platform` aggregates `#defines` from registered Modules; the publication channel introduced here is consumed there |
+| `catalog/enhancements/016-module-context/` | Sibling — defines `#ctx` (`#ModuleContext`, `#PlatformContext`, `#EnvironmentContext`, `#ContextBuilder`, `#Environment`). `#Module.#ctx` is typed by 016's `#ModuleContext` and injected at release time by `#ContextBuilder`. |

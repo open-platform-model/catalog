@@ -60,7 +60,7 @@ Consumers:
 
 `#Op` is not a full primitive — it has no metadata, FQN, or apiVersion. It is a schema contract: inputs, a runtime dispatch attribute, and a hidden output shape.
 
-**Location:** `v1alpha1/core/primitives/op.cue`
+**Location:** `catalog/core/v1alpha2/op.cue`
 
 ```cue
 // #Op: Base constraint for atomic operations.
@@ -120,7 +120,7 @@ Every Op declares its output shape as a hidden `#out` field. Hidden because:
 
 ## Well-Known Ops
 
-**Location:** Published as CUE packages under `opmodel.dev/opm/v1alpha1/ops/`
+**Location:** Published as CUE packages under `opmodel.dev/opm/v1alpha2/ops/`
 
 ### `#Exec` — Run a command in a container
 
@@ -206,12 +206,12 @@ Every Op declares its output shape as a hidden `#out` field. Hidden because:
 
 `#Action` is a full primitive with metadata and FQN. It composes Ops (and nested Actions) into ordered execution flows via `#steps`.
 
-**Location:** `v1alpha1/core/primitives/action.cue`
+**Location:** `catalog/core/v1alpha2/action.cue`
 
 ```cue
 #Action: {
     $type:      "action"
-    apiVersion: "opmodel.dev/core/v1alpha1"
+    apiVersion: "opmodel.dev/core/v1alpha2"
     kind:       "Action"
 
     metadata: {
@@ -267,7 +267,7 @@ Steps are named struct fields. Each step is either an `#Op` (atomic) or a nested
 ```cue
 #DBMigration: #Action & {
     metadata: {
-        modulePath:  "opmodel.dev/opm/v1alpha1/actions/database"
+        modulePath:  "opmodel.dev/opm/v1alpha2/actions/database"
         version:     "v1"
         name:        "db-migration"
         description: "Runs database migration with pre-check and post-verify"
@@ -298,7 +298,7 @@ Steps are named struct fields. Each step is either an `#Op` (atomic) or a nested
 ```cue
 #BackupData: #Action & {
     metadata: {
-        modulePath:  "opmodel.dev/opm/v1alpha1/actions/data"
+        modulePath:  "opmodel.dev/opm/v1alpha2/actions/data"
         version:     "v1"
         name:        "backup-data"
         description: "Executes a backup with optional pre-backup hook and verification"
@@ -333,7 +333,7 @@ Steps are named struct fields. Each step is either an `#Op` (atomic) or a nested
 
 ```cue
 import (
-    db "opmodel.dev/opm/v1alpha1/actions/database"
+    db "opmodel.dev/opm/v1alpha2/actions/database"
 )
 
 myMigration: db.#DBMigration & {
