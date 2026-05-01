@@ -42,9 +42,9 @@ This enhancement is intentionally thin. `#Environment`, runtime fill mechanism f
 
 ### Out of scope
 
-- `#Environment` construct (008 — referenced unchanged).
-- `#ctx` / `#PlatformContext` schema (008 — referenced unchanged).
-- `#ContextBuilder` and module integration (008 — referenced unchanged).
+- `#Environment` construct (016 — referenced from there).
+- `#ctx` / `#PlatformContext` schema (016 — referenced from there).
+- `#ContextBuilder` and module integration (016 — referenced from there).
 - Runtime-fill mechanism (Strategy B–style Go injection) — declared in schema, mechanism in follow-up.
 - Self-service catalog runtime API (`opm catalog list`, web UI, etc.).
 - `#PolicyTransformer` registration (deferred — pending policy redesign).

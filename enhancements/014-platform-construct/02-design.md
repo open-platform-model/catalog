@@ -13,8 +13,8 @@
 
 ## Non-Goals
 
-- `#Environment` construct, `#ContextBuilder`, and `#ModuleRelease` integration — defined in 008, used unchanged.
-- `#PlatformContext` / `#ctx` schema — defined in 008, referenced unchanged.
+- `#Environment` construct, `#ContextBuilder`, and `#ModuleRelease` integration — defined in 016, used unchanged.
+- `#PlatformContext` / `#ctx` schema — defined in 016, referenced unchanged.
 - Runtime-fill mechanism for `#registry` — schema declared here; mechanism (Strategy B–style Go injection) deferred to a follow-up enhancement.
 - Self-service catalog runtime API surface (`opm catalog list`, web UI, deploy-time match resolver) — declarative shape only; runtime is the platform's choice (consistent with 015 design).
 - `#PolicyTransformer` registration — deferred until policy redesign converges (`enhancements/012`).
