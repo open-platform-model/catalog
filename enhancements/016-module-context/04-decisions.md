@@ -423,6 +423,70 @@ Most decisions here carry forward verbatim from the archived [008-platform-const
 
 ---
 
+### D33: `#ContextBuilder` cluster-domain resolution uses a conditional struct, not a `*` default disjunction
+
+**Decision:** `#ContextBuilder` resolves the effective cluster domain through a conditional-struct pattern guarded by `_|_` checks, not via a CUE default disjunction. Working form:
+
+```cue
+let _resolved = {
+    domain: string
+    if #environment.#ctx.runtime.cluster != _|_ {
+        domain: #environment.#ctx.runtime.cluster.domain
+    }
+    if #environment.#ctx.runtime.cluster == _|_ {
+        domain: #platform.#ctx.runtime.cluster.domain
+    }
+}
+let _resolvedClusterDomain = _resolved.domain
+```
+
+**Alternatives considered:**
+
+- **`*` default disjunction** (`*#environment.#ctx.runtime.cluster.domain | #platform.#ctx.runtime.cluster.domain`). Rejected: `#EnvironmentContext.runtime.cluster` is `cluster?:` (optional); when the env omits cluster — the common case — referencing `#environment.#ctx.runtime.cluster.domain` raises `cannot reference optional field: cluster` in CUE rather than gracefully falling through to the second disjunct. The disjunction form is what the original 016 schema documented; the experiment surfaced the failure on `cue vet -c -t test` against the layered fixture set.
+- **Push the cluster-domain merge to the `#PlatformContext` / `#EnvironmentContext` schemas instead of the builder** (e.g., make every layer set `cluster.domain` explicitly with platform's value as the default). Rejected: forces every environment author to either restate the platform's cluster.domain or accept a stale default; weakens the layered-override semantics described in D24.
+
+**Rationale:** A conditional-struct guarded by `cluster != _|_` (and the symmetric `== _|_` branch) is the simplest form that respects the optionality of `#EnvironmentContext.runtime.cluster` while still keeping the override semantics from D24. CPU cost is identical to the disjunction form. This pattern generalises to any future optional-layer override field — `route.domain` already follows the same shape (`if #environment.#ctx.runtime.route != _|_ { route: ... }`).
+
+**Source:** Experiment `catalog/experiments/001-module-context/` (Finding 1) on 2026-05-01.
+
+---
+
+### D34: `#ModuleRelease` unifies `#config: values` *before* feeding `#components` to `#ContextBuilder`
+
+**Decision:** `#ModuleRelease` performs the unification in three explicit steps:
+
+1. `let _withConfig = #module & { #config: values }` — unify operator-supplied values into `#config` first.
+2. Feed `_withConfig.#components` (the post-config component map) to `#ContextBuilder`.
+3. Unify `_builderOut.ctx` and `_builderOut.injections` back into `_withConfig` to produce the final `unifiedModule`.
+
+**Alternatives considered:**
+
+- **Read `#module.#components` directly in step 2, leaving config unification for step 3** (the form documented in 016's earlier 03-schema.md / 02-design.md drafts). Rejected: modules that build components dynamically from `#config` — the mc_java_fleet `for _srvName, _c in #config.servers { "server-\(_srvName)": { ... } }` pattern — produce zero components in the bare-`#Module` view, because `#config.servers` is non-concrete until `values` is unified. The builder would emit an empty `#ctx.runtime.components` and the dynamic components would never receive a `#names` injection. Failure mode is silent: tests pass for static-component modules, dynamic modules render with broken self-references. Surfaced by experiment test `t10_dynamic_components_tests.cue`.
+- **Require module authors to enumerate dynamic component keys statically** (i.e., disallow `for ... in #config.<…>` comprehensions inside `#components`). Rejected: dynamic component generation is a load-bearing pattern (mc_java_fleet, multi-tenant reverse proxies, future fleet-style modules); restricting it just to dodge a builder ordering quirk would force authors back to copy-paste boilerplate.
+
+**Rationale:** The three-step ordering matches the data dependency: dynamic components require `#config` to be concrete; `#ctx.runtime.components` requires the full component set; `#names` injections require `_componentNames` to have been computed. Doing config-unification first turns the order into a one-way pipeline with no cycle risk. The cost is one extra `let` binding (`_withConfig`) and one re-bind of `_moduleMetadata` against it; no extra evaluation work.
+
+**Source:** Experiment `catalog/experiments/001-module-context/` (Finding 2) on 2026-05-01.
+
+---
+
+### D35: Authoring-time lexical scope for `#ctx` / `#names` references
+
+**Decision:** Module authors reference `#ctx.runtime.<…>` and `#names.<…>` from inside their component bodies. In normal authoring (a module-as-package, where `#Module` and `#Component` are unified at the package level), CUE's lexical scoping resolves `#ctx` and `#names` against the enclosing definition with no additional declaration required — the scope works exactly as the 016 examples show.
+
+When inlining a `#Module & {...}` or `#Component & {...}` **literal** outside its own package — typically in tests, doc snippets, or single-file examples — the literal must declare the field at its own level (`#ctx: _` on the module literal, `#names: _` on each inlined component) to bring the identifier into scope. The concrete value still arrives via `#ContextBuilder` unification at release time; the declaration is purely a lexical-scope bringer.
+
+**Alternatives considered:**
+
+- **Document inline-literal use as unsupported.** Rejected: tests, examples, and walkthroughs need single-file forms; the experiment itself relies on the inline form for `t08`/`t09`/`t10`.
+- **Pass `#ctx` and `#names` as explicit function-style parameters into the component body.** Rejected: would make the module-as-package authoring path (where `#ctx` resolves package-lexically) less ergonomic for the sake of the inline-literal corner case.
+
+**Rationale:** This is a CUE evaluation rule, not a 016 schema concern — references resolve against the lexical scope where the literal is *written*, not against the type definition the literal is unified with. Calling it out in 02-design.md ("Authoring-time lexical scope for `#ctx` and `#names`") prevents authors who inline a module literal once (in a test or example) from concluding the design is broken. Real catalog modules, which live in their own packages, never need the workaround.
+
+**Source:** Experiment `catalog/experiments/001-module-context/` (Finding 3) on 2026-05-01.
+
+---
+
 ## Open Questions
 
 ### OQ1 — `#TransformerContext` and `#ctx` overlap

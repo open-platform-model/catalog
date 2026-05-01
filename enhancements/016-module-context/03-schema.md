@@ -259,8 +259,22 @@ package v1alpha2
     #environment: #Environment
 
     // Resolve cluster domain: environment override beats platform default.
-    let _clusterDomain = *#environment.#ctx.runtime.cluster.domain |
-                         #platform.#ctx.runtime.cluster.domain
+    // #EnvironmentContext.runtime.cluster is optional, so guard with a
+    // conditional struct rather than a `*` default disjunction. The
+    // disjunction form (`*#env...cluster.domain | #platform...cluster.domain`)
+    // fails when the env omits cluster — CUE reports
+    // `cannot reference optional field: cluster` instead of falling through
+    // to the second disjunct. (See experiments/001-module-context Finding 1.)
+    let _resolved = {
+        domain: string
+        if #environment.#ctx.runtime.cluster != _|_ {
+            domain: #environment.#ctx.runtime.cluster.domain
+        }
+        if #environment.#ctx.runtime.cluster == _|_ {
+            domain: #platform.#ctx.runtime.cluster.domain
+        }
+    }
+    let _resolvedClusterDomain = _resolved.domain
 
     // Computed once, reused by both `ctx.runtime.components` and the
     // per-component `injections.<name>.#names` field below. Single source
@@ -270,7 +284,7 @@ package v1alpha2
             (compName): {
                 _releaseName:   #release.name
                 _namespace:     #release.namespace
-                _clusterDomain: _clusterDomain
+                _clusterDomain: _resolvedClusterDomain
                 _compName:      compName
                 if comp.metadata.resourceName != _|_ {
                     resourceName: comp.metadata.resourceName
@@ -290,7 +304,7 @@ package v1alpha2
             runtime: #RuntimeContext & {
                 release: #release
                 module:  #module
-                cluster: domain: _clusterDomain
+                cluster: domain: _resolvedClusterDomain
 
                 if #environment.#ctx.runtime.route != _|_ {
                     route: #environment.#ctx.runtime.route
@@ -314,6 +328,8 @@ package v1alpha2
 
 ## `#ModuleRelease` integration
 
+`#config: values` must be unified into the module **before** the builder reads `#components`. Modules can build components dynamically from `#config` (mc_java_fleet's `for _srvName, _c in #config.servers { "server-\(_srvName)": ... }`); reading `#module.#components` against the bare `#Module` returns the static comprehension wrapper without those dynamic entries, the builder produces an empty `#ctx.runtime.components`, and the dynamic components never receive a `#names` injection. (See experiments/001-module-context Finding 2.)
+
 ```cue
 // catalog/core/v1alpha2/module_release.cue
 #ModuleRelease: {
@@ -333,8 +349,12 @@ package v1alpha2
     #module: #Module
     values:  _
 
-    let _moduleMetadata = #module.metadata
+    // Step 1 — unify values into #config so dynamic #components materialise
+    // (modules may build components via `for ... in #config.<…>` comprehensions).
+    let _withConfig = #module & { #config: values }
+    let _moduleMetadata = _withConfig.metadata
 
+    // Step 2 — feed the post-config component map to the builder.
     let _builderOut = (#ContextBuilder & {
         #release: {
             name:      metadata.name
@@ -347,13 +367,13 @@ package v1alpha2
             fqn:     _moduleMetadata.fqn
             uuid:    _moduleMetadata.uuid
         }
-        #components:  #module.#components
+        #components:  _withConfig.#components
         #platform:    #env.#platform
         #environment: #env
     }).out
 
-    let unifiedModule = #module & {
-        #config:     values
+    // Step 3 — unify the builder's outputs back into the (config-resolved) module.
+    let unifiedModule = _withConfig & {
         #ctx:        _builderOut.ctx
         #components: _builderOut.injections
     }

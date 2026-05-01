@@ -123,7 +123,7 @@ for _srvName, _c in #config.servers {
 
 ### Where `#ctx` is computed and injected
 
-`#ModuleRelease` invokes `#ContextBuilder` inline via `let` bindings, then unifies the result into the module along with `values`:
+`#ModuleRelease` invokes `#ContextBuilder` inline via `let` bindings, then unifies the result into the module along with `values`. **Order matters**: `#config: values` must be unified into the module *before* the builder reads `#components`, because modules can build components dynamically from `#config` (e.g. mc_java_fleet's `for _srvName, _c in #config.servers { "server-\(_srvName)": ... }`). Reading `#module.#components` against the bare `#Module` returns the static comprehension wrapper without those dynamic entries; the builder would then produce an empty `#ctx.runtime.components` and the dynamic components would never get a `#names` injection. (Validated experimentally — see [`catalog/experiments/001-module-context/`](../../experiments/001-module-context/) Finding 2.)
 
 ```cue
 #ModuleRelease: {
@@ -132,17 +132,22 @@ for _srvName, _c in #config.servers {
     #module: module.#Module
     values:  _
 
-    let _computedCtx = (helpers.#ContextBuilder & {
+    // Step 1 — unify values into #config so dynamic #components materialise.
+    let _withConfig = #module & { #config: values }
+
+    // Step 2 — feed the post-config component map to the builder.
+    let _builderOut = (helpers.#ContextBuilder & {
         #release:     { name: metadata.name, namespace: metadata.namespace, uuid: metadata.uuid }
         #module:      { name: #moduleMetadata.name, version: ..., fqn: ..., uuid: ... }
-        #components:  #module.#components
+        #components:  _withConfig.#components
         #platform:    #env.#platform
         #environment: #env
     }).out
 
-    let unifiedModule = #module & {
-        #config: values
-        #ctx:    _computedCtx
+    // Step 3 — unify the builder's outputs back into the module.
+    let unifiedModule = _withConfig & {
+        #ctx:        _builderOut.ctx
+        #components: _builderOut.injections
     }
 
     components: { for name, comp in unifiedModule.#components { (name): comp } }
@@ -150,6 +155,14 @@ for _srvName, _c in #config.servers {
 ```
 
 By the time `components` are extracted, `#ctx` is fully resolved. The render pipeline iterates components without further context wiring on the CUE side.
+
+### Authoring-time lexical scope for `#ctx` and `#names`
+
+`#ctx` and `#names` are declared on `#Module` and `#Component` respectively. Inside a module's own package files (the normal authoring path), references like `#ctx.runtime.route.domain` and `#names.dns.fqdn` resolve via package-level lexical scope — the field exists on the enclosing definition and is in scope for every component body.
+
+When inlining a `#Module & {...}` (or `#Component & {...}`) **literal** outside its own package — typically in tests, examples, or doc snippets — CUE's lexical scope does *not* reach into the type definition to find `#ctx` / `#names`. The literal must declare the field at its own level (`#ctx: _` on the module literal, `#names: _` on each inlined component) to bring the identifier into scope; the concrete value still arrives via `#ContextBuilder` unification at release time.
+
+This is a CUE evaluation rule, not a schema bug — but it surprises authors who try to inline a module literal once and reuse the snippet. Real catalog modules, which live in their own packages, never need the workaround.
 
 ## How `#ctx` differs from `#config`
 
