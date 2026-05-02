@@ -6,7 +6,7 @@ Decisions referenced live in `10-decisions.md` under the `CL-` prefix; open ques
 
 For the `#Module` slot list overall, see [`04-module-shape.md`](04-module-shape.md).
 For the `#defines` publication channel that surfaces Claim type definitions, see [`05-defines-channel.md`](05-defines-channel.md).
-For the transformers that fulfil Claims, see [`07-transformer-redesign.md`](07-transformer-redesign.md).
+For the transformers that fulfil Claims, see [`07-transformer-redesign.md`](07-transformer-redesign.md) (`#ModuleTransformer` + status writeback) and [014/05-component-transformer-and-matcher.md](../014-platform-construct/05-component-transformer-and-matcher.md) (`#ComponentTransformer` schema + matcher algorithm).
 
 ## Litmus Question
 

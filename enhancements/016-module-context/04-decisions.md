@@ -344,7 +344,7 @@ Most decisions here carry forward verbatim from the archived [008-platform-const
 
 ### D28: `#ctx.platform` extensions are unconstrained even after operational commodities land
 
-**Decision:** Even now that operational commodities (backup, TLS, routing — see [015/08-examples.md](../015-module-defines/08-examples.md) Example 7) populate well-known sub-keys (`backup.backends`, `tls.issuers`, `routing.gateways`), the `#ctx.platform` struct remains an unconstrained open struct. The catalog does not pin these sub-keys as required schema.
+**Decision:** Even now that operational commodities (backup, TLS, routing — see [015/08-examples.md](../015-claims/08-examples.md) Example 7) populate well-known sub-keys (`backup.backends`, `tls.issuers`, `routing.gateways`), the `#ctx.platform` struct remains an unconstrained open struct. The catalog does not pin these sub-keys as required schema.
 
 **Alternatives considered:**
 

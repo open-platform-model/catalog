@@ -28,7 +28,7 @@ Every transformer that emits a Service / Ingress / Route / Certificate independe
 
 ### No place for per-platform extensions
 
-Operational commodities (backup, TLS, routing — see archived [011-operational-commodities](../archive/011-operational-commodities/) and the example in [015/08-examples.md](../015-module-defines/08-examples.md)) need platform-team-supplied configuration: which backup backends are available, which cert-manager issuers exist, which Gateway listeners are configured. Today these facts have to live somewhere the catalog has not modeled: ad-hoc `#config` extensions that every module author has to anticipate, or external configuration files outside CUE entirely.
+Operational commodities (backup, TLS, routing — see archived [011-operational-commodities](../archive/011-operational-commodities/) and the example in [015/08-examples.md](../015-claims/08-examples.md)) need platform-team-supplied configuration: which backup backends are available, which cert-manager issuers exist, which Gateway listeners are configured. Today these facts have to live somewhere the catalog has not modeled: ad-hoc `#config` extensions that every module author has to anticipate, or external configuration files outside CUE entirely.
 
 ## Concrete Example
 

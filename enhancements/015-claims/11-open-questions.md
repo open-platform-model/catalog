@@ -44,21 +44,9 @@ These are platform-implementation questions, not primitive-design questions, but
 
 ## `#Claim` Primitive (CL)
 
-### CL-Q1 — Genuinely open: Component-level vs Module-level `#Claim` resolution semantics (was Q1)
+### CL-Q1 — Component-level vs Module-level `#Claim` resolution semantics *(CLOSED by CL-D17)*
 
-When a Module has both component-level `#claims` (inside a `#Component`) and module-level `#claims` (top-level on `#Module`), what is the resolution order if they reference the same Claim type?
-
-Specifically:
-
-- If a component has `#claims.db` and the module has `#claims.db`, do they merge, override, or conflict?
-- Does the platform treat a module-level Claim as a singleton that all components share, or as an additional independent claim?
-- If two components each have `#claims.db` of the same type, do they share one fulfilment or get two independent fulfilments?
-
-**Revisit trigger:** Before pipeline implementation begins. The matching algorithm must answer this.
-
-**Lean direction:** Module-level Claims are singletons; component-level Claims are per-component instances. Same Claim type at both levels is allowed (a module may need a shared DB *and* each component may have its own cache); naming distinguishes them.
-
-**Update (CL-D15, 2026-05-01):** With `#status` (CL-D15), each Claim instance carries its own resolution data. Module-level `#claims.db` and a component-level `#components.X.#claims.db` are resolved independently — module-level is fulfilled by a `#ModuleTransformer.requiredClaims`, component-level by a `#ComponentTransformer.requiredClaims`. Two instances ⇒ two `#status` values. The lean direction is confirmed; the schema does not need merge / override semantics. What remains open: whether two component-level `#claims.db` (same FQN, different ids, same module) on different components share a fulfilment or get independent ones — the latter is the natural reading of CL-D15, but the matcher must commit to it before the pipeline is built.
+**Status:** CLOSED 2026-05-02 by **CL-D17** (each Claim instance is fulfilled independently). Module-level `#claims.db` and component-level `#components.X.#claims.db` resolve as two instances ⇒ two `#status` values. Two component-level `#claims.db` on different components likewise resolve independently. No merge / override / share-fulfilment semantics. See `10-decisions.md` CL-D17 for full text.
 
 ---
 
@@ -134,13 +122,9 @@ Enhancement 012 explores cross-component noun grammar (shared networks, identiti
 
 ---
 
-### CL-Q8 — Genuinely open: Multiple module-level Claims of the same FQN (was Q16, surfaced in 07-transformer-redesign.md)
+### CL-Q8 — Multiple module-level Claims of the same FQN *(CLOSED by CL-D18)*
 
-The transformer-redesign matcher pseudocode picks the first matching claim instance via a comprehension lookup. If a Module carries two `#claims` entries with the same FQN at module level, the body silently sees only one. Should that be a CUE-time uniqueness check on `#Module.#claims`?
-
-**Lean direction:** yes — duplicate module-level Claim FQN is a misconfiguration. Worth enforcing at `#Module` schema time.
-
-**Revisit trigger:** Pipeline implementation, or first author hitting it.
+**Status:** CLOSED 2026-05-02 by **CL-D18** (duplicate module-level Claim FQN is rejected at `#Module` schema time). The check is a CUE constraint on `#Module.#claims` — two entries with the same `metadata.fqn` produce `_|_` at module-evaluation time, before the matcher runs. See `10-decisions.md` CL-D18 for full text + the schema constraint.
 
 ---
 
@@ -152,7 +136,7 @@ Open sub-questions:
 
 - **Cycle detection.** Two transformers that each write a Claim the other reads form a cycle. Should the matcher detect this at platform-evaluation time (CUE-time) or at deploy-time (Go-pipeline)?
 - **Missing fulfiller.** If a consumer reads `#status.X` but no transformer writes it, what is the deploy-time signal? `_|_` from CUE? An explicit unmatched-claim error from the matcher?
-- **Multi-fulfiller.** TR-Q2 (multi-fulfiller resolution policy) — when two transformers both have `requiredClaims: <FQN>`, only one writes `#status` for a given claim instance. Selection policy is the same as TR-Q2.
+- **Multi-fulfiller.** Closed by **014 D13** — forbidden at the `#matchers` layer; platform evaluation fails when two transformers' `requiredClaims` overlap on the same FQN. Status-writeback uniqueness is guaranteed by construction.
 
 **Revisit trigger:** Pipeline implementation, or first author hitting a cycle/missing-fulfiller case.
 
@@ -172,27 +156,23 @@ Enhancement 011 introduces `#PolicyTransformer` for matching `#Policy` (with rul
 
 ---
 
-### TR-Q2 — Genuinely open: Multi-implementation resolution for transformer `requiredClaims` (was Q14)
+### TR-Q2 — Multi-implementation resolution for transformer `requiredClaims` *(CLOSED by 014 D13)*
 
-Two registered Modules may each ship a transformer (`#ComponentTransformer` or `#ModuleTransformer`) whose `requiredClaims` includes the same Claim FQN (e.g. one Postgres operator and one Aiven operator, both fulfilling `ManagedDatabase`). The platform's render pipeline must pick one per consumer request.
+**Status:** CLOSED 2026-05-01 by **014 D13** — multi-fulfiller is forbidden at the `#matchers` layer. Two registered transformers whose `requiredClaims` (or `requiredResources` / `requiredTraits`) overlap on the same FQN cause `#Platform` evaluation to fail with `_|_`. Resolution is admin-driven — disable one entry via `#ModuleRegistration.enabled: false` (014 D14), pin a different version, or remove one of the two registrations. A future enhancement may reopen multi-fulfiller with a deliberate selection policy; until then the constraint stays.
 
-- Does the admin select a default fulfiller per Claim FQN at platform-registration time?
-- Does the consumer Module pin the desired fulfiller (e.g. by transformer FQN)?
-- Is selection automatic (priority order in `#registry`)?
+Original text retained for the historical record:
 
-This question replaces the old `#Api` collision question (former Q12 / OQ5 in 014). The same resolution problem now lives at the transformer-`requiredClaims` layer.
-
-**Revisit trigger:** First conflict between two registered fulfilling Modules in a real platform deployment.
+> Two registered Modules may each ship a transformer (`#ComponentTransformer` or `#ModuleTransformer`) whose `requiredClaims` includes the same Claim FQN (e.g. one Postgres operator and one Aiven operator, both fulfilling `ManagedDatabase`). The platform's render pipeline must pick one per consumer request. Candidates: admin-selected default fulfiller per Claim FQN, consumer-pinned fulfiller (transformer FQN), or registry priority order. This question replaces the old `#Api` collision question (former Q12 / OQ5 in 014).
 
 ---
 
-### TR-Q3 — Genuinely open: Does 014's `#provider` synthetic value still work? (was Q15, in 07-transformer-redesign.md)
+### TR-Q3 — Does 014's `#provider` synthetic value still work? *(CLOSED — superseded by 014 D12)*
 
-014/02-design.md claims the existing matcher interface is preserved via a synthetic `#provider` wrapping `#composedTransformers`. With two transformer kinds, the matcher dispatches by `kind`. Either the existing `#provider` shape carries enough information, or 014 needs a follow-up amendment.
+**Status:** CLOSED 2026-05-02. **014 D12** retired `#Provider` and the synthetic `#provider` shim entirely. The matcher consumes `#composedTransformers` + the new `#matchers` reverse index directly. The `#statusWrites` injection-phase sub-question moves to `12-pipeline-changes.md`.
 
-**Sub-question (CL-D15/CL-D16):** does the matcher's `runRender` step also handle `#statusWrites` injection back into the resolved Module, or is `#status` injection a separate pipeline phase that runs between transformer dispatches? The phase split affects whether the synthetic `#provider` needs to expose any state to the post-render injection step.
+Original text retained for the historical record:
 
-**Revisit trigger:** When 014 transitions from draft to implementation.
+> 014/02-design.md claims the existing matcher interface is preserved via a synthetic `#provider` wrapping `#composedTransformers`. With two transformer kinds, the matcher dispatches by `kind`. Either the existing `#provider` shape carries enough information, or 014 needs a follow-up amendment.
 
 ---
 
@@ -208,14 +188,14 @@ This question replaces the old `#Api` collision question (former Q12 / OQ5 in 01
 
 | ID | Topic | Blocking implementation? |
 |----|-------|--------------------------|
-| CL-Q1 | Component vs module Claim resolution | Yes |
+| CL-Q1 | Component vs module Claim resolution | **CLOSED by CL-D17** (independent fulfilments) |
 | CL-Q2 | Specialty Claim versioning across vendors | No (eventual) |
-| CL-Q3 | Claim spec / status validation at deploy time | Yes (matching) |
+| CL-Q3 | Claim spec / status validation at deploy time | Delegated to Go pipeline — see `12-pipeline-changes.md` |
 | CL-Q4 | `#Resource` / `#Directive` apiVersion openness | No (consistency) |
-| CL-Q7 | Status writeback ordering | Yes (pipeline) |
-| CL-Q8 | Duplicate module-level Claim FQN | Yes (matching) |
+| CL-Q7 | Status writeback ordering | Delegated to Go pipeline — see `12-pipeline-changes.md` (multi-fulfiller half closed by 014 D13) |
+| CL-Q8 | Duplicate module-level Claim FQN | **CLOSED by CL-D18** (CUE constraint on `#Module.#claims`) |
 | DEF-Q1 | Self-service catalog API | No (platform-impl) |
-| TR-Q1 | Interaction with `#PolicyTransformer` (011) | Yes (pipeline) |
-| TR-Q2 | Multi-implementation resolution | Yes (matching) |
-| TR-Q3 | 014 `#provider` synthetic + status injection phase | Yes (impl) |
+| TR-Q1 | Interaction with `#PolicyTransformer` (011) | Yes (pipeline) — gated on 012 |
+| TR-Q2 | Multi-implementation resolution | **CLOSED by 014 D13** (forbidden at `#matchers`) |
+| TR-Q3 | 014 `#provider` synthetic + status injection phase | **CLOSED by 014 D12** (`#provider` retired; status injection tracked in `12-pipeline-changes.md`) |
 | TR-Q4 | `requiresComponents` granularity | No (future) |

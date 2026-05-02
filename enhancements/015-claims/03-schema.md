@@ -2,16 +2,37 @@
 
 This file is the CUE-level reference: type definitions, field tables, file locations. Design rationale, examples, supersession history, and decisions live in the topical narrative files (see [`02-design.md`](02-design.md) for the index).
 
+This enhancement extends 014's schema. See [014/03-schema.md](../014-platform-construct/03-schema.md) for `#Platform`, `#ModuleRegistration`, `#PlatformMatch`, and `#ComponentTransformer`. The 015 deltas to those constructs (Claim half of `#matchers` / `#PlatformMatch`, `#composedTransformers` union widening, `#ComponentTransformer` `requiredClaims` / `optionalClaims` extension) are noted inline below where the parent shape lives in 014.
+
 ## File Locations
 
 ```text
 catalog/core/v1alpha2/
-├── module.cue          // #Module (modified — eight slots, #defines, #ctx)
-├── claim.cue           // #Claim (new primitive)
-└── transformer.cue     // #ComponentTransformer + #ModuleTransformer (replaces v1alpha1 #Transformer)
+├── module.cue          // #Module (modified — eight slots, #defines, #ctx, CL-D18 constraint)
+├── component.cue       // #Component (modified — adds metadata.resourceName, #names, #claims)
+├── claim.cue           // #Claim (new primitive — this enhancement)
+└── transformer.cue     // 014 introduces #ComponentTransformer + #TransformerMap;
+                        // this enhancement adds #ModuleTransformer, widens #TransformerMap,
+                        // and extends #ComponentTransformer with requiredClaims / optionalClaims
 ```
 
 Concrete commodity Claim definitions ship under `catalog/opm/v1alpha2/claims/`; vendor specialty Claims ship in their own packages. See [`06-claim-primitive.md`](06-claim-primitive.md) for the triplet / quartet pattern (and a worked `#ManagedDatabaseClaim` definition).
+
+### Lifecycle / Workflow / Action — left as stubs
+
+`#Module.#lifecycles` and `#Module.#workflows` reference `#Lifecycle` and `#Workflow` constructs. Neither is fully designed in this enhancement; they are declared as slots so the eight-slot shape (MS-D2) is complete and so operator-Module authors can populate them when the constructs land. For now, treat them as opaque `_` types in any implementation pass — the slots are there, the schemas are intentionally unspecified. `#Action` is consumed by `#Lifecycle` and `#Workflow` (MS-D3) and inherits the same stub status.
+
+A follow-up enhancement (or the policy redesign in 012) will pin the construct shapes. Until then, modules that need lifecycle / workflow behaviour either inline `_` values into the slots or omit them.
+
+### Pipeline-level concerns — see `12-pipeline-changes.md`
+
+Decisions whose schema reserves a channel but whose algorithm lives in the Go renderer:
+
+- `#statusWrites` — the writeback channel from `#ComponentTransformer.#transform` / `#ModuleTransformer.#transform` (CL-D16).
+- Topological-sort ordering for `#status` writeback (CL-Q7 — multi-fulfiller half closed by 014 D13; cycle detection + missing fulfiller delegated).
+- Deploy-time validation of `#Claim.#spec` / `#status` against registered Claim definitions (CL-Q3 — delegated).
+
+See [`12-pipeline-changes.md`](12-pipeline-changes.md) for the contracts the pipeline must implement.
 
 ## `#Claim` (primitive)
 
@@ -63,9 +84,102 @@ The `#status?` channel and its writeback semantics are documented in [`06-claim-
 
 ## Two transformer primitives
 
-`#ComponentTransformer` (per-component fan-out) and `#ModuleTransformer` (per-module fan-out) replace the v1alpha1 single `#Transformer`. Both ship through `#Module.#defines.transformers` (slot type: union `#ComponentTransformer | #ModuleTransformer`). CRD installation continues to live in `#components` via `#CRDsResource` — unchanged.
+[014 D17](../014-platform-construct/04-decisions.md) introduces `#ComponentTransformer` (per-component fan-out) — see [014/03-schema.md](../014-platform-construct/03-schema.md) and [014/05-component-transformer-and-matcher.md](../014-platform-construct/05-component-transformer-and-matcher.md). This enhancement adds:
 
-**Canonical schema, runtime guarantees, matcher pseudocode, status writeback channel, and worked examples live in [`07-transformer-redesign.md`](07-transformer-redesign.md).** This doc does not duplicate them.
+1. **`#ModuleTransformer`** — per-module fan-out, with optional `requiresComponents` pre-fire gate for dual-scope renders.
+2. **`#ComponentTransformer` widening** — `requiredClaims` and `optionalClaims` match keys for component-level Claim fulfilment.
+3. **`#TransformerMap` widening** — value type becomes `#ComponentTransformer | #ModuleTransformer`.
+4. **`#statusWrites`** — writeback channel on both `#transform` shapes.
+
+Both kinds ship through `#Module.#defines.transformers`. CRD installation continues to live in `#components` via `#CRDsResource` — unchanged.
+
+**Canonical schema for `#ModuleTransformer`, the widening details, status writeback channel, and worked examples live in [`07-transformer-redesign.md`](07-transformer-redesign.md).** This doc does not duplicate them.
+
+## Updated `#Component`
+
+`#Module.#components` references `#Component`. The current `core/v1alpha2/component.cue` (57 lines) covers `metadata`, `#resources`, `#traits`, `#blueprints`, and the `_allFields` / `spec` merging. This enhancement (in concert with 016) adds three slots:
+
+- `metadata.resourceName?` — single point of override for the Kubernetes resource base name (016 D13).
+- `#names: #ComponentNames` — runtime-injected per-component computed names; component bodies read `#names.dns.fqdn` etc. without retyping their map key (016 D32).
+- `#claims?: [string]: #Claim` — per-component data-plane Claims (CL-D10). Per-component `#claims` instances are independent across components (CL-D17) — two components shipping `cache: ...` of the same Claim type each get their own fulfilment.
+
+Proposed shape:
+
+```cue
+package v1alpha2
+
+#LabelWorkloadType: "core.opmodel.dev/workload-type"
+
+#Component: {
+    apiVersion: "opmodel.dev/core/v1alpha2"
+    kind:       "Component"
+
+    metadata: {
+        name!: #NameType
+
+        // Override the Kubernetes resource base name for this component.
+        // When absent, resourceName defaults to "{release}-{component}"
+        // via #ComponentNames in #ctx (016 D13). All DNS variants in
+        // #ctx.runtime.components and #names.dns.* cascade from this.
+        resourceName?: #NameType
+
+        labels?:      #LabelsAnnotationsType
+        annotations?: #LabelsAnnotationsType
+    }
+
+    // Resources applied for this component (catalog-fixed primitives).
+    #resources: #ResourceMap
+
+    // Traits applied to this component.
+    #traits?: #TraitMap
+
+    // Blueprints applied to this component (CUE-import composition only;
+    // not published through #defines per DEF-D6).
+    #blueprints?: #BlueprintMap
+
+    // Component-level Claims — per-component data-plane needs (CL-D10).
+    // Independent fulfilment per instance per CL-D17. Two components
+    // shipping the same Claim type get two #status values.
+    #claims?: [string]: #Claim
+
+    // Per-component computed names — injected by #ContextBuilder (016 D32).
+    // Equal to #ctx.runtime.components[<this component's key>].
+    // Components read #names.resourceName / #names.dns.* without retyping
+    // their map key. Cross-component reads still go through
+    // #ctx.runtime.components[<otherKey>].
+    #names: #ComponentNames
+
+    _allFields: {
+        for _, resource in #resources {
+            if resource.spec != _|_ {resource.spec}
+        }
+        if #traits != _|_ {
+            for _, trait in #traits {
+                if trait.spec != _|_ {trait.spec}
+            }
+        }
+        if #blueprints != _|_ {
+            for _, blueprint in #blueprints {
+                if blueprint.spec != _|_ {blueprint.spec}
+            }
+        }
+    }
+
+    // Fields exposed by this component, merged from resources / traits /
+    // blueprints. Closed — must be made concrete by the user.
+    spec: close({
+        _allFields
+    })
+}
+
+#ComponentMap: [string]: #Component
+```
+
+Notes:
+
+- `#claims` is keyed by author-chosen id (e.g. `db`, `cache`), not by FQN. The `metadata.fqn` on the embedded Claim value carries identity. The matcher resolves a transformer's `requiredClaims` (FQN-keyed) by walking the consumer's `#claims` map and matching on `claim.metadata.fqn`.
+- `#claims` does **not** participate in `_allFields` / `spec` merging. Claims are demand declarations, not spec contributions.
+- `#blueprints` stays internal to `#Component` composition; it does not flow up to a platform-level view (DEF-D6 / 014 D10 — paired drops of `#defines.blueprints` and `#knownBlueprints`).
 
 ## Updated `#Module`
 
@@ -74,9 +188,14 @@ package v1alpha2
 
 import (
     cue_uuid "uuid"
-    transformer "opmodel.dev/core/v1alpha2:transformer"
 )
 
+// `#ComponentTransformer`, `#ModuleTransformer`, and `#TransformerMap`
+// are siblings in the flat v1alpha2 package — no cross-package import
+// needed. (Earlier draft used `transformer "opmodel.dev/core/v1alpha2:transformer"`
+// which doesn't resolve in flat layout — see 014/03-schema.md for the
+// matching fix.)
+//
 // #Module: The portable application/API/operator blueprint created by
 // developers, vendors, or platform teams.
 #Module: {
@@ -125,8 +244,29 @@ import (
     #lifecycles?: [Id=string]: #Lifecycle
     #workflows?:  [Id=string]: #Workflow
 
-    // Outward — instances visible to the platform and other modules
+    // Outward — instances visible to the platform and other modules.
+    // Author-keyed map; identity travels via the embedded Claim's
+    // metadata.fqn. CL-D18 forbids two entries sharing the same FQN at
+    // module level — schema constraint sketched below; final form to be
+    // pinned by experiment / first implementation pass.
     #claims?: [Id=string]: #Claim
+
+    // CL-D18: no duplicate module-level Claim FQN. The hidden
+    // _moduleClaimFqnCounts map counts entries per FQN; the
+    // _noDuplicateModuleClaimFqn constraint unifies each count with
+    // concrete 1, producing _|_ when any FQN appears more than once.
+    let _moduleClaimFqnCounts = {
+        if #claims != _|_
+        for _, c in #claims {
+            (c.metadata.fqn): int
+            (c.metadata.fqn): 1 + (*_moduleClaimFqnCounts[c.metadata.fqn] | 0)
+        }
+    }
+    _noDuplicateModuleClaimFqn: {
+        for fqn, n in _moduleClaimFqnCounts {
+            (fqn): n & 1
+        }
+    }
 
     // Outward — publication channel.
     // Type definitions and rendering extensions this Module ships to the
@@ -134,17 +274,17 @@ import (
     // CUE unification enforces this via the inline & {metadata: fqn: FQN}
     // constraint on each sub-map.
     #defines?: {
-        resources?:    [FQN=string]: #Resource  & {metadata: fqn: FQN}
-        traits?:       [FQN=string]: #Trait     & {metadata: fqn: FQN}
-        claims?:       [FQN=string]: #Claim     & {metadata: fqn: FQN}
-        transformers?: [FQN=string]: (transformer.#ComponentTransformer | transformer.#ModuleTransformer) & {metadata: fqn: FQN}
+        resources?:    [FQN=string]: #Resource & {metadata: fqn: FQN}
+        traits?:       [FQN=string]: #Trait & {metadata: fqn: FQN}
+        claims?:       [FQN=string]: #Claim & {metadata: fqn: FQN}
+        transformers?: [FQN=string]: (#ComponentTransformer | #ModuleTransformer) & {metadata: fqn: FQN}
     }
 }
 
 #ModuleMap: [string]: #Module
 ```
 
-`v1alpha2`'s flat package layout means `#Component`, `#Resource`, `#Trait`, `#Blueprint`, `#Claim`, `#ModuleContext`, `#Lifecycle`, `#Workflow`, and the helper types are all unprefixed inside the package. `#Transformer` lives in the sibling `transformer` package and is the only cross-package import.
+`v1alpha2`'s flat package layout means `#Component`, `#Resource`, `#Trait`, `#Blueprint`, `#Claim`, `#ComponentTransformer`, `#ModuleTransformer`, `#TransformerMap`, `#ModuleContext`, `#Lifecycle`, `#Workflow`, and the helper types are all unprefixed inside the package. No cross-package import alias is needed.
 
 The eight-slot rationale, the supersession history (drop `#policies`, drop `#apis`), and the no-`#requires` decision live in [`04-module-shape.md`](04-module-shape.md). The `#defines` shape and FQN-binding rule live in [`05-defines-channel.md`](05-defines-channel.md).
 

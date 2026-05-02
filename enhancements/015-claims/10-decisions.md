@@ -71,7 +71,7 @@ The catalog primitives `#PolicyRule` and `#Directive` and the construct `#Policy
 
 **Supersedes:** The original wording of MS-D2 ("nine flat top-level fields") which listed `#policies` as one of nine — the count is now eight after MS-D4 drops `#policies` and CL-D14 drops `#apis`. MS-D2 is restated in light of the supersession history.
 
-Other affected primitives/constructs in the litmus reference are also dropped here for consistency: `#PolicyRule`, `#Directive`, `#StatusProbe` (primitives) and `#Policy`, `#Test`, `#Config`, `#Template`, `#Provider` (constructs) are removed from `09-litmus-updates.md`. `#Provider` survives only as the synthetic shim inside `#Platform` (see 014 D4). The other entries are deferred until they are real and demonstrably useful; until then the litmus reference advertises only what exists and works.
+Other affected primitives/constructs in the litmus reference are also dropped here for consistency: `#PolicyRule`, `#Directive`, `#StatusProbe` (primitives) and `#Policy`, `#Test`, `#Config`, `#Template`, `#Provider` (constructs) are removed from `09-litmus-updates.md`. `#Provider` is fully retired by 014 D12 — the matcher now consumes `#composedTransformers` + `#matchers` directly; no synthetic shim survives. The other entries are deferred until they are real and demonstrably useful; until then the litmus reference advertises only what exists and works.
 
 **Alternatives considered:**
 
@@ -113,19 +113,24 @@ What to do about unmatched FQNs (deploy fails / warns / drops the unrenderable r
 
 ## `#defines` Channel (DEF)
 
-### DEF-D1: Add `#defines` slot for type publication (was D17)
+### DEF-D1: `#defines` slot for type publication (014 introduces three sub-maps; 015 extends with `claims`) (was D17)
 
-**Decision:** `#Module` gains a `#defines` slot, structured as a map of sub-maps keyed by primitive kind: `resources`, `traits`, `claims`, `transformers`. Each sub-map is keyed by FQN. `#defines` is the platform-facing publication channel for type definitions and rendering extensions a Module ships to the ecosystem. (Original wording included `blueprints` in the kind list; that sub-map was subsequently removed by **DEF-D6** — Blueprints are CUE-import sugar with no platform-level consumer.)
+**Decision:** `#Module` gains a `#defines` slot, structured as a map of sub-maps keyed by primitive kind. **014 introduces** the slot with three sub-maps the matcher consumes: `resources`, `traits`, `transformers`. **015 extends** the slot with a fourth sub-map: `claims` (the Claim-type catalog). Each sub-map is keyed by FQN. `#defines` is the platform-facing publication channel for type definitions and rendering extensions a Module ships to the ecosystem.
+
+(Original wording introduced all four sub-maps in 015 and listed `blueprints` as a fifth; the blueprints sub-map was subsequently removed by **DEF-D6**, and the `resources` / `traits` / `transformers` introduction moved to 014 as part of the 014 / 015 untangle on 2026-05-02. The Claims half stays here in 015 — `#Claim` is a 015 primitive and the publication channel for it has no consumer until 015's `#knownClaims` view exists.)
 
 **Alternatives considered:**
 
 - Five flat sibling slots (`#publishedResources`, `#publishedTraits`, `#publishedBlueprints`, `#publishedClaims`, `#transformers`). Faithful to MS-D2's flat rule but pushes the field count from nine to fifteen.
 - Auto-derive from `#transformers` and `#apis` (no explicit publication slot). Misses publisher-only Modules (a vendor publishes a Trait that someone else's Module renders).
 - Extension-by-import only (no slot). Status quo. Forces the platform to source-scan to enumerate available definitions.
+- Introduce the entire `#defines` slot in 015 and have 014 cross-ref. Considered during the untangle: rejected because 014's matcher needs `#defines.transformers` (and the `#known*` views need `#defines.resources` / `#defines.traits`); it is cleaner for 014 to introduce the slots its matcher consumes and 015 to extend with claims than for 014 to dangle a forward-reference into 015.
 
 **Rationale:** A bounded, grouped slot is the smallest delta that makes definitions discoverable at platform-evaluation time. The grouping is justified because the kind-set is bounded (matches the primitive list, not unbounded) and the slot is meta — about the Module-as-publisher, not about the Module's runtime shape. Consumer Modules continue to import CUE packages directly to reference definitions; `#defines` is the discovery surface, not the consumption surface. Carves out a controlled exception to MS-D2's flat rule rather than ballooning the top-level field count.
 
-**Source:** User decision 2026-04-30 ("#defines is fine ... I also want to move #transformers into #defines").
+**Cross-references:** 014 introduces the slot mechanism + three sub-maps the matcher consumes; this enhancement adds the `claims` sub-map alongside `#Claim` itself.
+
+**Source:** User decision 2026-04-30 ("#defines is fine ... I also want to move #transformers into #defines"). Split between 014 and 015 on 2026-05-02 as part of the untangle.
 
 ---
 
@@ -483,9 +488,76 @@ The matcher must topologically order fulfillers before consumers. `requiredClaim
 
 **Rationale:** Status injection mirrors the most-similar already-decided mechanism (hashes). Re-using the precedent keeps the Go pipeline simple — one injection phase, two kinds of writes. The split lifecycle (CUE schema reserves; Go pipeline populates) preserves CUE-time testability for the read shapes while letting the populating order live in Go where the matcher already owns iteration.
 
-**Cross-references:** 016 D11 / D12 (centralised hash injection); TR-D6 (concrete `#ModuleRelease` runtime guarantee); CL-Q1 / CL-Q3 (resolution-order edge cases); `07-transformer-redesign.md` TR-Q3 / CL-Q7 (matcher writeback dispatch + ordering).
+**Cross-references:** 016 D11 / D12 (centralised hash injection); TR-D6 (concrete `#ModuleRelease` runtime guarantee); CL-D17 (each Claim instance fulfilled independently — single writer per instance is the natural reading); CL-Q3 (delegated to `12-pipeline-changes.md`); `07-transformer-redesign.md` CL-Q7 (matcher writeback dispatch + ordering — delegated to `12-pipeline-changes.md`); 014 D13 (multi-fulfiller forbidden — guarantees a single writer per Claim instance, closes the multi-fulfiller sub-bullet of CL-Q7 and the entirety of TR-Q2).
 
 **Source:** Design conversation 2026-05-01.
+
+---
+
+### CL-D17: Each `#Claim` instance is fulfilled independently — no merge / override / share-fulfilment semantics
+
+**Decision:** Every `#Claim` instance — whether at module level (`#Module.#claims.<id>`) or component level (`#Module.#components.<X>.#claims.<id>`) — is fulfilled independently and carries its own `#status`. No instance "merges" or "overrides" another. Specifically:
+
+1. Module-level `#claims.db` and component-level `#components.X.#claims.db` are two distinct instances ⇒ two `#status` values. Module-level is fulfilled by a `#ModuleTransformer.requiredClaims`; component-level by a `#ComponentTransformer.requiredClaims`. They do not share a fulfilment.
+2. Two component-level `#claims.db` instances on different components (same Claim FQN, different ids) are two distinct instances ⇒ two `#status` values. They do not share a fulfilment either; each component's instance is fulfilled by its own transformer match.
+3. The matcher does not deduplicate fulfilments across instances. If a Module wants a single shared resource (one DB, one queue), it models that as a single Claim at the appropriate scope — not as multiple instances expecting consolidation.
+
+**Alternatives considered:**
+
+- **Module-level as singleton; component-level instances all share the module-level fulfilment if FQNs match.** Rejected: forces an implicit cross-scope merge that the schema cannot validate; consumer Modules can't tell at authoring time whether their component-level Claim will be honored or overridden by an unrelated module-level Claim.
+- **Component-level instances of the same FQN share one fulfilment per FQN per Module.** Rejected: collapses the per-component independence that makes Components the unit of composition (CL-D11 reasoning). Also makes per-component sizing / variant impossible.
+- **Defer the resolution-order question to the Go matcher.** Rejected: the schema needs a stable contract before pipeline implementation; deferring means each pipeline rev can pick a different rule.
+
+**Rationale:** Independent fulfilment is the natural reading of CL-D15 (each instance carries its own `#status`) and removes the entire merge / override / share-fulfilment design space at the matcher layer. It also matches how Resources behave (a Component owning its own `#resources` does not merge with another Component's `#resources` of the same type). Module authors who want a shared resource have a clean expression of that intent — declare it once at the appropriate scope. Matcher implementation collapses to "one fulfiller per instance."
+
+**Cross-references:** CL-D10 (component-level + module-level placement); CL-D11 (Components as unit of composition — same parsimony); CL-D15 (`#status` per instance); CL-D16 (status writeback per matched instance); CL-D18 (no duplicate Claim FQN at module level — paired enforcement); 014 D13 (single fulfiller per FQN at platform level — together D17 + 014 D13 give "one fulfiller per FQN per instance").
+
+**Source:** User decision 2026-05-02 ("Elevate" — accepting the lean direction stated in CL-Q1's CL-D15 update note).
+
+---
+
+### CL-D18: Duplicate module-level Claim FQN is forbidden at `#Module` schema time
+
+**Decision:** `#Module.#claims` enforces FQN uniqueness across its entries. Two `#claims` entries with the same `metadata.fqn` produce `_|_` at module-evaluation time, before the matcher runs. The constraint is a CUE-level check on `#Module`:
+
+```cue
+#Module: {
+    ...
+    #claims?: [string]: #Claim
+
+    // FQN uniqueness across module-level Claims (CL-D18). The hidden
+    // _claimFqnCounts map counts how many entries share each FQN; the
+    // _noDuplicateClaimFqn constraint unifies every count with concrete
+    // 1 (or absent), producing _|_ when any FQN appears more than once.
+    let _claimFqnCounts = {
+        for _, c in #claims if #claims != _|_ {
+            (c.metadata.fqn): int
+            (c.metadata.fqn): 1 + (*_claimFqnCounts[c.metadata.fqn] | 0)
+        }
+    }
+    _noDuplicateClaimFqn: {
+        for fqn, n in _claimFqnCounts {
+            (fqn): n & 1
+        }
+    }
+    ...
+}
+```
+
+(The exact CUE form is to be validated by the experiment / first implementation pass — the principle is "fail at module-eval time when two `#claims` entries share an FQN.")
+
+The check applies to module-level `#claims` only. Component-level `#claims` (on `#Module.#components.<X>.#claims`) are per-component scopes and are not constrained across components — two components may legitimately each ship a `cache: ...` Claim entry of the same Claim type, and both fulfilments fire independently per CL-D17.
+
+**Alternatives considered:**
+
+- **Defer to runtime detection** — the matcher pseudocode in `07-transformer-redesign.md` picks the first matching claim instance via comprehension lookup; if two entries share an FQN, the body silently sees only one. Rejected: silent shadowing is exactly the misconfiguration class CUE excels at catching at definition time. Punting to runtime hides the bug from the author.
+- **Allow duplicates and treat as multi-instance fulfilment** — the matcher runs per-instance and emits two fulfilments. Rejected: at module level there is no per-instance discriminator (no parent Component as scope), so two same-FQN module-level Claims are indistinguishable to downstream consumers reading `#claims.<id>.#status`. Authors who want two distinct resources should give them distinct Claim definitions or push them to component level.
+
+**Rationale:** Module-level is the singleton scope for "platform-relationship" Claims (DNS hostname, workload identity, mesh tenant, backup orchestration — see CL-D10's table). Each of those is conceptually a single resource per Module. Allowing duplicate FQNs would either silently drop one instance (matcher bug) or fan out fulfilment in ways consumers cannot disambiguate (`#claims.dns1.#status.fqdn` vs `#claims.dns2.#status.fqdn` — both bound to the same Claim type but with no module-level discriminator). Failing at schema time forces the author to model the intent properly.
+
+**Cross-references:** CL-D10 (module-level vs component-level placement — singleton scope rationale); CL-D17 (independent fulfilments per instance — D18 prevents the degenerate case at module level); 014 D3 (FQN-collision-on-types fails CUE unification — same parsimony, applied to instances at module scope).
+
+**Source:** User decision 2026-05-02 ("Elevate" — accepting the lean direction stated in CL-Q8).
 
 ---
 
@@ -560,40 +632,47 @@ The matcher must topologically order fulfillers before consumers. `requiredClaim
 
 ---
 
-### TR-D5: Two transformer primitives — `#ComponentTransformer` and `#ModuleTransformer` (was D28)
+### TR-D5: Two transformer primitives — 014 owns `#ComponentTransformer`; 015 introduces `#ModuleTransformer` and widens the union (was D28)
 
-**Decision:** Replace the single `#Transformer` with two primitives in `catalog/core/v1alpha2/transformer.cue`:
+**Decision:** Replace the single v1alpha1 `#Transformer` with two primitives in `catalog/core/v1alpha2/transformer.cue`:
 
-- **`#ComponentTransformer`** — fires once per matching `#Component`. Match keys (`requiredLabels`, `requiredResources`, `requiredTraits`, `requiredClaims`) read against a single component. `#transform` receives `#moduleRelease` plus the matched `#component` (singular).
-- **`#ModuleTransformer`** — fires once per matching `#Module`. Match keys (`requiredLabels`, `requiredClaims`) read against `#Module` top level. `#transform` receives `#moduleRelease` only; the body iterates `#moduleRelease.#components` itself when dual-scope work is needed. An optional `requiresComponents` field carries a pre-fire gate ("at least one component must carry X").
+- **`#ComponentTransformer`** — fires once per matching `#Component`. Match keys (`requiredLabels`, `requiredResources`, `requiredTraits`) read against a single component. `#transform` receives `#moduleRelease` plus the matched `#component` (singular). **Introduced by [014 D17](../014-platform-construct/04-decisions.md).** This enhancement extends `#ComponentTransformer` with `requiredClaims` / `optionalClaims` for component-level Claim fulfilment.
+- **`#ModuleTransformer`** — fires once per matching `#Module`. Match keys (`requiredLabels`, `requiredClaims`) read against `#Module` top level. `#transform` receives `#moduleRelease` only; the body iterates `#moduleRelease.#components` itself when dual-scope work is needed. An optional `requiresComponents` field carries a pre-fire gate ("at least one component must carry X"). **Introduced by this enhancement (015).**
 
-`#defines.transformers` accepts the union `#ComponentTransformer | #ModuleTransformer`. The runtime guarantees `#transform` is invoked with a fully concrete `#ModuleRelease` (every `#components`, `#claims`, `#config`, `#ctx` resolved).
+This enhancement also widens 014's `#TransformerMap` from `[FQN]: #ComponentTransformer` to `[FQN]: #ComponentTransformer | #ModuleTransformer`. `#defines.transformers` accepts the union. The runtime guarantees `#transform` is invoked with a fully concrete `#ModuleRelease` (014 D18 — applies to both kinds equally).
 
-**Supersedes:** TR-D1 (scope buckets `componentMatch` / `moduleMatch`), TR-D2 (single-primitive constraint), TR-D3 (derived `_scope` discriminator), TR-D4 (dual-scope semantics via map of components). TR-D1–TR-D4 remain as historical record; TR-D5 declares the new shape that replaces them.
+**014 / 015 ownership note (2026-05-02):** the original wording introduced both primitives in 015. The 014 / 015 untangle moved `#ComponentTransformer` to 014 because the matcher needs a typed transformer primitive at the 014 layer; introducing a sibling primitive in 015 is a true extension rather than a re-shuffle. The original split-motivation (CL-D10 — same Claim FQN at component or module level) only earns its keep once Claims exist, which is also a 015 concern.
+
+**Supersedes:** TR-D1 (scope buckets `componentMatch` / `moduleMatch`), TR-D2 (single-primitive constraint), TR-D3 (derived `_scope` discriminator), TR-D4 (dual-scope semantics via map of components). TR-D1–TR-D4 remain as historical record; TR-D5 (with the 014 split) declares the new shape that replaces them.
 
 **Alternatives considered:**
 
 - **Keep the bucketed single-primitive design (TR-D1–TR-D4).** Rejected: the `_scope` derived field is a crutch that exists only because one signature tries to cover three populations. With the runtime guaranteeing a concrete `#ModuleRelease`, the body can iterate components itself; pre-filtering them into a map buys no expressivity. Two types make scope explicit at the type level and remove the `_scope` derivation.
 - **Single primitive with optional `#component` field.** Rejected: shifts the discrimination to nullability, which CUE evaluators and catalog tooling have to repeatedly inspect; type identity is a stronger discriminator and groups naturally in catalog UIs.
 - **Pre-filtered component map for dual-scope.** Rejected on the same grounds — the body has the full `#moduleRelease` and can filter freely. The matcher's job is "should this fire?" not "which components should the body see?"
+- **Keep `#ComponentTransformer` introduction in 015 (single-doc home).** Rejected during the untangle: 014's matcher and `#composedTransformers` schema need a typed primitive; deferring to 015 leaves 014 with a dangling reference. The split is cleaner.
 
 **Rationale:** The runtime guarantee changes the design pressure. When the transformer always sees a fully concrete `#ModuleRelease`, the matcher's job collapses to two questions — *should this fire?* and *which component(s) does it fire over?* — and those questions split cleanly along type identity (component vs module). The pre-filter convenience that justified the bucketed map disappears. Two primitives is then the minimum-information shape: scope encoded by type, fan-out by matcher dispatch on `kind`, dual-scope expressed by `#ModuleTransformer` + `requiresComponents` + body iteration.
 
-**Source:** User question 2026-05-01 ("So i wonder if `_scope` is actually needed. And i wonder if the transformer should allow two types, `#ModuleRelease` and `#Component`, as in singular. Can you explain why the redesign allow for a map of `#Component`?").
+**Source:** User question 2026-05-01 ("So i wonder if `_scope` is actually needed. And i wonder if the transformer should allow two types, `#ModuleRelease` and `#Component`, as in singular."). Decision split between 014 and 015 on 2026-05-02 ("014 owns the redesign of the #Transformer (now #ComponentTransformer) and the matcher and the matcher algorithm. Then 015 extends that design with #ModuleTransformer and #Claim, and so on").
 
 ---
 
-### TR-D6: Runtime always passes a fully concrete `#ModuleRelease` to `#transform` (was D29)
+### TR-D6: Runtime always passes a fully concrete `#ModuleRelease` to `#transform` — *lifted to [014 D18](../014-platform-construct/04-decisions.md)* (was D29)
 
-**Decision:** The OPM runtime guarantees that by the time a transformer's `#transform` body evaluates, `#moduleRelease` is fully concrete: `#config` is resolved, `#ctx` is injected (via 016's `#ContextBuilder`), every `#components[].spec` is concrete, and every `#claims[]` instance carries its complete `#spec`. Transformer bodies may index into `#moduleRelease` freely without re-resolving values.
+**Status:** Lifted to 014 D18 on 2026-05-02 as part of the 014 / 015 untangle. The runtime guarantee applies to both `#ComponentTransformer` (014's primitive) and `#ModuleTransformer` (015's extension); placing it in 014 keeps it alongside the primitive that first relies on it.
 
-**Alternatives considered:**
+**Cross-reference:** [`014/04-decisions.md` D18](../014-platform-construct/04-decisions.md). Original wording retained below for the historical record.
 
-- **Pass partial values and let the body resolve.** Rejected: forces every transformer to know how to drive `#config`/`#ctx` resolution; couples render logic to the runtime pipeline.
-
-**Rationale:** Without this guarantee, the schema would have to allow either party (matcher or body) to perform component filtering for dual-scope, which is what dragged the original design into the bucketed map. With the guarantee, the body owns iteration and the schema stays minimal (TR-D5).
-
-**Source:** User statement 2026-05-01 ("Whenever the `#Transformer` is invoked, it will always receive a fully concrete `#ModuleRelease`. ... The runtime implementation makes sure of that.").
+> **Decision:** The OPM runtime guarantees that by the time a transformer's `#transform` body evaluates, `#moduleRelease` is fully concrete: `#config` is resolved, `#ctx` is injected (via 016's `#ContextBuilder`), every `#components[].spec` is concrete, and every `#claims[]` instance carries its complete `#spec`. Transformer bodies may index into `#moduleRelease` freely without re-resolving values.
+>
+> **Alternatives considered:**
+>
+> - **Pass partial values and let the body resolve.** Rejected: forces every transformer to know how to drive `#config`/`#ctx` resolution; couples render logic to the runtime pipeline.
+>
+> **Rationale:** Without this guarantee, the schema would have to allow either party (matcher or body) to perform component filtering for dual-scope, which is what dragged the original design into the bucketed map. With the guarantee, the body owns iteration and the schema stays minimal (TR-D5).
+>
+> **Source:** User statement 2026-05-01 ("Whenever the `#Transformer` is invoked, it will always receive a fully concrete `#ModuleRelease`. ... The runtime implementation makes sure of that.").
 
 ---
 

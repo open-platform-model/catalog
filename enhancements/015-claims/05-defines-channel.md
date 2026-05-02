@@ -2,11 +2,14 @@
 
 This file is the topical narrative for the `#defines` slot on `#Module`: what it surfaces to the platform, why it's a single slot rather than five flat siblings, what it accepts and what it doesn't, and how it's consumed.
 
+**Ownership:** [014](../014-platform-construct/) introduces the slot mechanism and three sub-maps (`resources`, `traits`, `transformers`) — those are what 014's matcher consumes. This enhancement extends `#defines` with a fourth sub-map, `claims`, and adds the corresponding `#knownClaims` view to the platform aggregation. The narrative here covers the full final shape; sub-section ownership notes call out which half lives where.
+
 Decisions referenced live in `10-decisions.md` under the `DEF-` prefix; open questions in `11-open-questions.md`.
 
 For the `#Module` slot list overall, see [`04-module-shape.md`](04-module-shape.md).
 For the `#Claim` primitive that's one of the publishable kinds, see [`06-claim-primitive.md`](06-claim-primitive.md).
-For the transformer types under `#defines.transformers`, see [`07-transformer-redesign.md`](07-transformer-redesign.md).
+For the `#ComponentTransformer` schema and matcher algorithm, see [014/05-component-transformer-and-matcher.md](../014-platform-construct/05-component-transformer-and-matcher.md).
+For `#ModuleTransformer` + status writeback, see [`07-transformer-redesign.md`](07-transformer-redesign.md).
 
 ## Goal
 
@@ -23,7 +26,7 @@ Make every type definition and rendering extension a Module ships discoverable a
 }
 ```
 
-Four sub-maps under one slot. Each sub-map keyed by FQN. Each entry's `metadata.fqn` is bound by CUE unification to the map key — typos fail at definition time.
+Four sub-maps under one slot. Each sub-map keyed by FQN. Each entry's `metadata.fqn` is bound by CUE unification to the map key — typos fail at definition time. **014 introduces** `resources`, `traits`, `transformers`; **this enhancement adds** `claims`.
 
 `#Blueprint` is intentionally **not** a sub-kind here — see **DEF-D6**. Blueprints are CUE-import sugar with no platform-level consumer (no transformer match key references a Blueprint FQN); registering them buys nothing.
 

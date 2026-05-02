@@ -51,7 +51,7 @@ This enhancement extracts the `#ctx` work from the now-archived [008-platform-co
 | `CONSTITUTION.md` (repo root) | Core design principles |
 | `catalog/enhancements/archive/008-platform-construct/` | Predecessor — original combined Platform + Environment + `#ctx` design. The `#ctx` portion is lifted into this enhancement; the Platform composition portion is replaced by 014; the Module shape portion lives in 015. |
 | `catalog/enhancements/014-platform-construct/` | Sibling — `#Platform.#ctx` references `#PlatformContext` defined here |
-| `catalog/enhancements/015-module-defines/` | Sibling — `#Module.#ctx` references `#ModuleContext` defined here |
+| `catalog/enhancements/015-claims/` | Sibling — `#Module.#ctx` references `#ModuleContext` defined here |
 | `catalog/experiments/001-module-context/` | Self-contained CUE sandbox that builds and exercises every schema in `03-schema.md`. 11 test files (40 concrete assertions). Surfaced D33–D35 corrections to the schema. Run: `cue vet -c -t test ./...` from the experiment dir. |
 | `catalog/core/v1alpha2/module.cue` | Gains `#ctx: #ModuleContext` field |
 | `catalog/core/v1alpha2/component.cue` | Gains optional `metadata.resourceName` override and a `#names: #ComponentNames` definition field |

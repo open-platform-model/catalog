@@ -82,7 +82,7 @@ Decision log for all architectural and design choices made during this enhanceme
 
 **Rationale:** The wrapper carries platform-level metadata that is *about* the registration, not about the Module itself. The Module value is referenced via `#module`; everything else describes how the platform handles it.
 
-**Status:** Narrowed by **D11** (2026-05-01). The original draft also carried `#release?` (deploy-state assertion) and `presentation.operator` (admin-facing install metadata); both removed because registration is now a pure projection of `#defines`. Deploy state lives in the `ModuleRelease` CRD reconciler, not in the CUE registration value.
+**Status:** Narrowed by **D11** (2026-05-01). The original draft also carried `#release?` (deploy-state assertion) and `presentation.operator` (admin-facing install metadata); both removed because registration is now a pure projection of `#defines`. Deploy state lives in the `ModuleRelease` CRD reconciler, not in the CUE registration value. Further narrowed by **D14** — `presentation.template` wrapper flattened to a bare `presentation` struct after the only sibling (`presentation.operator`) was already gone.
 
 **Source:** Design discussion 2026-04-30.
 
@@ -102,24 +102,28 @@ Decision log for all architectural and design choices made during this enhanceme
 
 ---
 
-### D7: Capability fulfilment is registered via transformer `requiredClaims`; no separate `#apis` aggregation
+### D7: Capability fulfilment for Resources/Traits is registered via transformer `requiredResources` / `requiredTraits`; no separate aggregation map
 
-**Decision:** Capability fulfilment for `#Claim` requests is registered by the transformer that does the rendering, via the transformer's `requiredClaims` field (introduced in 015). `#Platform` exposes `#composedTransformers` only; there is no separate `#apis` aggregation map keyed by Claim FQN. A consumer Module's `#claims` instance is matched at deploy time by the platform's render pipeline against transformers whose `requiredClaims` include the Claim's FQN.
+**Decision:** Capability fulfilment for Resource and Trait requests is registered by the transformer that does the rendering, via the transformer's `requiredResources` / `requiredTraits` fields. `#Platform` exposes `#composedTransformers` and `#matchers.{resources,traits}` only; there is no separate aggregation map keyed by primitive FQN. A consumer Module's `#components[].#resources` / `#components[].#traits` are matched at deploy time by the platform's render pipeline against transformers whose `required*` fields include the FQN.
+
+015 extends this story to Claims: a transformer's `requiredClaims` is the supply registration for component-level (`#ComponentTransformer.requiredClaims`) and module-level (`#ModuleTransformer.requiredClaims`) Claim instances. The same parsimony principle applies — fulfilment is a property of the rendering transformer, not a wrapper primitive (015 CL-D14 retires `#Api`).
 
 **Alternatives considered:**
 
 - Aggregate `#apis: [fqn=string]: prim.#Api` from each registered Module's `#apis` slot. Rejected: 015 CL-D14 removes the `#Api` primitive entirely. Capability supply is now expressed through the transformer that renders the request, not a wrapper primitive.
-- List-of-implementations map keyed by Claim FQN, derived from transformer `requiredClaims`. Rejected for now: pre-emptively encodes a resolution policy. The matcher already iterates `#composedTransformers` per component; the same iteration can resolve Claim requests without an extra projection. Multi-fulfiller resolution policy is deferred to a follow-up (see OQ5).
+- List-of-implementations map keyed by primitive FQN, derived from transformer `required*` fields, alongside `#matchers`. Rejected for now: pre-emptively encodes a resolution policy. The matcher already iterates `#composedTransformers` per component; the same iteration resolves the request without an extra projection. Multi-fulfiller resolution policy is closed by D13 — overlap is forbidden, not resolved.
 
-**Rationale:** Removing `#Api` from 015 makes a Platform-level `#apis` view redundant. The transformer is both the renderer and the registration; aggregating that information twice (once as transformers, once as `#apis`) duplicates state. Keep the platform's outward views minimal; let the matcher discover fulfillers by walking `#composedTransformers`.
+**Rationale:** The transformer is both the renderer and the registration; aggregating that information twice (once as transformers, once as a separate map) duplicates state. Keep the platform's outward views minimal; let the matcher discover fulfillers by walking `#composedTransformers`. The same principle scales to Claims when 015 widens the union.
 
-**Source:** User decision 2026-04-30 ("Now i want to remove #Api definition"). Replaces an earlier formulation that aggregated `#apis` from `#Module.#apis`; that formulation was edited in place (014 was unimplemented) rather than appended as a superseding decision.
+**Source:** User decision 2026-04-30 ("Now i want to remove #Api definition"). Original wording covered Claims; rewritten 2026-05-02 to scope this enhancement to Resources/Traits, with Claims extension delegated to 015.
 
 ---
 
 ### D8: Platform compatibility detection is the matcher's job; no `#requires` field on `#Module`
 
-**Decision:** A consumer Module declares no platform compatibility. At deploy time the matcher walks the module body for FQN usage — Resource and Trait FQNs from `#components[].#resources` / `#components[].#traits`, Claim FQNs from `#claims` (module-level) and `#components[].#claims` (component-level) — and looks each up in `#composedTransformers`. Unmatched FQNs are surfaced as a platform-level signal. The module schema gains nothing — `#Module` stays at 8 slots (see 015 MS-D5).
+**Decision:** A consumer Module declares no platform compatibility. At deploy time the matcher walks the module body for FQN usage — Resource and Trait FQNs from `#components[].#resources` / `#components[].#traits` — and looks each up in `#composedTransformers`. Unmatched FQNs are surfaced as a platform-level signal. The module schema gains nothing — `#Module` stays at 8 slots (see 015 MS-D5).
+
+015 extends this detection to Claims (module-level `#claims` and component-level `#components[].#claims`) once `#Claim` instances exist on `#Module`. The detection mechanism (matcher walks the body; matches against `#composedTransformers`) is unchanged — only the FQN surface widens.
 
 What to do about unmatched FQNs (fail / warn / drop, possibly with per-FQN `criticality` hints on Resource / Trait / Claim definitions) is a separate **platform-team policy** concern that lives at the platform level. That policy is deferred until the catalog `#Policy` redesign (012) converges — detection (this decision) and response (deferred) are independent.
 
@@ -200,7 +204,7 @@ Concretely this drops two fields from D5's draft `#ModuleRegistration` shape:
 
 **Rationale:** Registration ≠ deployment. Conflating them creates two sources of truth (CUE registration value vs. live `ModuleRelease`) and forces every consumer to reconcile both. Pure projection — `#registry[id].#module` carries the Module value, the operator owns the install + the FillPath, and downstream views (`#knownResources`, `#composedTransformers`, …) recompute automatically. No install metadata in CUE.
 
-**Cross-references:** D2 (registry fillable from static + runtime via the same field); D5 (narrowed by this decision); OQ1 (runtime-fill mechanism — `opm-operator` reconciler is the implementation path); OQ4 (self-service catalog runtime — consumes `presentation.template`).
+**Cross-references:** D2 (registry fillable from static + runtime via the same field); D5 (narrowed by this decision); D14 (`enabled: false` use case for staged registrations); D15 (concurrent-write conflict policy when static + runtime disagree); OQ1 (runtime-fill mechanism — `opm-operator` reconciler is the implementation path); OQ4 (self-service catalog runtime — consumes `presentation`).
 
 **Source:** User decision 2026-05-01 ("we don't need ANY instructions for the operators. No install instructions. Installing the #Module as a ModuleRelease (with #defines defined) will automagically register the primitives").
 
@@ -210,8 +214,8 @@ Concretely this drops two fields from D5's draft `#ModuleRegistration` shape:
 
 **Decision:** Replace the synthetic `#provider` (D4) with two native constructs in `core/v1alpha2/platform.cue`:
 
-1. **`#Platform.#matchers`** — a computed reverse index over `#composedTransformers`. Three submaps (`resources`, `traits`, `claims`) each keyed by FQN; the value is the list of transformer candidates whose `required*` field includes that FQN. Resources and Traits index `#ComponentTransformer` only (CL-D11); Claims index the union of `#ComponentTransformer` and `#ModuleTransformer` (TR-D5).
-2. **`#PlatformMatch`** — a per-deploy walker. Inputs: a `#Platform` and a consumer `#Module`. Outputs: `matched`, `unmatched`, and `ambiguous` projections that the Go pipeline / `opm-operator` consumes per render pass. `_demand` is computed from the consumer Module's component bodies (`#components[*].#resources/#traits/#claims`) and module-level `#claims`.
+1. **`#Platform.#matchers`** — a computed reverse index over `#composedTransformers`. Two submaps at this layer (`resources`, `traits`) each keyed by FQN; the value is the list of transformer candidates whose `required*` field includes that FQN. Resources and Traits index `#ComponentTransformer` only (CL-D11). 015 adds a `claims` submap (indexing the union of `#ComponentTransformer` and `#ModuleTransformer` per TR-D5) once Claim-fulfilling transformers exist.
+2. **`#PlatformMatch`** — a per-deploy walker. Inputs: a `#Platform` and a consumer `#Module`. Outputs: `matched`, `unmatched`, and `ambiguous` projections that the Go pipeline / `opm-operator` consumes per render pass. `_demand` is computed from the consumer Module's component bodies (`#components[*].#resources/#traits`). 015 extends `_demand` with module-level and component-level Claim FQNs.
 
 `#Provider` and the `provider.cue` file are deleted. The matcher Go interface migrates to read `#composedTransformers` and `#matchers` directly. `#declaredResources` and `#declaredTraits` (convenience FQN lists on `#Platform`) are also dropped — `#knownResources` / `#knownTraits` map keys give the same information.
 
@@ -224,9 +228,139 @@ Concretely this drops two fields from D5's draft `#ModuleRegistration` shape:
 
 **Rationale:** D4 deferred the matcher migration as out-of-scope. With D11 simplifying `#ModuleRegistration` and the schema otherwise stabilising, deferring `#provider` removal trades short-term scope for long-term debt. The reverse index belongs to `#Platform` because it is a deterministic projection of the platform's transformer catalog. The per-deploy walker belongs alongside it because it operationalises D8 detection (unmatched FQNs) and exposes the OQ5 hook (ambiguous candidates) without committing to a resolution policy. Schema and Go pipeline land in lockstep; no window where the two disagree.
 
-**Cross-references:** D4 (superseded); D7 (capability fulfilment via `requiredClaims` — `#matchers.claims` is the operationalisation); D8 (matcher detects unmatched FQNs — `#PlatformMatch.unmatched` is the surface); 015 TR-D5 (two transformer primitives — what the index keys against); OQ5 (multi-fulfiller resolution — `#PlatformMatch.ambiguous` is the hook).
+**Cross-references:** D4 (superseded); D7 (capability fulfilment via `requiredClaims` — `#matchers.claims` is the operationalisation); D8 (matcher detects unmatched FQNs — `#PlatformMatch.unmatched` is the surface); D13 (multi-fulfiller forbidden — `#PlatformMatch.ambiguous` collapses to a diagnostic surface); 015 TR-D5 (two transformer primitives — what the index keys against).
 
 **Source:** User decision 2026-05-01 ("Lets come up with a new set of definitions that work within the scope of #Platform. It should handle the matching logic").
+
+---
+
+### D13: Multi-fulfiller is forbidden at the `#matchers` layer
+
+**Decision:** When two registered Modules' `#defines.transformers` produce transformers whose `requiredResources` / `requiredTraits` overlap on the same FQN, `#Platform` evaluation fails with `_|_`. The mechanism is a hidden projection on `#matchers`:
+
+```cue
+_invalid: {
+    resources: [for fqn, ts in resources if len(ts) > 1 {fqn}]
+    traits:    [for fqn, ts in traits    if len(ts) > 1 {fqn}]
+}
+_noMultiFulfiller: 0 & (len(_invalid.resources) + len(_invalid.traits))
+```
+
+`#PlatformMatch.ambiguous` survives as a diagnostic surface but cannot populate in practice — the platform-level constraint fails first.
+
+015 extends `_invalid` with a `claims` list and widens `_noMultiFulfiller` to include Claim overlap. The same forbidding semantics apply unchanged.
+
+**Alternatives considered:**
+
+- **Defer multi-fulfiller resolution policy to a follow-up enhancement** (the prior OQ5 stance). Rejected: leaves `#PlatformMatch.ambiguous` populated with no consumer, and the first two-vendor `ManagedDatabase` collision in production is a deploy-time surprise rather than a platform-eval-time failure. Failing loud at the registry layer is cheaper than designing a resolution policy.
+- **Admin-selected default fulfiller per Claim FQN, consumer-pinned, or registry priority order.** Each of these requires a new schema slot (default-fulfiller map, consumer pin field, priority list) and a tie-breaker policy. None earns its keep before two real ecosystem participants ship overlapping transformers.
+- **Last-registered-wins.** Order-dependent and surprising under dynamic registry fills — same reasoning as D3 rejecting last-write-wins for FQN collisions.
+
+**Rationale:** The platform's job at registration time is to refuse ambiguous configurations, not to auto-resolve them. Two transformers fulfilling the same FQN means the admin has registered two Modules that disagree on who renders what; the admin is the only party with enough context to pick. Failing platform evaluation forces that choice up-front (disable one registration via `enabled: false` per D14, pin a different Module version, or remove one). Future enhancement may reopen multi-fulfiller with a deliberate resolution policy; until then the constraint stays.
+
+**Supersedes:** Closes **OQ5** ("Conflict resolution when two transformers declare overlapping `requiredClaims`"). Closes **015 TR-Q2** in lockstep.
+
+**Cross-references:** D3 (FQN-collision-on-types fails CUE unification — same parsimony principle, applied here to fulfilment); D12 (`#matchers` reverse index is where the projection lands); 015 TR-D5 (two transformer primitives — what `#matchers` indexes); 015 CL-D16 (status writeback — single fulfiller per Claim is now a hard constraint, not a convention).
+
+**Source:** User decision 2026-05-01 ("We don't allow multiple fulfillers at this time").
+
+---
+
+### D14: `enabled: false` hides every projection of a `#ModuleRegistration` entry
+
+**Decision:** When `#ModuleRegistration.enabled` is `false`, every computed view that walks `#registry` skips the entry — `#knownResources`, `#knownTraits`, `#composedTransformers`, and (transitively) `#matchers` (plus `#knownClaims` once 015 lands). The Module's primitives are completely hidden from the platform until the flag flips.
+
+The previous wording ("import types but skip transformer composition") was incorrect — the schema already gates every projection on `if reg.enabled`, so disabling skips types as well as transformers.
+
+**Alternatives considered:**
+
+- **Half-disable: hide transformers only, keep type definitions visible** (the discarded original wording). Rejected: the platform views are conceptually one bundle ("what does this registration contribute?"); peeling them apart creates a third state ("registered, types visible, transformers dark") whose semantics no consumer needs.
+- **Drop `enabled` entirely; admins remove the entry instead.** Rejected: removal loses curated `presentation` metadata and breaks runtime-injected entries that are managed by `opm-operator` reconciliation. Toggling a flag is the cleaner operator interface.
+
+**Rationale:** Use case is staging — opm-operator may FillPath an entry from a `ModuleRelease` CR before the admin is ready to activate it; flipping `enabled` to `true` in a follow-up reconcile is cleaner than racing the runtime fill against the admin's static declaration. Full hide also matches the principle of least surprise: a disabled registration produces zero platform-side effects.
+
+**Cross-references:** D2 (registry fillable from static + runtime); D11 (registration is consequence of release).
+
+**Source:** User decision 2026-05-01 ("enabled = false should hide everything registered from that module").
+
+---
+
+### D15: Concurrent static + runtime writes to the same `#registry[Id]` use CUE unification; concrete-value conflict surfaces in `ModuleRelease.status.conditions`
+
+**Decision:** When the platform CUE file declares `#registry["k8up"]` statically and `opm-operator` `FillPath`s `#registry["k8up"]` at runtime, CUE unification merges the two writes by Id. Three outcomes:
+
+1. **Identical values** → idempotent; no change.
+2. **Disjoint fields** (static sets `presentation`, runtime sets `#module`) → both populate.
+3. **Concrete-value disagreement** (static `version: "1.0.0"`, runtime injects `2.0.0`) → `_|_` at platform-evaluation time.
+
+The schema does **not** add an override hierarchy. The opm-operator reconciler catches the bottom value via `cue.Value.Err()`, parses the field path of the conflict, and writes a structured condition to the offending `ModuleRelease.status.conditions` (e.g. `type: "RegistryConflict", message: "#registry[\"k8up\"].#module.metadata.version conflict: declared 1.0.0, injected 2.0.0"`). Admins resolve by aligning the static declaration with the CR or removing one of the two.
+
+**Alternatives considered:**
+
+- **Schema-level split** (`#registry` for static, `#discoveredRegistry` for runtime). Rejected by D2 — forces every computed view to walk two maps; precedence rule offers no benefit unification doesn't already give.
+- **Runtime authoritative** (operator overwrites static on conflict). Rejected: breaks unification semantics; static admin declarations become advisory, surprising readers of the platform CUE.
+- **Static authoritative** (operator skips + warns when concrete static value present). Rejected: couples the reconciler to CUE-side diffing; complicates the operator without clear payoff.
+
+**Rationale:** CUE already models the merge correctly. The only real question was *where* the failure surfaces — the schema cannot raise it without an override hierarchy that breaks D2. Putting the surfacing in the reconciler keeps CUE pure and gives the admin an actionable signal instead of an opaque field-path error.
+
+**Cross-references:** D2 (registry fillable from static + runtime via the same field); D11 (operator-driven registration); OQ1 (runtime-fill mechanism — D15 is the conflict-handling half of that contract).
+
+**Source:** User decision 2026-05-01 ("for 16, Option A sounds good") — selected from a three-option menu (CUE unification + reconciler diagnostic / runtime authoritative / static authoritative).
+
+---
+
+### D16: `#registry` Id keys MUST be kebab-case (`#NameType`)
+
+**Decision:** `#registry: [Id=#NameType]: #ModuleRegistration`. The Id key is constrained by the existing `#NameType` regex (kebab-case). Convention is to set Id to `#module.metadata.name`. Non-kebab Ids fail CUE unification at definition time.
+
+**Alternatives considered:**
+
+- **Bare `string` Id** (current pre-decision shape). Rejected: opens the door to "k8up" vs "K8up" duplicates, especially under runtime injection where a CR field passes through unsanitised; admins would discover the collision only at platform-eval time, with an opaque error.
+- **Default Id to `#module.metadata.name` automatically.** Considered (see new OQ7). Deferred — the cosmetic win is small and the unification rule for default-from-sibling-field is fiddly enough to deserve its own follow-up.
+
+**Rationale:** Kebab-case matches the rest of the catalog's identifier conventions (Module names, Component names, Resource/Trait/Claim names). One identifier shape across the system reduces author cognitive load and makes runtime injection behave predictably.
+
+**Cross-references:** D2 (registry merge contract — Id space must be unambiguous for unification to merge cleanly); D15 (concurrent-write conflicts — kebab constraint helps avoid case-mismatch collisions).
+
+**Source:** User decision 2026-05-01 ("Yes, add constraints").
+
+---
+
+### D17: `#ComponentTransformer` is the sole transformer primitive at this layer
+
+**Decision:** v1alpha1's single `#Transformer` is replaced in v1alpha2 by `#ComponentTransformer` — a primitive that fires once per matching `#Component` with match keys `requiredLabels` / `optionalLabels` / `requiredResources` / `optionalResources` / `requiredTraits` / `optionalTraits`. The render body receives the `#ModuleRelease` plus the matched `#Component` (singular) and a `#TransformerContext`. `#defines.transformers` is typed `[FQN]: #ComponentTransformer` at this layer; the publication slot accepts only this kind. Schema lives in `catalog/core/v1alpha2/transformer.cue` (new file).
+
+015 introduces a sibling primitive `#ModuleTransformer` (per-module fan-out) and widens `#TransformerMap` to `#ComponentTransformer | #ModuleTransformer`. The original motivation for splitting `#Transformer` into two kinds was Claim placement (015 CL-D10 — same Claim FQN at component or module level); without Claims, one kind is sufficient. Naming `#ComponentTransformer` here (rather than keeping the bare `#Transformer` and renaming later) makes the future extension purely additive — 015 introduces a sibling, no rename.
+
+**Alternatives considered:**
+
+- **Keep the bucketed single-primitive design** (original 015 TR-D1–TR-D4 with `componentMatch` / `moduleMatch` buckets and a derived `_scope` field). Rejected: at this layer the only scope is component, so the buckets carry no information; a flat shape is the minimum-information form. 015's TR-D5 already retired the bucketed design.
+- **Pure inference at matcher time** (no schema change in v1alpha2 — keep v1alpha1's `#Transformer` shape, redesign only the matcher). Rejected: the matcher needs typed access to `requiredResources` / `requiredTraits` separately from the labels; v1alpha1's flat shape works but mixes axes. Cleaner to author one primitive for v1alpha2 and let 015 extend it than to graft a Claim story onto v1alpha1's vocabulary.
+- **Defer the `#Transformer` redesign to 015** (let 014 reference v1alpha1's `#Transformer`). Rejected: D12 already refactors how the matcher consumes transformers; the schema needs to land in lockstep so the Go pipeline interface change is internally consistent.
+
+**Rationale:** D12 dropped `#Provider`; the matcher consumes `#composedTransformers` + `#matchers` directly. That refactor needs a typed transformer primitive that the matcher can inspect (`requiredResources`, `requiredTraits`, `metadata.fqn`). Introducing `#ComponentTransformer` here keeps 014 a complete unit — schema, matcher, algorithm — and makes 015 a true extension rather than a bidirectional dependency.
+
+**Cross-references:** D7 (capability fulfilment via `requiredResources` / `requiredTraits`); D12 (matcher consumes the primitive directly); D18 (runtime guarantee — concrete `#ModuleRelease`); 015 TR-D5 (the union widening); 015 CL-D10 (Claim placement, the original split motivation); `05-component-transformer-and-matcher.md` (full design narrative + matcher algorithm).
+
+**Source:** User decision 2026-05-02 (untangle 014 / 015 ownership — "014 owns the redesign of the #Transformer (now #ComponentTransformer) and the matcher and the matcher algorithm").
+
+---
+
+### D18: Runtime always passes a fully concrete `#ModuleRelease` to `#transform`
+
+**Decision:** The OPM runtime guarantees that by the time a transformer's `#transform` body evaluates, `#moduleRelease` is fully concrete: `#config` is resolved, `#ctx` is injected (via 016's `#ContextBuilder`), and every `#components[].spec` is concrete. Transformer bodies may index into `#moduleRelease` freely without re-resolving values. The guarantee is a runtime-implementation contract, not a CUE-schema check.
+
+This guarantee shapes the schema: there is no need for the matcher to pre-filter components into a map for the body's convenience. `#ComponentTransformer.#transform` receives the matched `#component` directly; the body can also walk `#moduleRelease.#components` for cross-component reads. The same guarantee applies unchanged to 015's `#ModuleTransformer` — its body iterates `#moduleRelease.#components` for dual-scope work, and 015's `requiresComponents` field is a pre-fire gate (not a filter).
+
+**Alternatives considered:**
+
+- **Pass partial values and let the body resolve.** Rejected: forces every transformer to know how to drive `#config` / `#ctx` resolution; couples render logic to the runtime pipeline.
+
+**Rationale:** Without this guarantee, the schema would have to allow either party (matcher or body) to perform component filtering for cross-component renders, which is what dragged the original 015 transformer design into the bucketed map. With the guarantee, the body owns iteration and the schema stays minimal.
+
+**Cross-references:** D17 (the schema this guarantee makes possible); 015 TR-D5 / TR-D6 / TR-D7 (the parallel application to `#ModuleTransformer` and the `requiresComponents` pre-fire gate); 016 D11 / D12 (centralised context-injection precedent that the runtime uses to satisfy this guarantee).
+
+**Source:** User statement 2026-05-01 ("Whenever the `#Transformer` is invoked, it will always receive a fully concrete `#ModuleRelease`. ... The runtime implementation makes sure of that."). Lifted to 014 on 2026-05-02 as part of the 014 / 015 untangle.
 
 ---
 
@@ -240,7 +374,7 @@ Captured here while the enhancement is thin (no separate `NN-open-questions.md` 
 
 ### OQ2 — `#Platform.type` role beyond UX / registry filtering
 
-D8 (matcher detects unmatched FQNs) subsumes the type-mismatch *detection* concern: a Module registered against the wrong runtime surfaces as unmatched FQNs at deploy time, with no need to consult `#Platform.type`. The remaining open question is whether `#Platform.type` still has a job — UX hints (catalog UIs filter "compatible Modules" by type), registry-filter shortcuts before walking FQNs, or a deprecated field. **Revisit trigger:** when self-service catalog tooling ships and we discover whether the field carries weight beyond display.
+`#Platform.type` is **kept** as an authored field. D8 (matcher detects unmatched FQNs) subsumes the type-mismatch *detection* concern. The remaining open question is what `type` carries weight on beyond display — UX hints (catalog UIs filter "compatible Modules" by type), registry-filter shortcuts before walking FQNs, or a future enforcement contract. The field stays informational for now. **Revisit trigger:** when self-service catalog tooling ships and we discover whether the field earns enforcement.
 
 ### OQ3 — Migration of existing provider packages
 
@@ -248,8 +382,20 @@ D8 (matcher detects unmatched FQNs) subsumes the type-mismatch *detection* conce
 
 ### OQ4 — Self-service catalog runtime API
 
-`presentation.template` declares the metadata; the consuming surface (`opm catalog list`, web UI, deploy-time matcher) is platform-implementation territory. **Revisit trigger:** when the first self-service catalog tooling is implemented in `cli/` or `opm-operator/`. Consistent with 015 DEF-Q1.
+`presentation` declares the metadata; the consuming surface (`opm catalog list`, web UI, deploy-time matcher) is platform-implementation territory. **Revisit trigger:** when the first self-service catalog tooling is implemented in `cli/` or `opm-operator/`. Consistent with 015 DEF-Q1.
 
-### OQ5 — Conflict resolution when two transformers declare overlapping `requiredClaims`
+### OQ5 — Conflict resolution when two transformers declare overlapping `requiredClaims` *(CLOSED by D13)*
 
-Two registered Modules may each ship a transformer (`#ComponentTransformer` or `#ModuleTransformer`) whose `requiredClaims` includes the same Claim FQN (e.g. one Postgres operator and one Aiven operator, both fulfilling `ManagedDatabase`). The platform's render pipeline must pick one per consumer request. Candidates: admin-selected default fulfiller per Claim FQN, consumer-pinned fulfiller (transformer FQN), or registry priority order. **Revisit trigger:** first real conflict from two ecosystem participants. Same trigger as 015 TR-Q2.
+**Status:** CLOSED 2026-05-01 by **D13** — multi-fulfiller is forbidden at the `#matchers` layer. Platform evaluation fails with `_|_` when two registered transformers' `required*` fields overlap on the same FQN. Future enhancement may reopen with a deliberate resolution policy; until then the constraint stays.
+
+Original text retained for the historical record:
+
+> Two registered Modules may each ship a transformer (`#ComponentTransformer` or `#ModuleTransformer`) whose `requiredClaims` includes the same Claim FQN (e.g. one Postgres operator and one Aiven operator, both fulfilling `ManagedDatabase`). The platform's render pipeline must pick one per consumer request. Candidates: admin-selected default fulfiller per Claim FQN, consumer-pinned fulfiller (transformer FQN), or registry priority order.
+
+### OQ6 — Topological-sort algorithm for `#status` writeback ordering
+
+`#PlatformMatch` exposes `matched.claims` per Claim FQN, but the order in which transformer fulfillers run vs. consumers that read `#claims.<id>.#status` is not modelled in CUE. The dependency graph (write edges from transformer `requiredClaims`; read edges from `#claims.<id>.#status.<field>` reads) is computed and traversed in the Go pipeline. Cycle detection, missing-fulfiller signalling, and ordering policy live in Go. **Revisit trigger:** Go pipeline implementation, or a real cycle case from a catalog Module. Paired with **015 CL-Q7**.
+
+### OQ7 — Default `#registry` Id from `#module.metadata.name`
+
+D16 constrains Id keys to kebab-case but does not auto-default Id to `#module.metadata.name`. Authors must currently spell the Id explicitly (`"k8up": #module: k8up.#Module`). A CUE-side default (something like `[Id=#NameType]: #ModuleRegistration & {#module: metadata: name: Id}`) would remove the duplication but adds unification ceremony with corner cases (what if author overrides `Id` to something other than the Module name?). **Revisit trigger:** experiment 002 surfaces real authoring friction, or first admin who hits the duplication.

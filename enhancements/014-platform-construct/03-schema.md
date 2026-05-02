@@ -2,26 +2,29 @@
 
 ## Summary
 
-Three CUE definitions land in `core/v1alpha2`:
+Four CUE definitions land in `core/v1alpha2`:
 
 - `#Platform` — `core/v1alpha2/platform.cue` (replaces 008's `#Platform` schema)
 - `#ModuleRegistration` — same file
 - `#PlatformMatch` — same file (per-deploy match construct)
+- `#ComponentTransformer` — `core/v1alpha2/transformer.cue` (replaces v1alpha1's single `#Transformer`)
 
-All depend on the flat `#Module` shape with `#defines` from enhancement 015 and the two transformer primitives from 015 TR-D5.
+`#Platform`, `#ModuleRegistration`, and `#PlatformMatch` cover Resource/Trait demand only at this layer. `#ComponentTransformer` is the sole transformer primitive introduced here — it fires once per matching `#Component`. Sibling enhancement [015](../015-claims/) extends the schema with `#Claim`, `#ModuleTransformer`, `#defines.claims`, status writeback, and the corresponding widenings of `#composedTransformers`, `#matchers`, and `#PlatformMatch`.
+
+The `#Module` shape (eight-slot flat structure) and the `#defines.{resources, traits, transformers}` publication channel are introduced together with this enhancement and described in [015](../015-claims/05-defines-channel.md); 014 references the slots it consumes.
 
 ## `#Platform`
 
 ```cue
 package v1alpha2
 
-import (
-    transformer "opmodel.dev/core/v1alpha2:transformer"
-)
-
 // #Platform: A deployment target's identity, context, and registered
 // extensions. Composition unit is #Module (registered via #registry).
 // All outward views are computed projections over #registry.
+//
+// `#ComponentTransformer` and `#TransformerMap` are siblings in the
+// flat v1alpha2 package — no import needed. (015 adds `#ModuleTransformer`
+// and widens `#TransformerMap` to the union.)
 #Platform: {
     apiVersion: "opmodel.dev/core/v1alpha2"
     kind:       "Platform"
@@ -49,7 +52,13 @@ import (
     //      Installation of #components and registration of #defines are
     //      a single operator-driven step (see D11).
     // Both sources unify by Id key.
-    #registry: [Id=string]: #ModuleRegistration
+    //
+    // Id keys MUST be kebab-case (#NameType — D16). Convention is to set
+    // Id to #module.metadata.name. Static + runtime writes to the same Id
+    // unify; concrete-value disagreement produces _|_ at platform-eval
+    // time (D15). The opm-operator reconciler surfaces such conflicts in
+    // ModuleRelease.status.conditions.
+    #registry: [Id=#NameType]: #ModuleRegistration
 
     // ---- Computed views over #registry ----
 
@@ -57,7 +66,13 @@ import (
     // Each is keyed by FQN. FQN collisions across Modules surface as CUE
     // unification errors (correct behaviour — forces conflict resolution
     // at registration time).
-    #knownResources: [FQN=string]: #Resource & {
+    //
+    // The pattern constraint and the comprehension live as siblings inside
+    // the struct (NOT as `[FQN=string]: T & {comprehension}` — that form
+    // treats the comprehension as a per-value constraint and the map stays
+    // empty). Verified by experiments/002 finding 2.
+    #knownResources: {
+        [FQN=string]: #Resource
         for _, reg in #registry
         if reg.enabled
         if reg.#module.#defines != _|_
@@ -67,7 +82,8 @@ import (
         }
     }
 
-    #knownTraits: [FQN=string]: #Trait & {
+    #knownTraits: {
+        [FQN=string]: #Trait
         for _, reg in #registry
         if reg.enabled
         if reg.#module.#defines != _|_
@@ -77,24 +93,16 @@ import (
         }
     }
 
-    #knownClaims: [FQN=string]: #Claim & {
-        for _, reg in #registry
-        if reg.enabled
-        if reg.#module.#defines != _|_
-        if reg.#module.#defines.claims != _|_
-        for fqn, v in reg.#module.#defines.claims {
-            (fqn): v
-        }
-    }
+    // #knownClaims is added by 015 once #defines.claims exists.
 
     // Active rendering registry — all transformers from all enabled Modules.
-    // Capability fulfilment is registered implicitly: any transformer
-    // (#ComponentTransformer or #ModuleTransformer) whose requiredClaims
-    // includes a Claim FQN is the supply registration for that Claim
-    // (see 015 TR-D5). No separate #apis aggregation map exists;
-    // multi-fulfiller resolution is left to the matcher and to a future
-    // enhancement (see OQ5).
-    #composedTransformers: transformer.#TransformerMap & {
+    // Capability fulfilment for Resources/Traits is registered implicitly:
+    // a transformer whose requiredResources / requiredTraits includes a
+    // primitive FQN is the supply registration for that primitive (D7).
+    // 015 widens #TransformerMap to the union (#ComponentTransformer |
+    // #ModuleTransformer) and adds the requiredClaims supply path.
+    // Multi-fulfiller is forbidden — see #matchers._invalid below (D13).
+    #composedTransformers: #TransformerMap & {
         for _, reg in #registry
         if reg.enabled
         if reg.#module.#defines != _|_
@@ -109,79 +117,83 @@ import (
     // Reverse index from #composedTransformers' required* fields.
     // Key = FQN of a primitive that some transformer fulfils; value =
     // candidate transformers for that FQN. Empty/missing FQN at lookup
-    // time = unmatched (D8). Multi-candidate = ambiguous (OQ5).
+    // time = unmatched (D8). Multi-candidate is forbidden (D13) — the
+    // _invalid list captures any FQN with > 1 fulfiller, and the
+    // _noMultiFulfiller constraint forces _|_ at platform-eval time.
     //
     // Resources and Traits are component-scope only (CL-D11); only
-    // #ComponentTransformer can fulfil them. Claims may be fulfilled by
-    // either #ComponentTransformer (component-level Claims) or
-    // #ModuleTransformer (module-level Claims) per 015 TR-D5.
+    // #ComponentTransformer can fulfil them. 015 adds a `claims` sub-map
+    // populated from transformer requiredClaims (component-level via
+    // #ComponentTransformer, module-level via #ModuleTransformer).
+    //
+    // Pre-compute candidate maps as `let` bindings so _invalid can iterate
+    // them directly. Iterating the published `resources` / `traits` fields
+    // fails under `cue vet -c` with "incomplete type list" because the
+    // field type is `[FQN]: [...#ComponentTransformer]` — an open
+    // value-list — which CUE refuses to range over. (experiments/002
+    // finding 4.) List comprehensions yield via `{t}` — the trailing
+    // `t,` form is invalid CUE (experiments/002 finding 1).
     #matchers: {
-        // Universe of FQNs any transformer demands, used to drive the
-        // outer comprehensions. Hidden — implementation detail.
         let _resourceFqns = {
             for _, t in #composedTransformers
-            if t.kind == "ComponentTransformer"
             if t.requiredResources != _|_
             for fqn, _ in t.requiredResources {
-                (fqn): null
+                (fqn): _
             }
         }
         let _traitFqns = {
             for _, t in #composedTransformers
-            if t.kind == "ComponentTransformer"
             if t.requiredTraits != _|_
             for fqn, _ in t.requiredTraits {
-                (fqn): null
-            }
-        }
-        let _claimFqns = {
-            for _, t in #composedTransformers
-            if t.requiredClaims != _|_
-            for fqn, _ in t.requiredClaims {
-                (fqn): null
+                (fqn): _
             }
         }
 
-        resources: [FQN=string]: [...transformer.#ComponentTransformer]
-        resources: {
+        let _resourceCandidates = {
             for fqn, _ in _resourceFqns {
                 (fqn): [
                     for _, t in #composedTransformers
-                    if t.kind == "ComponentTransformer"
                     if t.requiredResources != _|_
-                    if t.requiredResources[fqn] != _|_
-                    t,
+                    if t.requiredResources[fqn] != _|_ {t},
                 ]
             }
         }
-
-        traits: [FQN=string]: [...transformer.#ComponentTransformer]
-        traits: {
+        let _traitCandidates = {
             for fqn, _ in _traitFqns {
                 (fqn): [
                     for _, t in #composedTransformers
-                    if t.kind == "ComponentTransformer"
                     if t.requiredTraits != _|_
-                    if t.requiredTraits[fqn] != _|_
-                    t,
+                    if t.requiredTraits[fqn] != _|_ {t},
                 ]
             }
         }
 
-        claims: [FQN=string]: [...(transformer.#ComponentTransformer | transformer.#ModuleTransformer)]
-        claims: {
-            for fqn, _ in _claimFqns {
-                (fqn): [
-                    for _, t in #composedTransformers
-                    if t.requiredClaims != _|_
-                    if t.requiredClaims[fqn] != _|_
-                    t,
-                ]
-            }
+        resources: {[FQN=string]: [...#ComponentTransformer]} & _resourceCandidates
+        traits:    {[FQN=string]: [...#ComponentTransformer]} & _traitCandidates
+
+        // D13 — forbid multi-fulfiller. Any FQN with > 1 candidate lands
+        // in _invalid; the _noMultiFulfiller constraint then unifies
+        // len(_invalid) with concrete 0, producing _|_ when non-empty.
+        // Hidden fields — diagnostic surface for tooling, not for authors.
+        // Iterates the let-binding candidate maps (concrete) rather than
+        // the typed published fields.
+        //
+        // 015 adds `claims` to both `_invalid` and the `_noMultiFulfiller`
+        // sum once Claim-fulfilling transformers exist.
+        _invalid: {
+            resources: [
+                for fqn, ts in _resourceCandidates if len(ts) > 1 {fqn},
+            ]
+            traits: [
+                for fqn, ts in _traitCandidates if len(ts) > 1 {fqn},
+            ]
         }
+        _noMultiFulfiller: 0 & (len(_invalid.resources) + len(_invalid.traits))
     }
 }
 ```
+
+> **Diagnostic split:** During implementation, consider exposing a `#PlatformBase` (every projection except `_noMultiFulfiller`) alongside the strict `#Platform`. Tests that need to *inspect* `_invalid` populated cannot use the strict form because the constraint short-circuits to `_|_` before any field is readable. The split is a testing convenience; production schemas use `#Platform`. See `experiments/002-platform-construct/22_platform.cue` for the working pattern.
 
 ## `#ModuleRegistration`
 
@@ -197,14 +209,20 @@ import (
     #module!: #Module
 
     // Enable/disable without removing the entry. Default true.
-    // Useful for "import types but skip transformer composition" cases.
+    // When false, every #Platform projection that walks #registry
+    // (#knownResources, #knownTraits, #composedTransformers, #matchers —
+    // and #knownClaims once 015 lands) skips this entry — the Module's
+    // primitives are completely hidden from the platform until enabled
+    // flips back to true (D14). Use case: stage a registration via
+    // FillPath, leave it dark until a follow-up reconcile flips the flag.
     enabled: bool | *true
 
     // Optional self-service catalog metadata. Carries platform-curation
     // data (category/tags/examples) that #module.metadata cannot — i.e.
     // information about how this platform surfaces the Module, not about
-    // the Module itself.
-    presentation?: template?: {
+    // the Module itself. Flat shape after D11 removed presentation.operator
+    // and D14 dropped the redundant `template` wrapper.
+    presentation?: {
         description?: string
         category?:    string
         tags?:        [...string]
@@ -219,8 +237,6 @@ import (
         annotations?: #LabelsAnnotationsType
     }
 }
-
-#PlatformMap: [string]: #Platform
 ```
 
 ## `#PlatformMatch`
@@ -236,43 +252,27 @@ Per-deploy match construct. The Go pipeline (or `opm-operator`) instantiates one
     module!:   #Module   // consumer Module being deployed
 
     // ---- Demand: FQNs the consumer Module reads ----
-
+    //
+    // 015 extends `_demand` with a `claims` sub-tree (module-level + per-
+    // component) once #Claim instances exist on #Module.
     _demand: {
-        resources: [FQN=string]: null
+        resources: [FQN=string]: _
         resources: {
+            if module.#components != _|_
             for _, c in module.#components
             if c.#resources != _|_
             for fqn, _ in c.#resources {
-                (fqn): null
+                (fqn): _
             }
         }
 
-        traits: [FQN=string]: null
+        traits: [FQN=string]: _
         traits: {
+            if module.#components != _|_
             for _, c in module.#components
             if c.#traits != _|_
             for fqn, _ in c.#traits {
-                (fqn): null
-            }
-        }
-
-        // Module-level vs component-level Claims — kept separate because
-        // they map to different transformer kinds (TR-D5).
-        claims: {
-            module: [FQN=string]: null
-            module: {
-                if module.#claims != _|_
-                for fqn, _ in module.#claims {
-                    (fqn): null
-                }
-            }
-            component: [FQN=string]: null
-            component: {
-                for _, c in module.#components
-                if c.#claims != _|_
-                for fqn, _ in c.#claims {
-                    (fqn): null
-                }
+                (fqn): _
             }
         }
     }
@@ -280,7 +280,7 @@ Per-deploy match construct. The Go pipeline (or `opm-operator`) instantiates one
     // ---- Lookup: candidate transformers per demanded FQN ----
 
     matched: {
-        resources: [FQN=string]: [...transformer.#ComponentTransformer]
+        resources: [FQN=string]: [...#ComponentTransformer]
         resources: {
             for fqn, _ in _demand.resources
             if platform.#matchers.resources[fqn] != _|_ {
@@ -288,51 +288,51 @@ Per-deploy match construct. The Go pipeline (or `opm-operator`) instantiates one
             }
         }
 
-        traits: [FQN=string]: [...transformer.#ComponentTransformer]
+        traits: [FQN=string]: [...#ComponentTransformer]
         traits: {
             for fqn, _ in _demand.traits
             if platform.#matchers.traits[fqn] != _|_ {
                 (fqn): platform.#matchers.traits[fqn]
             }
         }
-
-        claims: [FQN=string]: [...(transformer.#ComponentTransformer | transformer.#ModuleTransformer)]
-        claims: {
-            for fqn, _ in _demand.claims.module
-            if platform.#matchers.claims[fqn] != _|_ {
-                (fqn): platform.#matchers.claims[fqn]
-            }
-            for fqn, _ in _demand.claims.component
-            if platform.#matchers.claims[fqn] != _|_ {
-                (fqn): platform.#matchers.claims[fqn]
-            }
-        }
     }
 
     // ---- Diagnostics ----
-
+    //
     // FQNs the consumer demands but no transformer fulfils. D8 detection
     // signal. Response policy (fail / warn / drop) is platform-team
     // policy concern, deferred to 012.
+    //
+    // 015 adds `claims` to `matched`, `unmatched`, and `ambiguous` once
+    // Claim demand exists on #Module.
+    //
+    // Membership tested against pre-built matched-FQN sets, not via
+    // `matched.resources[fqn] == _|_` — that form errors with "undefined
+    // field" under `cue vet -c` because `matched.resources` is typed
+    // `[FQN]: [...#ComponentTransformer]`. (experiments/002 finding 5.)
+    // List comprehensions yield via `{fqn}` — the trailing `fqn,` form is
+    // invalid CUE (experiments/002 finding 1).
     unmatched: {
+        let _matchedResourceSet = {
+            for fqn, _ in matched.resources {(fqn): _}
+        }
+        let _matchedTraitSet = {
+            for fqn, _ in matched.traits {(fqn): _}
+        }
         resources: [
             for fqn, _ in _demand.resources
-            if matched.resources[fqn] == _|_ || len(matched.resources[fqn]) == 0
-            fqn,
+            if _matchedResourceSet[fqn] == _|_ {fqn},
         ]
         traits: [
             for fqn, _ in _demand.traits
-            if matched.traits[fqn] == _|_ || len(matched.traits[fqn]) == 0
-            fqn,
-        ]
-        claims: [
-            for fqn, _ in (_demand.claims.module & _demand.claims.component)
-            if matched.claims[fqn] == _|_ || len(matched.claims[fqn]) == 0
-            fqn,
+            if _matchedTraitSet[fqn] == _|_ {fqn},
         ]
     }
 
-    // FQNs with > 1 candidate. Resolution policy deferred (OQ5).
+    // FQNs with > 1 candidate. With multi-fulfiller forbidden at the
+    // platform level (D13), this should always be empty when reached —
+    // the platform-eval would have already failed. Kept as a diagnostic
+    // surface in case a future enhancement reopens multi-fulfiller.
     ambiguous: {
         resources: {
             for fqn, ts in matched.resources
@@ -346,14 +346,58 @@ Per-deploy match construct. The Go pipeline (or `opm-operator`) instantiates one
                 (fqn): ts
             }
         }
-        claims: {
-            for fqn, ts in matched.claims
-            if len(ts) > 1 {
-                (fqn): ts
-            }
-        }
     }
 }
+```
+
+## `#ComponentTransformer`
+
+Sole transformer primitive at this layer (D17). Fires once per matching `#Component`. See [`05-component-transformer-and-matcher.md`](05-component-transformer-and-matcher.md) for the full design narrative, runtime guarantee (D18), matcher algorithm, and worked example.
+
+```cue
+// catalog/core/v1alpha2/transformer.cue
+package v1alpha2
+
+#ComponentTransformer: {
+    apiVersion: "opmodel.dev/core/v1alpha2"
+    kind:       "ComponentTransformer"
+
+    metadata: {
+        modulePath!: #ModulePathType
+        version!:    #MajorVersionType
+        name!:       #NameType
+        #definitionName: (#KebabToPascal & {"in": name}).out
+        fqn: #FQNType & "\(modulePath)/\(name)@\(version)"
+        description!: string
+        labels?:      #LabelsAnnotationsType
+        annotations?: #LabelsAnnotationsType
+    }
+
+    // Match keys — read against the candidate #Component.
+    // 015 extends this set with requiredClaims / optionalClaims for
+    // component-level Claim fulfilment.
+    requiredLabels?:    #LabelsAnnotationsType
+    optionalLabels?:    #LabelsAnnotationsType
+    requiredResources?: [FQN=string]: _
+    optionalResources?: [FQN=string]: _
+    requiredTraits?:    [FQN=string]: _
+    optionalTraits?:    [FQN=string]: _
+
+    readsContext?:  [...string]
+    producesKinds?: [...string]
+
+    // Runtime always supplies both inputs concretely (D18).
+    #transform: {
+        #moduleRelease: _
+        #component:     _
+        #context:       #TransformerContext
+
+        output: {...}
+    }
+}
+
+// 015 widens this to `#ComponentTransformer | #ModuleTransformer`.
+#TransformerMap: [#FQNType]: #ComponentTransformer
 ```
 
 ## Field Documentation
@@ -368,22 +412,21 @@ Per-deploy match construct. The Go pipeline (or `opm-operator`) instantiates one
 | `metadata.description` | `string` | no | Human-readable summary |
 | `type` | `string` | yes | Target type (`"kubernetes"`, future: `"docker-compose"`, etc.) |
 | `#ctx` | `#PlatformContext` | yes | Platform-level context (016) |
-| `#registry` | `[Id=string]: #ModuleRegistration` | yes | Registered Modules (static + runtime). Runtime entries are FillPath-injected by `opm-operator` from `ModuleRelease` CRs (D11). |
-| `#knownResources` | `[FQN=string]: #Resource` | computed | Resource types from `#registry[*].#module.#defines.resources` |
-| `#knownTraits` | `[FQN=string]: #Trait` | computed | Trait types from `#registry[*].#module.#defines.traits` |
-| `#knownClaims` | `[FQN=string]: #Claim` | computed | Claim types from `#registry[*].#module.#defines.claims` |
-| `#composedTransformers` | `transformer.#TransformerMap` | computed | All transformers (`#ComponentTransformer \| #ModuleTransformer`), keyed by FQN. Capability fulfilment is registered via each transformer's `requiredClaims` field (see 015 TR-D5). |
+| `#registry` | `[Id=#NameType]: #ModuleRegistration` | yes | Registered Modules (static + runtime). Id MUST be kebab-case (D16). Runtime entries are FillPath-injected by `opm-operator` from `ModuleRelease` CRs (D11). Static + runtime writes to the same Id unify via CUE; concrete-value disagreement = `_\|_` surfaced by reconciler (D15). |
+| `#knownResources` | `[FQN=string]: #Resource` | computed | Resource types from `#registry[*].#module.#defines.resources` (only entries where `enabled: true` per D14). |
+| `#knownTraits` | `[FQN=string]: #Trait` | computed | Trait types from enabled `#registry[*].#module.#defines.traits`. |
+| `#composedTransformers` | `#TransformerMap` | computed | All transformers from enabled `#registry[*].#module.#defines.transformers`, keyed by FQN. Value type is `[FQN]: #ComponentTransformer` at this layer; 015 widens to `#ComponentTransformer \| #ModuleTransformer`. Capability fulfilment for Resources/Traits is registered via the transformer's `requiredResources` / `requiredTraits` fields (D7). |
 | `#matchers.resources` | `[FQN=string]: [...#ComponentTransformer]` | computed | Reverse index: per-Resource-FQN, transformer candidates whose `requiredResources` includes that FQN (D12). |
 | `#matchers.traits` | `[FQN=string]: [...#ComponentTransformer]` | computed | Same shape, keyed off `requiredTraits`. |
-| `#matchers.claims` | `[FQN=string]: [...(#ComponentTransformer \| #ModuleTransformer)]` | computed | Same shape, keyed off `requiredClaims`; spans both transformer kinds. |
+| `#matchers._invalid` | `{resources: [...string], traits: [...string]}` | computed | FQNs with > 1 fulfiller. Hidden diagnostic. Paired with `_noMultiFulfiller` constraint that forces `_\|_` when any sub-list is non-empty (D13). 015 adds a `claims` sub-list. |
 
 ### `#ModuleRegistration`
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `#module` | `#Module` | yes | Registered Module value (CUE-imported or runtime-injected) |
-| `enabled` | `bool` | default `true` | Disable without removal |
-| `presentation.template` | `{...}` | no | Self-service catalog curation metadata (category, tags, examples). Optional. |
+| `enabled` | `bool` | default `true` | When false, hides every projection of this entry from the platform (`#knownResources`, `#knownTraits`, `#composedTransformers`, `#matchers` — and `#knownClaims` once 015 lands) — D14 |
+| `presentation` | `{description?, category?, tags?, examples?}` | no | Self-service catalog curation metadata. Flat shape after D11/D14. |
 | `metadata.labels` | `#LabelsAnnotationsType` | no | Registration labels |
 | `metadata.annotations` | `#LabelsAnnotationsType` | no | Registration annotations |
 
@@ -395,9 +438,26 @@ Per-deploy match construct. The Go pipeline (or `opm-operator`) instantiates one
 | `module` | `#Module` | yes | Consumer Module being deployed |
 | `matched.resources` | `[FQN=string]: [...#ComponentTransformer]` | computed | Per-FQN candidate list for Resource demand |
 | `matched.traits` | `[FQN=string]: [...#ComponentTransformer]` | computed | Per-FQN candidate list for Trait demand |
-| `matched.claims` | `[FQN=string]: [...(#ComponentTransformer \| #ModuleTransformer)]` | computed | Per-FQN candidate list for Claim demand (module-level + component-level) |
-| `unmatched.{resources,traits,claims}` | `[...string]` | computed | FQNs the consumer demands with zero fulfillers (D8) |
-| `ambiguous.{resources,traits,claims}` | `[FQN=string]: [...transformer]` | computed | FQNs with > 1 fulfiller (OQ5) |
+| `unmatched.{resources,traits}` | `[...string]` | computed | FQNs the consumer demands with zero fulfillers (D8). 015 adds `claims`. |
+| `ambiguous.{resources,traits}` | `[FQN=string]: [...transformer]` | computed | FQNs with > 1 fulfiller (closed by D13 — should always be empty at runtime). 015 adds `claims`. |
+
+### `#ComponentTransformer`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `apiVersion` | `"opmodel.dev/core/v1alpha2"` | fixed | OPM core |
+| `kind` | `"ComponentTransformer"` | fixed | Always `"ComponentTransformer"` |
+| `metadata.modulePath` | `#ModulePathType` | yes | Module path (e.g. `"opmodel.dev/opm/v1alpha2/providers/kubernetes"`) |
+| `metadata.version` | `#MajorVersionType` | yes | Major version |
+| `metadata.name` | `#NameType` | yes | Transformer name (kebab-case) |
+| `metadata.fqn` | `#FQNType` | computed | `\(modulePath)/\(name)@\(version)` — used as `#defines.transformers` map key |
+| `metadata.description` | `string` | yes | Human-readable summary |
+| `requiredLabels` / `optionalLabels` | `#LabelsAnnotationsType` | no | Component label match keys |
+| `requiredResources` / `optionalResources` | `[FQN=string]: _` | no | Component `#resources` FQN match keys |
+| `requiredTraits` / `optionalTraits` | `[FQN=string]: _` | no | Component `#traits` FQN match keys. 015 adds `requiredClaims` / `optionalClaims`. |
+| `readsContext` | `[...string]` | no | Declarative `#ctx` paths the body reads (catalog-UI hint) |
+| `producesKinds` | `[...string]` | no | Output Kubernetes kinds (catalog-UI hint) |
+| `#transform` | `{ #moduleRelease, #component, #context, output }` | yes | Render function. Runtime supplies all three inputs concretely (D18). |
 
 ## File Locations
 
@@ -405,7 +465,9 @@ Per-deploy match construct. The Go pipeline (or `opm-operator`) instantiates one
 
 | Path | Purpose |
 |------|---------|
-| `catalog/core/v1alpha2/platform.cue` | `#Platform`, `#ModuleRegistration`, `#PlatformMatch`, `#PlatformMap` |
+| `catalog/core/v1alpha2/platform.cue` | `#Platform`, `#ModuleRegistration`, `#PlatformMatch` |
+| `catalog/core/v1alpha2/transformer.cue` | `#ComponentTransformer`, `#TransformerMap`. 015 extends with `#ModuleTransformer` and widens `#TransformerMap` to the union. |
+| `catalog/experiments/002-platform-construct/` | Self-contained CUE harness exercising every schema in this doc — mirrors `experiments/001-module-context/`. Validates D3 (FQN collision), D13 (multi-fulfiller forbidden), D14 (enabled hides), D15 (concurrent-write conflict), D16 (kebab Id), the `#PlatformMatch.unmatched` walker, and basic `#known*` / `#composedTransformers` / `#matchers` projections. |
 
 ### Removed / superseded
 
@@ -421,4 +483,8 @@ Per-deploy match construct. The Go pipeline (or `opm-operator`) instantiates one
 | `catalog/core/v1alpha2/context.cue` | `#PlatformContext`, `#EnvironmentContext`, `#ModuleContext`, `#RuntimeContext`, `#ComponentNames` | 016 |
 | `catalog/core/v1alpha2/environment.cue` | `#Environment` | 016 |
 | `catalog/core/v1alpha2/context_builder.cue` | `#ContextBuilder` | 016 |
-| `catalog/core/v1alpha2/transformer.cue` | `#ComponentTransformer`, `#ModuleTransformer`, `#TransformerMap` | 015 |
+| `catalog/core/v1alpha2/module.cue` | `#Module` flat shape (eight slots) | 015 |
+| `catalog/core/v1alpha2/claim.cue` | `#Claim` primitive, `#ClaimMap` | 015 |
+| `catalog/core/v1alpha2/transformer.cue` | `#ModuleTransformer` (extends this enhancement's transformer file) | 015 |
+
+> Flat-package note: 014 / 015 / 016 all live in the single `v1alpha2` package, so `#Platform`'s schema references `#ComponentTransformer` and `#TransformerMap` (and 015's `#ModuleTransformer`) directly without a cross-package import alias.

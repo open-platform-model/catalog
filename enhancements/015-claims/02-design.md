@@ -1,13 +1,16 @@
-# Design — `#Module` Flat Shape with `#Claim` Primitive and `#defines` Channel
+# Design — `#Claim` Primitive, `#ModuleTransformer`, Module Extension Surface
 
 This is the high-level overview. Topical narratives live in dedicated files; consult them when you need the rationale, schema sketches, examples, and supersession history of a specific area.
+
+[014](../014-platform-construct/) introduces `#Platform`, `#registry`, `#composedTransformers`, `#matchers.{resources,traits}`, `#PlatformMatch`, `#ComponentTransformer`, the matcher algorithm, and the `#defines.{resources,traits,transformers}` slot. **This enhancement extends every one of those views with the Claim half** plus introduces `#Module` flat shape, `#Claim` primitive, `#ModuleTransformer`, and `#statusWrites`.
 
 | Topic | Narrative file |
 |---|---|
 | The eight-slot flat `#Module` shape | [`04-module-shape.md`](04-module-shape.md) |
-| The `#defines` publication channel | [`05-defines-channel.md`](05-defines-channel.md) |
+| The `#defines` publication channel (014 introduces three sub-maps; 015 extends with `claims`) | [`05-defines-channel.md`](05-defines-channel.md) |
 | The `#Claim` primitive and `#status` resolution | [`06-claim-primitive.md`](06-claim-primitive.md) |
-| The two transformer primitives + matcher | [`07-transformer-redesign.md`](07-transformer-redesign.md) |
+| `#ModuleTransformer` schema, `#statusWrites` writeback, dual-scope examples | [`07-transformer-redesign.md`](07-transformer-redesign.md) |
+| `#ComponentTransformer` schema + matcher algorithm | [014/05-component-transformer-and-matcher.md](../014-platform-construct/05-component-transformer-and-matcher.md) |
 | Worked examples (seven Modules covering apps, operators, publication-only, commodities) | [`08-examples.md`](08-examples.md) |
 | Litmus / docs updates landing alongside this enhancement | [`09-litmus-updates.md`](09-litmus-updates.md) |
 | Decision audit log | [`10-decisions.md`](10-decisions.md) |
@@ -55,7 +58,7 @@ outward       #claims         # ecosystem-supplied needs (instance form)
 
 `#Claim` is a new primitive that defines the shape of a need (`#spec`) and the resolution channel that flows back from the fulfilling transformer (`#status`). The same primitive serves as both type definition (in catalog or vendor packages, or published via `#defines.claims`) and request (in `#claims`). Identity travels via `apiVersion` + `metadata.fqn`. `#Claim` may be placed at component level (data-plane needs — DB, queue, cache) or module level (platform-relationship needs — DNS, identity, mesh tenant). The full Claim story — identity, placement, triplet/quartet pattern, `#status` lifecycle, capability fulfilment — lives in [`06-claim-primitive.md`](06-claim-primitive.md).
 
-There is no separate `#Api` wrapper primitive. An "API" in OPM is expressed either as a set of `#Resource` / `#Trait` definitions (consumed via component composition; rendered by catalog transformers) or as a `#Claim` definition (resolved at deploy time by any registered transformer whose `requiredClaims` includes the Claim's FQN). Both ship through `#defines`. Two transformer kinds carry fulfilment: `#ComponentTransformer` (component-level Claims) and `#ModuleTransformer` (module-level Claims). Full transformer schema, matcher pseudocode, and dual-scope (`requiresComponents`) gate live in [`07-transformer-redesign.md`](07-transformer-redesign.md).
+There is no separate `#Api` wrapper primitive. An "API" in OPM is expressed either as a set of `#Resource` / `#Trait` definitions (consumed via component composition; rendered by catalog transformers) or as a `#Claim` definition (resolved at deploy time by any registered transformer whose `requiredClaims` includes the Claim's FQN). Both ship through `#defines`. Two transformer kinds carry fulfilment: `#ComponentTransformer` (component-level Claims; introduced by [014 D17](../014-platform-construct/04-decisions.md), extended here with `requiredClaims` / `optionalClaims`) and `#ModuleTransformer` (module-level Claims; introduced here). The `#ComponentTransformer` schema and matcher algorithm live in [014/05-component-transformer-and-matcher.md](../014-platform-construct/05-component-transformer-and-matcher.md); the `#ModuleTransformer` schema, dual-scope (`requiresComponents`) gate, and `#statusWrites` writeback channel live in [`07-transformer-redesign.md`](07-transformer-redesign.md).
 
 `#defines` is the platform-facing publication channel. A Module that publishes new Resource / Trait / Claim type definitions or ships transformers lists them under `#defines`, keyed by FQN. Consumer Modules import the CUE packages directly to reference definitions; `#defines` is the discovery surface, not the consumption surface. `#Blueprint` is *not* publishable through `#defines` (DEF-D6) — Blueprints are CUE-import sugar with no platform-level consumer. Full publication-channel story lives in [`05-defines-channel.md`](05-defines-channel.md).
 
