@@ -42,4 +42,4 @@ t09_moduleFqn:            "opmodel.dev/opm/v1alpha2/opm-kubernetes-core:0.1.0" &
 
 // Computed views fire correctly off the merged value.
 t09_knownResourcesCount: 2 & len(_t09_unified.#knownResources)
-t09_transformersCount:   1 & len(_t09_unified.#composedTransformers)
+t09_transformersCount:   2 & len(_t09_unified.#composedTransformers)

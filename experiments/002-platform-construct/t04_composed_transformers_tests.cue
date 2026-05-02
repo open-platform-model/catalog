@@ -16,9 +16,10 @@ _t04_platform: #Platform & {
 	}
 }
 
-// 1 (deployment) + 1 (postgres) + 1 (backup-schedule) = 3
-t04_transformerCount: len(_t04_platform.#composedTransformers) & 3
+// 2 (deployment, service) + 1 (postgres) + 1 (backup-schedule) = 4
+t04_transformerCount: len(_t04_platform.#composedTransformers) & 4
 
 t04_deploymentKind: "ComponentTransformer" & _t04_platform.#composedTransformers["opmodel.dev/opm/v1alpha2/providers/kubernetes/deployment-transformer@v1"].kind
+t04_serviceKind:    "ComponentTransformer" & _t04_platform.#composedTransformers["opmodel.dev/opm/v1alpha2/providers/kubernetes/service-transformer@v1"].kind
 t04_pgKind:         "ComponentTransformer" & _t04_platform.#composedTransformers["vendor.com/postgres-operator/managed-database-transformer@v1"].kind
 t04_backupKind:     "ModuleTransformer" & _t04_platform.#composedTransformers["opmodel.dev/k8up/v1alpha2/transformers/backup-schedule-transformer@v1"].kind

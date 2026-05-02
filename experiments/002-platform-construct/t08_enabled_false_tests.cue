@@ -25,7 +25,7 @@ _t08_platform: #Platform & {
 t08_knownResourcesCount: 2 & len(_t08_platform.#knownResources)       // container + volume
 t08_knownTraitsCount:    1 & len(_t08_platform.#knownTraits)          // expose only
 t08_knownClaimsCount:    1 & len(_t08_platform.#knownClaims)          // managed-database only
-t08_transformersCount:   1 & len(_t08_platform.#composedTransformers) // deployment only
+t08_transformersCount:   2 & len(_t08_platform.#composedTransformers) // deployment + service
 
 // Specifically the disabled module's primitives are absent.
 t08_backupTraitAbsent:       _t08_platform.#knownTraits["opmodel.dev/opm/v1alpha2/operations/backup/backup-trait@v1"] == _|_ & true

@@ -88,9 +88,91 @@ _deploymentTransformer: #ComponentTransformer & {
 		name:        "deployment-transformer"
 		version:     "v1"
 		fqn:         "opmodel.dev/opm/v1alpha2/providers/kubernetes/deployment-transformer@v1"
-		description: "Renders Container resource → Deployment"
+		description: "Renders Container resource → apps/v1 Deployment"
 	}
 	requiredResources: (_containerResource.metadata.fqn): _
+
+	producesKinds: ["apps/v1.Deployment"]
+
+	#transform: {
+		#moduleRelease: _
+		#component:     _
+		#context:       #TransformerContext
+
+		// Body materialises only when the dispatcher unifies in concrete
+		// #context + #component. Without this guard, fixture-time
+		// evaluation triggers `required field missing: name` because
+		// #TransformerContext.release.name is required.
+		if #context.release.name != _|_
+		if #context.component.name != _|_
+		if #component.spec != _|_ {
+			output: {
+				apiVersion: "apps/v1"
+				kind:       "Deployment"
+				metadata: {
+					name:      "\(#context.release.name)-\(#context.component.name)"
+					namespace: #context.release.namespace
+					labels: {
+						"app.kubernetes.io/name":     #context.component.name
+						"app.kubernetes.io/instance": #context.release.name
+					}
+				}
+				spec: {
+					replicas: #component.spec.replicas
+					selector: matchLabels: "app.kubernetes.io/name": #context.component.name
+					template: {
+						metadata: labels: "app.kubernetes.io/name": #context.component.name
+						spec: containers: [{
+							name:  #context.component.name
+							image: #component.spec.image
+							if #component.spec.port != _|_ {
+								ports: [{containerPort: #component.spec.port}]
+							}
+						}]
+					}
+				}
+			}
+		}
+	}
+}
+
+_serviceTransformer: #ComponentTransformer & {
+	metadata: {
+		modulePath:  "opmodel.dev/opm/v1alpha2/providers/kubernetes"
+		name:        "service-transformer"
+		version:     "v1"
+		fqn:         "opmodel.dev/opm/v1alpha2/providers/kubernetes/service-transformer@v1"
+		description: "Renders Expose trait → v1 Service"
+	}
+	requiredTraits: (_exposeTrait.metadata.fqn): _
+
+	producesKinds: ["v1.Service"]
+
+	#transform: {
+		#moduleRelease: _
+		#component:     _
+		#context:       #TransformerContext
+
+		if #context.release.name != _|_
+		if #context.component.name != _|_
+		if #component.spec != _|_ {
+			output: {
+				apiVersion: "v1"
+				kind:       "Service"
+				metadata: {
+					name:      "\(#context.release.name)-\(#context.component.name)"
+					namespace: #context.release.namespace
+				}
+				spec: {
+					selector: "app.kubernetes.io/name": #context.component.name
+					ports: [{
+						port:       #component.spec.port
+						targetPort: #component.spec.port
+					}]
+				}
+			}
+		}
+	}
 }
 
 _pgManagedDatabaseTransformer: #ComponentTransformer & {
@@ -151,6 +233,7 @@ _opmCoreModule: #Module & {
 		}
 		transformers: {
 			(_deploymentTransformer.metadata.fqn): _deploymentTransformer
+			(_serviceTransformer.metadata.fqn):    _serviceTransformer
 		}
 	}
 }
@@ -202,7 +285,9 @@ _k8upModule: #Module & {
 	}
 }
 
-// Consumer web-app — uses container resource and claims a database.
+// Consumer web-app — uses container resource, exposes a port, and claims
+// a database. Carries a concrete spec so the slim render pipeline has real
+// values to interpolate into the rendered Deployment / Service.
 _consumerWebApp: #Module & {
 	metadata: {
 		modulePath: "example.com/apps"
@@ -213,11 +298,31 @@ _consumerWebApp: #Module & {
 	}
 	#components: {
 		web: {
-			metadata: name:                                "web"
+			metadata: {
+				name: "web"
+				labels: "app.kubernetes.io/name": "web"
+			}
 			#resources: (_containerResource.metadata.fqn): _
+			#traits: (_exposeTrait.metadata.fqn):          _
 			#claims: db:                                   _managedDatabaseClaim
+			spec: {
+				image:    "nginx:1.27"
+				replicas: 2
+				port:     8080
+			}
 		}
 	}
+}
+
+// _webAppRelease — concrete release for the slim pipeline showcase.
+// Used by t11/t12; doubles as the value behind
+//   cue eval -e '_pipelineFixture.#outputs' -t test ./...
+// which dumps the rendered K8s manifests for visual inspection.
+_webAppRelease: #ModuleRelease & {
+	#module:   _consumerWebApp
+	name:      "demo"
+	namespace: "apps"
+	uuid:      "00000000-0000-0000-0000-0000000000a0"
 }
 
 // Consumer with an unfulfilled Claim — drives unmatched walker test.

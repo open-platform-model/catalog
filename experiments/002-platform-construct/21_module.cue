@@ -1,7 +1,8 @@
 package platform_construct
 
 // Stub #Component — minimal surface for testing demand-side reads in
-// #PlatformMatch (#resources, #traits, #claims maps).
+// #PlatformMatch (#resources, #traits, #claims maps) AND for the slim
+// render pipeline (transformer bodies read concrete `spec` values).
 #Component: {
 	metadata: {
 		name!:         #NameType
@@ -12,6 +13,7 @@ package platform_construct
 	#resources?: [FQN=string]: _
 	#traits?: [FQN=string]:    _
 	#claims?: [string]:        #Claim
+	spec?: _
 }
 
 // Stub #Module — flat eight-slot shape from 015 (minimum required for the
