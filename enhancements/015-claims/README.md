@@ -34,7 +34,7 @@ The enhancement is split into high-level overview docs (`01`–`03`), four topic
 4. [04-module-shape.md](04-module-shape.md) — The eight-slot flat `#Module` shape: rationale, what was removed, why no `#requires`
 5. [05-defines-channel.md](05-defines-channel.md) — `#defines` publication channel narrative: 014 introduces `resources` / `traits` / `transformers`; 015 extends with `claims`; FQN binding; what's excluded
 6. [06-claim-primitive.md](06-claim-primitive.md) — `#Claim` primitive: identity, placement, triplet/quartet pattern, `#status` resolution, capability fulfilment, supersession history of `#Api`
-7. [07-transformer-redesign.md](07-transformer-redesign.md) — `#ModuleTransformer` schema (per-module fan-out), `requiresComponents` pre-fire gate, `#ComponentTransformer` Claim-key extension, `#TransformerMap` widening, `#statusWrites` channel + writeback flow, worked module-scope and dual-scope examples. Component-scope schema and matcher algorithm live in [014/05-component-transformer-and-matcher.md](../014-platform-construct/05-component-transformer-and-matcher.md).
+7. [07-claim-fulfilment.md](07-claim-fulfilment.md) — `#ModuleTransformer` schema (per-module fan-out), `requiresComponents` pre-fire gate, `#ComponentTransformer` Claim-key extension, `#TransformerMap` widening, `#statusWrites` channel + writeback flow, worked module-scope and dual-scope examples. Component-scope schema and matcher algorithm live in [014/05-component-transformer-and-matcher.md](../014-platform-construct/05-component-transformer-and-matcher.md).
 8. [08-examples.md](08-examples.md) — Seven worked Modules: app-with-claim, module-level-claim, operator-with-transformer, specialty-vendor, claim-only, OPM-core publication-only, operational-commodity (backup)
 9. [09-litmus-updates.md](09-litmus-updates.md) — Updates to `docs/core/definition-types.md` litmus questions and decision flowchart
 10. [10-decisions.md](10-decisions.md) — All design decisions, grouped by topic (`MS-`, `DEF-`, `CL-`, `TR-` prefixes); `(was D#)` cross-refs to the prior chronological numbering
@@ -58,7 +58,7 @@ The enhancement is split into high-level overview docs (`01`–`03`), four topic
 | `CONSTITUTION.md` (repo root) | Core design principles governing all changes in this repository |
 | `catalog/core/v1alpha2/module.cue` | `#Module` definition — restructured by this enhancement (no `#policies` slot in v1alpha2) |
 | `catalog/core/v1alpha2/claim.cue` | `#Claim` primitive — introduced by this enhancement |
-| `catalog/core/v1alpha2/transformer.cue` | `#ComponentTransformer` introduced by 014; this enhancement adds `#ModuleTransformer`, widens `#TransformerMap`, and extends `#ComponentTransformer` with `requiredClaims` / `optionalClaims` (see 07-transformer-redesign.md) |
+| `catalog/core/v1alpha2/transformer.cue` | `#ComponentTransformer` introduced by 014; this enhancement adds `#ModuleTransformer`, widens `#TransformerMap`, and extends `#ComponentTransformer` with `requiredClaims` / `optionalClaims` (see 07-claim-fulfilment.md) |
 | `catalog/core/v1alpha2/resource.cue` | `#Resource` primitive — sibling primitive whose litmus is sharpened here |
 | `catalog/core/v1alpha1/primitives/directive.cue` | `#Directive` primitive (v1alpha1) — pattern followed by `#Claim` (apiVersion + metadata + `#spec`); `#Directive` itself is deferred to policy redesign |
 | `catalog/opm/v1alpha2/resources/extension/crd.cue` | `#CRDsResource` — canonical CRD-shipping path for operator Modules |

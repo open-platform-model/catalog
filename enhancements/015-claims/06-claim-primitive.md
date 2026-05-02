@@ -6,7 +6,7 @@ Decisions referenced live in `10-decisions.md` under the `CL-` prefix; open ques
 
 For the `#Module` slot list overall, see [`04-module-shape.md`](04-module-shape.md).
 For the `#defines` publication channel that surfaces Claim type definitions, see [`05-defines-channel.md`](05-defines-channel.md).
-For the transformers that fulfil Claims, see [`07-transformer-redesign.md`](07-transformer-redesign.md) (`#ModuleTransformer` + status writeback) and [014/05-component-transformer-and-matcher.md](../014-platform-construct/05-component-transformer-and-matcher.md) (`#ComponentTransformer` schema + matcher algorithm).
+For the transformers that fulfil Claims, see [`07-claim-fulfilment.md`](07-claim-fulfilment.md) (`#ModuleTransformer` + status writeback) and [014/05-component-transformer-and-matcher.md](../014-platform-construct/05-component-transformer-and-matcher.md) (`#ComponentTransformer` schema + matcher algorithm).
 
 ## Litmus Question
 
@@ -85,7 +85,7 @@ This differs from `#Resource` and `#Directive` which today pin `apiVersion` to O
 ### Resolution lifecycle
 
 1. **Match.** The matcher walks `#composedTransformers`. A transformer whose `requiredClaims` contains a Claim FQN is the fulfiller for that Claim instance.
-2. **Render.** Transformer body runs — `#transform.output` produces the provider-specific resource(s); a sibling `#transform.#statusWrites` carries per-claim status data (sketched in `07-transformer-redesign.md`).
+2. **Render.** Transformer body runs — `#transform.output` produces the provider-specific resource(s); a sibling `#transform.#statusWrites` carries per-claim status data (sketched in `07-claim-fulfilment.md`).
 3. **Inject.** The Go pipeline reads `#statusWrites` and injects values via `FillPath` into the matched `#Claim` instance's `#status`. Same Strategy B precedent as 016 D12 hash injection (**CL-D16**).
 4. **Consume.** Downstream transformers / component bodies that read `#claims.<id>.#status.<field>` see the populated values. The matcher topologically orders fulfillers before consumers.
 

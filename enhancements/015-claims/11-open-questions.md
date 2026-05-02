@@ -2,7 +2,7 @@
 
 Items that remain unresolved after the initial design conversation. Grouped by topic; numbering resets within each topic group. Each entry carries a `(was Q#)` parenthetical mapping to the prior chronological numbering.
 
-Topic groups: **MS** (module shape), **DEF** (defines channel), **CL** (claim primitive), **TR** (transformer redesign). The `07-transformer-redesign.md` doc surfaces TR-Q1 through TR-Q4 inline; this file is the cross-cutting index.
+Topic groups: **MS** (module shape), **DEF** (defines channel), **CL** (claim primitive), **TR** (transformer redesign). The `07-claim-fulfilment.md` doc surfaces TR-Q1 through TR-Q4 inline; this file is the cross-cutting index.
 
 ## Categories
 
@@ -128,9 +128,9 @@ Enhancement 012 explores cross-component noun grammar (shared networks, identiti
 
 ---
 
-### CL-Q7 — Genuinely open: Status writeback ordering (was Q18, surfaced in 07-transformer-redesign.md)
+### CL-Q7 — Genuinely open: Status writeback ordering (was Q18, surfaced in 07-claim-fulfilment.md)
 
-A `#ComponentTransformer` (or `#ModuleTransformer`) that fulfils a Claim writes `#status` via the `#statusWrites` channel sketched in `07-transformer-redesign.md`. A second transformer — or a component body — reads the same Claim's `#status` to wire connection data. The matcher must dispatch fulfillers before consumers; the dispatch order is the topological sort of an FQN-graph derived from `requiredClaims` (write edges) and `#claims.<id>.#status.<field>` reads (read edges).
+A `#ComponentTransformer` (or `#ModuleTransformer`) that fulfils a Claim writes `#status` via the `#statusWrites` channel sketched in `07-claim-fulfilment.md`. A second transformer — or a component body — reads the same Claim's `#status` to wire connection data. The matcher must dispatch fulfillers before consumers; the dispatch order is the topological sort of an FQN-graph derived from `requiredClaims` (write edges) and `#claims.<id>.#status.<field>` reads (read edges).
 
 Open sub-questions:
 
@@ -176,7 +176,7 @@ Original text retained for the historical record:
 
 ---
 
-### TR-Q4 — Genuinely open: `requiresComponents` granularity (was Q17, in 07-transformer-redesign.md)
+### TR-Q4 — Genuinely open: `requiresComponents` granularity (was Q17, in 07-claim-fulfilment.md)
 
 `requiresComponents` is a single conjunction (resources AND traits AND claims). A transformer that wants "components carrying `#BackupTrait` *or* components with a backup-tagged volume" cannot express that. Disjunctive gates may eventually want their own shape; deferred until a real case appears.
 

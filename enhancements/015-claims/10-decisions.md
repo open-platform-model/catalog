@@ -13,7 +13,7 @@ Topic groups:
 - **CL** — `#Claim` primitive (identity, placement, resolution)
 - **TR** — Transformer redesign (`#ComponentTransformer` + `#ModuleTransformer`)
 
-Topical narrative files (`04-module-shape.md`, `05-defines-channel.md`, `06-claim-primitive.md`, `07-transformer-redesign.md`) carry the design rationale and reference these decisions inline. This file is the audit-trail home.
+Topical narrative files (`04-module-shape.md`, `05-defines-channel.md`, `06-claim-primitive.md`, `07-claim-fulfilment.md`) carry the design rationale and reference these decisions inline. This file is the audit-trail home.
 
 ---
 
@@ -464,7 +464,7 @@ Some Claims fulfil purely by side-effect (e.g. `#BackupClaim` — the transforme
 
 **Rationale:** `#status` is the cross-runtime portability surface. The same `#Module` deployed against different fulfilling transformers receives target-appropriate resolution data without changing the consumer's code path. A `#PublicEndpointClaim` resolved by a k8s Gateway transformer or by a compose Traefik-label transformer both write `#status.url`; the consumer reads the same field on both runtimes. This makes `#status` the bridge that 014 D9 (per-runtime transformer Modules) leans on for cross-runtime portability.
 
-**Cross-references:** CL-D4 (Claim FQN identity); TR-D5 (two transformer primitives); TR-D6 (runtime guarantee of fully concrete `#ModuleRelease`); 016 D11 / D12 (centralised computed-field injection precedent); `07-transformer-redesign.md` (writeback channel sketch).
+**Cross-references:** CL-D4 (Claim FQN identity); TR-D5 (two transformer primitives); TR-D6 (runtime guarantee of fully concrete `#ModuleRelease`); 016 D11 / D12 (centralised computed-field injection precedent); `07-claim-fulfilment.md` (writeback channel sketch).
 
 **Source:** Design conversation 2026-05-01 (platform-model brainstorm).
 
@@ -484,11 +484,11 @@ The matcher must topologically order fulfillers before consumers. `requiredClaim
 **Alternatives considered:**
 
 - **Strategy A (two-pass CUE evaluation).** Deferred for the same reason content hashes deferred it (016 D12 Alternatives): adds CUE-evaluation complexity without a current need. Strategy A becomes desirable only if a `#status` write must self-reference its own future value (no current case).
-- **Status writeback as a separate, declared `#statusWrites` field on the transformer.** Schema sketch landed in `07-transformer-redesign.md`; left at convention level for now. The exact field name and shape are an implementation concern, not a schema-decision concern.
+- **Status writeback as a separate, declared `#statusWrites` field on the transformer.** Schema sketch landed in `07-claim-fulfilment.md`; left at convention level for now. The exact field name and shape are an implementation concern, not a schema-decision concern.
 
 **Rationale:** Status injection mirrors the most-similar already-decided mechanism (hashes). Re-using the precedent keeps the Go pipeline simple — one injection phase, two kinds of writes. The split lifecycle (CUE schema reserves; Go pipeline populates) preserves CUE-time testability for the read shapes while letting the populating order live in Go where the matcher already owns iteration.
 
-**Cross-references:** 016 D11 / D12 (centralised hash injection); TR-D6 (concrete `#ModuleRelease` runtime guarantee); CL-D17 (each Claim instance fulfilled independently — single writer per instance is the natural reading); CL-Q3 (delegated to `12-pipeline-changes.md`); `07-transformer-redesign.md` CL-Q7 (matcher writeback dispatch + ordering — delegated to `12-pipeline-changes.md`); 014 D13 (multi-fulfiller forbidden — guarantees a single writer per Claim instance, closes the multi-fulfiller sub-bullet of CL-Q7 and the entirety of TR-Q2).
+**Cross-references:** 016 D11 / D12 (centralised hash injection); TR-D6 (concrete `#ModuleRelease` runtime guarantee); CL-D17 (each Claim instance fulfilled independently — single writer per instance is the natural reading); CL-Q3 (delegated to `12-pipeline-changes.md`); `07-claim-fulfilment.md` CL-Q7 (matcher writeback dispatch + ordering — delegated to `12-pipeline-changes.md`); 014 D13 (multi-fulfiller forbidden — guarantees a single writer per Claim instance, closes the multi-fulfiller sub-bullet of CL-Q7 and the entirety of TR-Q2).
 
 **Source:** Design conversation 2026-05-01.
 
@@ -550,7 +550,7 @@ The check applies to module-level `#claims` only. Component-level `#claims` (on 
 
 **Alternatives considered:**
 
-- **Defer to runtime detection** — the matcher pseudocode in `07-transformer-redesign.md` picks the first matching claim instance via comprehension lookup; if two entries share an FQN, the body silently sees only one. Rejected: silent shadowing is exactly the misconfiguration class CUE excels at catching at definition time. Punting to runtime hides the bug from the author.
+- **Defer to runtime detection** — the matcher pseudocode in `07-claim-fulfilment.md` picks the first matching claim instance via comprehension lookup; if two entries share an FQN, the body silently sees only one. Rejected: silent shadowing is exactly the misconfiguration class CUE excels at catching at definition time. Punting to runtime hides the bug from the author.
 - **Allow duplicates and treat as multi-instance fulfilment** — the matcher runs per-instance and emits two fulfilments. Rejected: at module level there is no per-instance discriminator (no parent Component as scope), so two same-FQN module-level Claims are indistinguishable to downstream consumers reading `#claims.<id>.#status`. Authors who want two distinct resources should give them distinct Claim definitions or push them to component level.
 
 **Rationale:** Module-level is the singleton scope for "platform-relationship" Claims (DNS hostname, workload identity, mesh tenant, backup orchestration — see CL-D10's table). Each of those is conceptually a single resource per Module. Allowing duplicate FQNs would either silently drop one instance (matcher bug) or fan out fulfilment in ways consumers cannot disambiguate (`#claims.dns1.#status.fqdn` vs `#claims.dns2.#status.fqdn` — both bound to the same Claim type but with no module-level discriminator). Failing at schema time forces the author to model the intent properly.
@@ -565,7 +565,7 @@ The check applies to module-level `#claims` only. Component-level `#claims` (on 
 
 ### TR-D1: `#Transformer` match keys grouped into `componentMatch` and `moduleMatch` buckets (was D24)
 
-**Decision:** The v1alpha2 `#Transformer` (catalog/core/v1alpha2/transformer.cue) replaces the flat `requiredX` / `optionalX` fields with two scope buckets. `componentMatch` carries everything matched against a single `#Component` (`requiredLabels`, `requiredResources`, `requiredTraits`, `requiredClaims`, plus the `optional*` parallels). `moduleMatch` carries everything matched against `#Module` top level (`requiredLabels`, `requiredClaims`, plus `optional*`). `requiredDirectives` / `optionalDirectives` are dropped pending the policy redesign (012). The full design lives in `07-transformer-redesign.md`.
+**Decision:** The v1alpha2 `#Transformer` (catalog/core/v1alpha2/transformer.cue) replaces the flat `requiredX` / `optionalX` fields with two scope buckets. `componentMatch` carries everything matched against a single `#Component` (`requiredLabels`, `requiredResources`, `requiredTraits`, `requiredClaims`, plus the `optional*` parallels). `moduleMatch` carries everything matched against `#Module` top level (`requiredLabels`, `requiredClaims`, plus `optional*`). `requiredDirectives` / `optionalDirectives` are dropped pending the policy redesign (012). The full design lives in `07-claim-fulfilment.md`.
 
 **Alternatives considered:**
 
@@ -680,7 +680,7 @@ This enhancement also widens 014's `#TransformerMap` from `[FQN]: #ComponentTran
 
 **Decision:** `requiresComponents` declares "at least one component carrying X must exist for this transformer to fire". The matcher's `anyComponentMatches` check evaluates the gate; if it returns false, the transformer is skipped and the platform reports an unfulfilled dual-scope render. The render body still iterates `#moduleRelease.#components` itself to determine which components to act on — `requiresComponents` does not pre-select a subset.
 
-The conjunction is single-level: `resources` AND `traits` AND `claims`. Disjunctive gates are deferred (TR-Q4 in `07-transformer-redesign.md`).
+The conjunction is single-level: `resources` AND `traits` AND `claims`. Disjunctive gates are deferred (TR-Q4 in `07-claim-fulfilment.md`).
 
 **Alternatives considered:**
 

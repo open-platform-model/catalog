@@ -4,7 +4,7 @@ This file is the topical narrative for the `#Module` construct's top-level shape
 
 For the `#defines` slot (one of the eight), see [`05-defines-channel.md`](05-defines-channel.md).
 For the `#claims` slot and `#Claim` primitive, see [`06-claim-primitive.md`](06-claim-primitive.md).
-For the transformer types that ship under `#defines.transformers`, see [`07-transformer-redesign.md`](07-transformer-redesign.md).
+For the transformer types that ship under `#defines.transformers`, see [`07-claim-fulfilment.md`](07-claim-fulfilment.md).
 
 ## Goals
 

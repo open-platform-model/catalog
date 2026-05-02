@@ -12,20 +12,20 @@ Several decisions in `10-decisions.md` and open questions in `11-open-questions.
 
 Items captured here:
 
-- **`#statusWrites`** — the writeback channel sketched in `07-transformer-redesign.md` and referenced by **CL-D16**. Schema is convention-level; pipeline pins the field name + injection ordering.
+- **`#statusWrites`** — the writeback channel sketched in `07-claim-fulfilment.md` and referenced by **CL-D16**. Schema is convention-level; pipeline pins the field name + injection ordering.
 - **CL-Q3** — `#Claim.#spec` / `#status` validation policy at deploy time and across version evolutions. CUE handles authoring-time validation; the pipeline owns deploy-time + version-skew handling.
 - **CL-Q7** — Topological-sort ordering for `#status` writeback. Multi-fulfiller half closed by **014 D13**; cycle detection + missing-fulfiller halves remain pipeline concerns.
 
 Out of scope (separate enhancements):
 
-- The matcher's component / module dispatch loop itself (specified in [014/05-component-transformer-and-matcher.md](../014-platform-construct/05-component-transformer-and-matcher.md) for the component-scope half; `#ModuleTransformer` dispatch + `requiresComponents` gate in `07-transformer-redesign.md`).
+- The matcher's component / module dispatch loop itself (specified in [014/05-component-transformer-and-matcher.md](../014-platform-construct/05-component-transformer-and-matcher.md) for the component-scope half; `#ModuleTransformer` dispatch + `requiresComponents` gate in `07-claim-fulfilment.md`).
 - `#PolicyTransformer` interaction (TR-Q1) — gated on enhancement 012.
 
 ---
 
 ## `#statusWrites` channel
 
-### Schema sketch (recap from `07-transformer-redesign.md`)
+### Schema sketch (recap from `07-claim-fulfilment.md`)
 
 ```cue
 #ComponentTransformer: {

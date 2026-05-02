@@ -80,7 +80,7 @@ package v1alpha2
 
 `#Claim` lives in the flat `v1alpha2` package alongside `#Resource`, `#Trait`, `#Blueprint`. Helper types (`#ModulePathType`, `#MajorVersionType`, `#NameType`, `#FQNType`, `#KebabToPascal`, `#KebabToCamel`, `#LabelsAnnotationsType`) all live in the same package — no `t.` prefix needed.
 
-The `#status?` channel and its writeback semantics are documented in [`06-claim-primitive.md`](06-claim-primitive.md) and [`07-transformer-redesign.md`](07-transformer-redesign.md).
+The `#status?` channel and its writeback semantics are documented in [`06-claim-primitive.md`](06-claim-primitive.md) and [`07-claim-fulfilment.md`](07-claim-fulfilment.md).
 
 ## Two transformer primitives
 
@@ -93,7 +93,7 @@ The `#status?` channel and its writeback semantics are documented in [`06-claim-
 
 Both kinds ship through `#Module.#defines.transformers`. CRD installation continues to live in `#components` via `#CRDsResource` — unchanged.
 
-**Canonical schema for `#ModuleTransformer`, the widening details, status writeback channel, and worked examples live in [`07-transformer-redesign.md`](07-transformer-redesign.md).** This doc does not duplicate them.
+**Canonical schema for `#ModuleTransformer`, the widening details, status writeback channel, and worked examples live in [`07-claim-fulfilment.md`](07-claim-fulfilment.md).** This doc does not duplicate them.
 
 ## Updated `#Component`
 
