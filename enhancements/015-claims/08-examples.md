@@ -138,7 +138,7 @@ import (
         version:     "v1"
         description: "Renders ManagedDatabaseClaim → Postgres CRD instance"
     }
-    requiredClaims: (data.#ManagedDatabaseClaim.metadata.fqn): _
+    requiredClaims: (data.#ManagedDatabaseClaim.metadata.fqn): data.#ManagedDatabaseClaim
     // Fires once per matching component; #transform.#component is the matched component.
     #transform: _   // emits pgcrd.#Postgres from claim spec
 }
