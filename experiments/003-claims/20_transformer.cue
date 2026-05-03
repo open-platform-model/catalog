@@ -5,7 +5,7 @@ package claims
 // #ComponentTransformer fires once per matching component (014/05).
 // #ModuleTransformer fires once per matching module (015/07).
 //
-// Both gain #statusWrites?: [claimId=string]: _ on the #transform body
+// Both gain #resolution?: [claimId=string]: _ on the #transform body
 // (CL-D15, CL-D16). Keys are the consumer's #claims map keys, resolved by
 // FQN-equality between the transformer's requiredClaims and the matched
 // scope's #claims.<id>.metadata.fqn.
@@ -41,7 +41,7 @@ package claims
 		// #Claim instance's #status. Map key is the consumer's claim id
 		// (the key under #components[].#claims, e.g. "db"), resolved by
 		// FQN-equality between requiredClaims and #component.#claims.
-		#statusWrites?: [claimId=string]: _
+		#resolution?: [claimId=string]: _
 
 		output: _
 	}
@@ -79,7 +79,7 @@ package claims
 	#transform?: {
 		#moduleRelease: _
 		#context:       #TransformerContext
-		#statusWrites?: [claimId=string]: _
+		#resolution?: [claimId=string]: _
 		output: _
 	}
 }

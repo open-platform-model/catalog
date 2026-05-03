@@ -5,11 +5,11 @@ package claims
 // T12 — Topological correctness for depth-1 chains.
 //
 // Two transformers fire against the same component:
-//   - _pgManagedDatabaseTransformer writes #statusWrites.db.{host, port, ...}
+//   - _pgManagedDatabaseTransformer writes #resolution.db.{host, port, ...}
 //   - _deploymentTransformer reads #component.#claims.db.#status.{host, port}
 //     when present.
 //
-// The render pipeline (25_render.cue) computes #statusWrites in Phase 1
+// The render pipeline (25_render.cue) computes #resolution in Phase 1
 // (BASE dispatch, no #status reads), injects in Phase 3, and re-dispatches
 // in Phase 4. Phase 4 sees the populated status, so the deployment's env
 // vars resolve correctly.

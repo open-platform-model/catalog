@@ -484,7 +484,7 @@ The matcher must topologically order fulfillers before consumers. `requiredClaim
 **Alternatives considered:**
 
 - **Strategy A (two-pass CUE evaluation).** Deferred for the same reason content hashes deferred it (016 D12 Alternatives): adds CUE-evaluation complexity without a current need. Strategy A becomes desirable only if a `#status` write must self-reference its own future value (no current case).
-- **Status writeback as a separate, declared `#statusWrites` field on the transformer.** Schema sketch landed in `07-claim-fulfilment.md`; left at convention level for now. The exact field name and shape are an implementation concern, not a schema-decision concern.
+- **Status writeback as a separate, declared `#resolution` field on the transformer.** Schema sketch landed in `07-claim-fulfilment.md`; left at convention level for now. The exact field name and shape are an implementation concern, not a schema-decision concern.
 
 **Rationale:** Status injection mirrors the most-similar already-decided mechanism (hashes). Re-using the precedent keeps the Go pipeline simple — one injection phase, two kinds of writes. The split lifecycle (CUE schema reserves; Go pipeline populates) preserves CUE-time testability for the read shapes while letting the populating order live in Go where the matcher already owns iteration.
 

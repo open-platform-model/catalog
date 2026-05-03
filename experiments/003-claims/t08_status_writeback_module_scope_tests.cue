@@ -2,9 +2,9 @@
 
 package claims
 
-// T08 — CL-D15/D16 module-scope half: #ModuleTransformer's #statusWrites.
+// T08 — CL-D15/D16 module-scope half: #ModuleTransformer's #resolution.
 // _dnsHostnameTransformer matches against #moduleRelease.#module.#claims
-// (no per-component scope), writes #statusWrites.<id>.fqdn. Phase 3 injects
+// (no per-component scope), writes #resolution.<id>.fqdn. Phase 3 injects
 // into module-level claim's #status.
 
 _t08_platform: #Platform & {

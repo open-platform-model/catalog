@@ -52,7 +52,7 @@ This enhancement is intentionally thin. `#Environment`, runtime-fill mechanism f
 - `#Environment` construct (016 — referenced from there).
 - `#ctx` / `#PlatformContext` schema (016 — referenced from there).
 - `#ContextBuilder` and module integration (016 — referenced from there).
-- `#Claim` primitive, `#ModuleTransformer`, status writeback (`#statusWrites`), `#defines.claims`, `#knownClaims`, `#matchers.claims`, the Claim halves of `#PlatformMatch._demand` / `matched` / `unmatched` / `ambiguous` — all extensions in [015](../015-claims/).
+- `#Claim` primitive, `#ModuleTransformer`, status writeback (`#resolution`), `#defines.claims`, `#knownClaims`, `#matchers.claims`, the Claim halves of `#PlatformMatch._demand` / `matched` / `unmatched` / `ambiguous` — all extensions in [015](../015-claims/).
 - Runtime-fill mechanism (Strategy B–style Go injection) — declared in schema, mechanism in follow-up.
 - Self-service catalog runtime API (`opm catalog list`, web UI, etc.).
 - `#PolicyTransformer` registration (deferred — pending policy redesign).

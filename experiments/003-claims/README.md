@@ -2,7 +2,7 @@
 
 Sandbox for enhancement [015-claims](../../enhancements/015-claims/). Proves the
 015 Claim pipeline (component + module transformer dispatch, `requiresComponents`
-gate, `#statusWrites` writeback, status consumption) end-to-end in pure CUE.
+gate, `#resolution` writeback, status consumption) end-to-end in pure CUE.
 
 Sibling [002-platform-construct](../002-platform-construct/) is the foundation
 this experiment extends — 002 already proves 014's matcher index, registry,
@@ -25,7 +25,7 @@ Self-contained: zero imports, zero stdlib. Module path
 ├── 12_claim.cue              # #Claim with metadata.fqn unification (CL-D4)
 ├── 13_context.cue            # #TransformerContext, component? optional
 ├── 20_transformer.cue        # ComponentTransformer + ModuleTransformer
-│                             # both with #statusWrites? on #transform
+│                             # both with #resolution? on #transform
 ├── 21_module.cue             # 8-slot #Module + CL-D18 hidden constraint
 ├── 22_platform.cue           # #PlatformBase + strict #Platform (copy from 002)
 ├── 24_module_release.cue     # #ModuleRelease wrapper (copy from 002)
@@ -62,11 +62,11 @@ Self-contained: zero imports, zero stdlib. Module path
 | `t04_component_transformer_required_claims_match` | TR-D5 | postgres fires against `web` because `web.#claims.db.metadata.fqn` matches `requiredClaims` |
 | `t05_module_transformer_gate_pass` | TR-D7 | K8up fires for Strix media (both components carry `#BackupTrait`); `#AnyComponentMatches` reports 2 bearers |
 | `t06_module_transformer_gate_block` | TR-D7 | K8up does NOT fire when no component carries `#BackupTrait`; gate is a pre-fire gate, not a filter |
-| `t07_status_writeback_component_scope` | CL-D15/16 | postgres `#statusWrites: db: {host, port, secretName}` → `#moduleReleaseWithStatus.#components.web.#claims.db.#status` |
+| `t07_status_writeback_component_scope` | CL-D15/16 | postgres `#resolution: db: {host, port, secretName}` → `#moduleReleaseWithStatus.#components.web.#claims.db.#status` |
 | `t08_status_writeback_module_scope` | CL-D15/16 | `_dnsHostnameTransformer` (module-scope) writes module-level `edge.fqdn`; component-scope db.host stays correct |
 | `t09_consumer_reads_status` | CL-D15 + full chain | Deployment env `DATABASE_HOST` resolves to host populated by postgres transformer |
 | `t10_dual_scope_backup` | TR-D7, Example 7 | K8up Schedule lists both trait-bearing components as targets; reads `schedule`/`backend` from module-level claim |
-| `t11_side_effect_only_claim` | 12-pipeline-changes.md | Schedule renders, but `#status` stays empty when fulfiller omits `#statusWrites` |
+| `t11_side_effect_only_claim` | 12-pipeline-changes.md | Schedule renders, but `#status` stays empty when fulfiller omits `#resolution` |
 | `t12_topological_chain` | CL-D16 ordering | depth-1 chain — postgres writes `db.host`, deployment body reads it; both fire in single render |
 | `t13_full_pipeline` | end-to-end | 4 outputs (Deployment + Service + Postgres CR + DNS Record), both component-scope and module-scope writebacks visible |
 
@@ -128,7 +128,7 @@ Four phases in a single CUE evaluation:
    populated values.
 
 Topological correctness for depth-1 chains (writer transformer → reader
-component body) is automatic: Phase 2 reads only `#statusWrites` (which
+component body) is automatic: Phase 2 reads only `#resolution` (which
 depends on `#spec` / `#context` / fixed inputs); Phase 4 reads `#status`
 (downstream of Phase 3's injection). No structural cycle because the
 writeback computation never references `#moduleReleaseWithStatus`.
@@ -196,7 +196,7 @@ populating it.
 
 ### F4 — `t.#transform` body fires correctly only with concrete inputs
 
-When a transformer body has `if X != _|_ { #statusWrites: ...; output: ... }`
+When a transformer body has `if X != _|_ { #resolution: ...; output: ... }`
 guards and `t` is accessed via a typed map (`#TransformerMap`), the body
 fires only after `t.#transform & { concrete inputs }` unification. This
 is the existing 002 Finding 6/7/8 territory — 003 confirms the if-guard
@@ -237,7 +237,7 @@ schemas land in `catalog/core/v1alpha2/`.
 - [ ] **F3 — optional field defaults** — propagate to 015's `03-schema.md` (`#Claim.#spec` quartet examples should default rather than `?:` when defaults exist).
 - [ ] **F5 — gate evaluation pattern** — add to 015's `07-claim-fulfilment.md` near the `requiresComponents` discussion.
 - [ ] **R1 confirmation** — depth-1 chains work in pure CUE; depth-2+ are confirmed Go-side responsibility. Update 015's R1 / 12-pipeline-changes.md.
-- [ ] **R2 — claim id resolution** — fixture authors must walk `#component.#claims` by FQN-eq to find the consumer's claim id. Production schema may inject `#matchedClaimIds` to simplify. Open question: lift as a refinement to 015's `#statusWrites` definition.
+- [ ] **R2 — claim id resolution** — fixture authors must walk `#component.#claims` by FQN-eq to find the consumer's claim id. Production schema may inject `#matchedClaimIds` to simplify. Open question: lift as a refinement to 015's `#resolution` definition.
 
 ## Cross-references
 
@@ -246,5 +246,5 @@ schemas land in `catalog/core/v1alpha2/`.
 | [`002-platform-construct/`](../002-platform-construct/) | Sibling experiment for 014. Foundation that 003 extends. |
 | [`015-claims/03-schema.md`](../../enhancements/015-claims/03-schema.md) | Canonical schemas for `#Claim`, `#ComponentTransformer.requiredClaims`, `#ModuleTransformer`, `#defines.claims` |
 | [`015-claims/07-claim-fulfilment.md`](../../enhancements/015-claims/07-claim-fulfilment.md) | `#ModuleTransformer` schema + `requiresComponents` semantics + dual-scope worked example |
-| [`015-claims/12-pipeline-changes.md`](../../enhancements/015-claims/12-pipeline-changes.md) | Pipeline contract for `#statusWrites`, topological sort, side-effect-only fulfilment |
+| [`015-claims/12-pipeline-changes.md`](../../enhancements/015-claims/12-pipeline-changes.md) | Pipeline contract for `#resolution`, topological sort, side-effect-only fulfilment |
 | [`015-claims/08-examples.md`](../../enhancements/015-claims/08-examples.md) | Example 1 (managed-database) + Example 7 (dual-scope backup) — drive `_consumerWebApp` and `_consumerStrixMedia` |

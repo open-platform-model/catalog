@@ -172,7 +172,7 @@ For readers tracing the full picture: 015 layers on top of this with no rewrites
 - `requiredClaims` / `optionalClaims` added to `#ComponentTransformer` for component-level Claim fulfilment.
 - `#TransformerMap` widened to the union `#ComponentTransformer | #ModuleTransformer`.
 - `#composedTransformers`, `#matchers.claims`, and `#PlatformMatch` claim-related fields land alongside the union widening.
-- `#statusWrites` channel for transformer-to-Claim status writeback (CL-D15 / CL-D16).
+- `#resolution` channel for transformer-to-Claim status writeback (CL-D15 / CL-D16).
 - D7 / D8 / D13 each pick up Claim-shaped extensions in 015's decision log.
 
 See [`015/06-claim-primitive.md`](../015-claims/06-claim-primitive.md) and [`015/07-claim-fulfilment.md`](../015-claims/07-claim-fulfilment.md) for the extension narratives.

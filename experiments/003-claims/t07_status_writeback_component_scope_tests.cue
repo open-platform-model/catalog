@@ -2,9 +2,9 @@
 
 package claims
 
-// T07 — CL-D15/D16: component-scope #statusWrites injection.
+// T07 — CL-D15/D16: component-scope #resolution injection.
 // Postgres transformer fires against web's db claim and emits
-// #statusWrites: db: { host, port, secretName }. Phase 3 of the render
+// #resolution: db: { host, port, secretName }. Phase 3 of the render
 // pipeline injects those values into the claim's #status field by
 // unification. Asserts both:
 //   - The diagnostic surface (#status.injectedComponent) reports the

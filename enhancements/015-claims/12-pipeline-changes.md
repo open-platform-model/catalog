@@ -12,7 +12,7 @@ Several decisions in `10-decisions.md` and open questions in `11-open-questions.
 
 Items captured here:
 
-- **`#statusWrites`** — the writeback channel sketched in `07-claim-fulfilment.md` and referenced by **CL-D16**. Schema is convention-level; pipeline pins the field name + injection ordering.
+- **`#resolution`** — the writeback channel sketched in `07-claim-fulfilment.md` and referenced by **CL-D16**. Schema is convention-level; pipeline pins the field name + injection ordering.
 - **CL-Q3** — `#Claim.#spec` / `#status` validation policy at deploy time and across version evolutions. CUE handles authoring-time validation; the pipeline owns deploy-time + version-skew handling.
 - **CL-Q7** — Topological-sort ordering for `#status` writeback. Multi-fulfiller half closed by **014 D13**; cycle detection + missing-fulfiller halves remain pipeline concerns.
 
@@ -23,7 +23,7 @@ Out of scope (separate enhancements):
 
 ---
 
-## `#statusWrites` channel
+## `#resolution` channel
 
 ### Schema sketch (recap from `07-claim-fulfilment.md`)
 
@@ -42,7 +42,7 @@ Out of scope (separate enhancements):
         // (e.g. "db" if the module declared #claims.db: ...). The matcher
         // resolves claim ids by FQN-equality between requiredClaims and the
         // candidate component's #claims.
-        #statusWrites?: [claimId=string]: _
+        #resolution?: [claimId=string]: _
     }
 }
 
@@ -54,7 +54,7 @@ Out of scope (separate enhancements):
 
         output: {...}
 
-        #statusWrites?: [claimId=string]: _    // resolves against #moduleRelease.#claims
+        #resolution?: [claimId=string]: _    // resolves against #moduleRelease.#claims
     }
 }
 ```
@@ -64,24 +64,24 @@ Out of scope (separate enhancements):
 When the matcher invokes a transformer that fulfils a Claim:
 
 1. **Identify matched instance(s).** For `#ComponentTransformer`: scan the fired component's `#claims` for entries whose `metadata.fqn` matches a key in `requiredClaims`. For `#ModuleTransformer`: scan `#moduleRelease.#claims` (module-level) similarly. Independent fulfilment per instance per **CL-D17**.
-2. **Run the render body.** `#transform.output` produces the provider-specific rendered resources; `#transform.#statusWrites` (optional) carries per-instance status data keyed by the consumer's claim id.
-3. **Inject via `FillPath`.** For each entry in `#statusWrites`, the pipeline calls `FillPath` to write `<value>` into `#claims.<claimId>.#status` on the matched instance — module-level instance for `#ModuleTransformer`, component-level instance for `#ComponentTransformer`. Same Strategy B mechanism as 016 D12 hash injection.
+2. **Run the render body.** `#transform.output` produces the provider-specific rendered resources; `#transform.#resolution` (optional) carries per-instance status data keyed by the consumer's claim id.
+3. **Inject via `FillPath`.** For each entry in `#resolution`, the pipeline calls `FillPath` to write `<value>` into `#claims.<claimId>.#status` on the matched instance — module-level instance for `#ModuleTransformer`, component-level instance for `#ComponentTransformer`. Same Strategy B mechanism as 016 D12 hash injection.
 4. **Re-evaluate downstream consumers.** Any transformer or component body that reads `#claims.<id>.#status.<field>` re-evaluates after the write phase.
 
 ### Matcher resolves claim ids by FQN-equality
 
-The transformer declares `requiredClaims` keyed by FQN. The consumer Module's `#claims` declares instances keyed by author-chosen ids (e.g. `db`, `cache`, `nightly`). The matcher walks the consumer's claim map, finds entries whose `metadata.fqn` matches a `requiredClaims` key, and uses each matched id as the `#statusWrites` map key.
+The transformer declares `requiredClaims` keyed by FQN. The consumer Module's `#claims` declares instances keyed by author-chosen ids (e.g. `db`, `cache`, `nightly`). The matcher walks the consumer's claim map, finds entries whose `metadata.fqn` matches a `requiredClaims` key, and uses each matched id as the `#resolution` map key.
 
-Example: a `#ManagedDatabaseTransformer` with `requiredClaims: ("opmodel.dev/.../managed-database@v1"): _` matches a consumer's `#claims.db: data.#ManagedDatabaseClaim` entry — the transformer writes `#statusWrites: db: { host: ..., port: ..., passwordRef: ... }`, and the pipeline injects into `#claims.db.#status`.
+Example: a `#ManagedDatabaseTransformer` with `requiredClaims: ("opmodel.dev/.../managed-database@v1"): _` matches a consumer's `#claims.db: data.#ManagedDatabaseClaim` entry — the transformer writes `#resolution: db: { host: ..., port: ..., passwordRef: ... }`, and the pipeline injects into `#claims.db.#status`.
 
 ### Side-effect-only fulfilment
 
-Claims with no resolution data (e.g. `#BackupClaim` per `08-examples.md` Example 7) may omit `#statusWrites` entirely. The pipeline simply runs the transformer body, takes `output`, and skips the writeback step. `#status` stays empty by design.
+Claims with no resolution data (e.g. `#BackupClaim` per `08-examples.md` Example 7) may omit `#resolution` entirely. The pipeline simply runs the transformer body, takes `output`, and skips the writeback step. `#status` stays empty by design.
 
 ### Failure modes
 
-- **Missing claim id in `#statusWrites`** when the transformer's `requiredClaims` matched: pipeline warns; consumer reads `#status.X` produce `_|_` and surface as render-time errors against the consumer body. Acceptable v1 behavior.
-- **Extra claim id in `#statusWrites`** that doesn't match any consumer instance: pipeline drops silently. Transformer authors should keep `#statusWrites` keys in sync with what their `requiredClaims` declares.
+- **Missing claim id in `#resolution`** when the transformer's `requiredClaims` matched: pipeline warns; consumer reads `#status.X` produce `_|_` and surface as render-time errors against the consumer body. Acceptable v1 behavior.
+- **Extra claim id in `#resolution`** that doesn't match any consumer instance: pipeline drops silently. Transformer authors should keep `#resolution` keys in sync with what their `requiredClaims` declares.
 - **Cycle / missing-fulfiller**: see "Topological-sort ordering" below.
 
 ---
@@ -96,7 +96,7 @@ The matcher dispatches fulfillers before consumers. `requiredClaims` declares bo
 
 1. **Build the dependency graph** before render dispatch. Nodes = transformer invocations (one per matched instance). Edges = `(writer transformer for FQN X) → (reader transformer / component body that reads #status from a Claim with FQN X)`.
 2. **Topologically sort** the nodes. Detect cycles during sort.
-3. **Dispatch in topological order**, performing the `#statusWrites` injection between each transformer and its dependent reader.
+3. **Dispatch in topological order**, performing the `#resolution` injection between each transformer and its dependent reader.
 
 ### Edge cases
 
@@ -119,7 +119,7 @@ Closed by **014 D13** — multi-fulfiller is forbidden at the `#matchers` layer.
 ### What the pipeline does NOT need to handle
 
 - **Per-FQN writer selection.** D13 forbids multi-fulfiller; selection is unambiguous.
-- **Conflict resolution between two `#statusWrites` for the same instance.** Cannot happen — only one fulfiller per instance per CL-D17 + 014 D13.
+- **Conflict resolution between two `#resolution` for the same instance.** Cannot happen — only one fulfiller per instance per CL-D17 + 014 D13.
 - **Cross-Module status reads.** Bundle-level / cross-Module references are out of scope for this enhancement (016 OQ2). Pipeline operates within a single `#ModuleRelease` boundary.
 
 ---
@@ -140,7 +140,7 @@ When a `#Module` is serialized for matching (e.g. shipped through a `ModuleRelea
 ### Pipeline contract
 
 1. **Before render dispatch**, walk the consumer's `#claims` (module-level + per-component) and unify each entry against the corresponding Claim definition from `#Platform.#knownClaims` (lookup by `metadata.fqn`). Failure ⇒ structured error in `ModuleRelease.status.conditions`.
-2. **After each transformer fires**, before injecting `#statusWrites`, unify the writeback values against the Claim's `#status` schema. Failure ⇒ structured error naming the offending writer + field.
+2. **After each transformer fires**, before injecting `#resolution`, unify the writeback values against the Claim's `#status` schema. Failure ⇒ structured error naming the offending writer + field.
 
 ### Version evolution
 
@@ -162,7 +162,7 @@ The same logic applies to `#spec` evolution. A vendor introducing a stricter `#s
 
 When the Go pipeline is built (in `cli/` or `opm-operator/`):
 
-1. **Status-writeback channel** — pin `#statusWrites` field name in `#ComponentTransformer.#transform` / `#ModuleTransformer.#transform` (CUE schema), implement the `FillPath` injection step in the renderer.
+1. **Status-writeback channel** — pin `#resolution` field name in `#ComponentTransformer.#transform` / `#ModuleTransformer.#transform` (CUE schema), implement the `FillPath` injection step in the renderer.
 2. **Missing-fulfiller pre-scan** — implement the unmatched-claim error before render dispatch (consumes `#PlatformMatch.unmatched.claims`).
 3. **Topological dispatch** — implement the dependency graph + topological sort + cycle detection.
 4. **Deploy-time `#spec` / `#status` validation** — implement the platform-side unification step.
@@ -178,4 +178,4 @@ These are pipeline-implementation decisions deferred until first use case:
 
 - **Cycle detection phase** — CUE-side at platform-eval, or Go-side at deploy? Lean: deploy-side (cheaper v1).
 - **Missing-fulfiller error format** — single aggregated error vs. per-claim errors. Lean: per-claim, surfaced in `ModuleRelease.status.conditions` for visibility.
-- **`#statusWrites` field name** — `#statusWrites` (current sketch) vs. `statusWrites` (export-visible) vs. inside `#transform.output` as `#status` (alongside `output`). Lean: `#statusWrites` (hidden) — keeps the CUE-time `#transform` body shape symmetrical with the existing `output` field and excludes status writes from rendered manifests.
+- **`#resolution` shape** — hidden field `#resolution` (current sketch) vs. export-visible `resolution` vs. nested under `#transform.output` as a sibling `#status`. Lean: `#resolution` (hidden) — keeps the CUE-time `#transform` body shape symmetrical with the existing `output` field and excludes status writes from rendered manifests.

@@ -7,7 +7,7 @@ package platform_construct
 // platform is realistic; only ComponentTransformers fire (postgres' is a
 // component-scope ManagedDatabase fulfiller — the consumer's #claims.db
 // instance lives at component-scope on `web`, but its rendering would need
-// 015's #statusWrites pipeline; here it's enough that the dispatch
+// 015's #resolution pipeline; here it's enough that the dispatch
 // completes cleanly without that 015 surface).
 //
 // _pipelineFixture doubles as the manual-inspection target:

@@ -22,7 +22,7 @@
 - Self-service catalog runtime API surface (`opm catalog list`, web UI, deploy-time match resolver) — declarative shape only; runtime is the platform's choice (consistent with 015 design).
 - `#PolicyTransformer` registration — deferred until policy redesign converges (`enhancements/012`).
 - Migration of `opmodel.dev/opm/v1alpha2/providers/kubernetes` and other provider packages into `#Module` form — separate enhancement.
-- `#Claim` primitive, `#ModuleTransformer`, status writeback (`#statusWrites`), `#defines.claims`, `#knownClaims`, `#matchers.claims`, and the Claim halves of `_demand` / `matched` / `unmatched` / `ambiguous` on `#PlatformMatch` — all introduced as extensions in [015](../015-claims/).
+- `#Claim` primitive, `#ModuleTransformer`, status writeback (`#resolution`), `#defines.claims`, `#knownClaims`, `#matchers.claims`, and the Claim halves of `_demand` / `matched` / `unmatched` / `ambiguous` on `#PlatformMatch` — all introduced as extensions in [015](../015-claims/).
 - Multi-fulfiller resolution policy. Today: forbidden by D13 — overlap on `requiredResources` / `requiredTraits` FQNs fails platform evaluation. A future enhancement may reopen with admin-selected default fulfiller, consumer-pinned fulfiller, or registry priority order.
 - Policy for unmatched FQNs (Resource / Trait types used by a deployed module with no renderer registered, plus 015's Claim extension). Detection is deterministic (D8); the response — fail / warn / drop — is a platform-team policy concern deferred until the catalog `#Policy` redesign (012) converges.
 

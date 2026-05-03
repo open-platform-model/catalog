@@ -28,7 +28,7 @@ A follow-up enhancement (or the policy redesign in 012) will pin the construct s
 
 Decisions whose schema reserves a channel but whose algorithm lives in the Go renderer:
 
-- `#statusWrites` — the writeback channel from `#ComponentTransformer.#transform` / `#ModuleTransformer.#transform` (CL-D16).
+- `#resolution` — the writeback channel from `#ComponentTransformer.#transform` / `#ModuleTransformer.#transform` (CL-D16).
 - Topological-sort ordering for `#status` writeback (CL-Q7 — multi-fulfiller half closed by 014 D13; cycle detection + missing fulfiller delegated).
 - Deploy-time validation of `#Claim.#spec` / `#status` against registered Claim definitions (CL-Q3 — delegated).
 
@@ -89,7 +89,7 @@ The `#status?` channel and its writeback semantics are documented in [`06-claim-
 1. **`#ModuleTransformer`** — per-module fan-out, with optional `requiresComponents` pre-fire gate for dual-scope renders.
 2. **`#ComponentTransformer` widening** — `requiredClaims` and `optionalClaims` match keys for component-level Claim fulfilment.
 3. **`#TransformerMap` widening** — value type becomes `#ComponentTransformer | #ModuleTransformer`.
-4. **`#statusWrites`** — writeback channel on both `#transform` shapes.
+4. **`#resolution`** — writeback channel on both `#transform` shapes.
 
 Both kinds ship through `#Module.#defines.transformers`. CRD installation continues to live in `#components` via `#CRDsResource` — unchanged.
 

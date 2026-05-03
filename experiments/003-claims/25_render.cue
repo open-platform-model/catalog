@@ -7,11 +7,11 @@ package claims
 //
 //   Phase 1 (dispatch BASE) — invoke each fired transformer's #transform
 //                              against the as-authored #moduleRelease.
-//                              #statusWrites must NOT read #status (depth-1
+//                              #resolution must NOT read #status (depth-1
 //                              contract); it depends only on #spec /
 //                              #context / fixed inputs.
 //
-//   Phase 2 (project writebacks) — walk every base fire's #statusWrites
+//   Phase 2 (project writebacks) — walk every base fire's #resolution
 //                                   and resolve the consumer's claim id by
 //                                   FQN-equality against the matched
 //                                   #claims.<id>.metadata.fqn.
@@ -280,12 +280,12 @@ package claims
 
 	_componentWritebacks: {
 		for fireKey, fire in _componentFiresBase
-		if fire._result.#statusWrites != _|_
+		if fire._result.#resolution != _|_
 		if fire.transformer.requiredClaims != _|_
 		for fqn, _ in fire.transformer.requiredClaims
 		for cId, claim in fire._claims
 		if claim.metadata.fqn == fqn
-		for swId, swVal in fire._result.#statusWrites
+		for swId, swVal in fire._result.#resolution
 		if swId == cId {
 			(fire._cname): (cId): swVal
 		}
@@ -293,13 +293,13 @@ package claims
 
 	_moduleWritebacks: {
 		for tFqn, fire in _moduleFiresBase
-		if fire._result.#statusWrites != _|_
+		if fire._result.#resolution != _|_
 		if fire.transformer.requiredClaims != _|_
 		if #moduleRelease.#module.#claims != _|_
 		for fqn, _ in fire.transformer.requiredClaims
 		for cId, claim in #moduleRelease.#module.#claims
 		if claim.metadata.fqn == fqn
-		for swId, swVal in fire._result.#statusWrites
+		for swId, swVal in fire._result.#resolution
 		if swId == cId {
 			(cId): swVal
 		}

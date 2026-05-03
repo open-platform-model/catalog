@@ -12,7 +12,7 @@ package claims
 //
 // #status is the writeback target. Concrete claim defs may pin a #status
 // schema (quartet pattern, CL-D6); when the matching transformer's
-// #statusWrites resolves to a value that doesn't satisfy the pinned schema,
+// #resolution resolves to a value that doesn't satisfy the pinned schema,
 // CUE unification fails and surfaces the contract violation.
 #Claim: {
 	apiVersion!: string

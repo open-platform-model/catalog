@@ -85,8 +85,8 @@ This differs from `#Resource` and `#Directive` which today pin `apiVersion` to O
 ### Resolution lifecycle
 
 1. **Match.** The matcher walks `#composedTransformers`. A transformer whose `requiredClaims` contains a Claim FQN is the fulfiller for that Claim instance.
-2. **Render.** Transformer body runs — `#transform.output` produces the provider-specific resource(s); a sibling `#transform.#statusWrites` carries per-claim status data (sketched in `07-claim-fulfilment.md`).
-3. **Inject.** The Go pipeline reads `#statusWrites` and injects values via `FillPath` into the matched `#Claim` instance's `#status`. Same Strategy B precedent as 016 D12 hash injection (**CL-D16**).
+2. **Render.** Transformer body runs — `#transform.output` produces the provider-specific resource(s); a sibling `#transform.#resolution` carries per-claim status data (sketched in `07-claim-fulfilment.md`).
+3. **Inject.** The Go pipeline reads `#resolution` and injects values via `FillPath` into the matched `#Claim` instance's `#status`. Same Strategy B precedent as 016 D12 hash injection (**CL-D16**).
 4. **Consume.** Downstream transformers / component bodies that read `#claims.<id>.#status.<field>` see the populated values. The matcher topologically orders fulfillers before consumers.
 
 ### Side-effect-only fulfilment
@@ -203,7 +203,7 @@ Two transformer kinds (TR-D5):
 #ManagedDatabaseTransformer: transformer.#ComponentTransformer & {
     metadata: { ... }
     requiredClaims: (data.#ManagedDatabaseClaim.metadata.fqn): _
-    #transform: _   // emits Postgres CRD instance from claim spec; #statusWrites populates #status
+    #transform: _   // emits Postgres CRD instance from claim spec; #resolution populates #status
 }
 
 postgresOperator: core.#Module & {

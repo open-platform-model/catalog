@@ -17,7 +17,7 @@
 2. **Dual-scope renders.** Some module-level claims need data from per-component traits (e.g. K8up `#BackupClaim` orchestration reads each component's `#BackupTrait`). The transformer fires once per Module but iterates the matched Module's components in its body.
 3. **Claim fulfilment + status writeback.** Whichever transformer fulfils a Claim writes that Claim's `#status` (CL-D15 / CL-D16) so consumers can read fulfiller-agnostic resolution data.
 
-This doc introduces `#ModuleTransformer` (a sibling primitive to 014's `#ComponentTransformer`), widens `#TransformerMap` and `#ComponentTransformer` for Claims, and pins the `#statusWrites` channel.
+This doc introduces `#ModuleTransformer` (a sibling primitive to 014's `#ComponentTransformer`), widens `#TransformerMap` and `#ComponentTransformer` for Claims, and pins the `#resolution` channel.
 
 ## Runtime guarantee
 
@@ -156,11 +156,11 @@ A `#ModuleTransformer` whose `requiresComponents` finds zero matches **does not 
 `#Claim` carries an open `#status?` field (CL-D15). The transformer that fulfils a Claim writes that Claim's `#status` as part of its render. The split lifecycle:
 
 1. **Match.** Matcher walks `#composedTransformers`. A transformer whose `requiredClaims` contains a Claim FQN is the fulfiller for that Claim instance.
-2. **Render.** Transformer body runs — `#transform.output` produces the provider-specific resource(s); a sibling `#transform.#statusWrites` carries per-claim status data.
-3. **Inject.** The Go pipeline reads `#statusWrites` and injects values via `FillPath` into the matched `#Claim` instance's `#status`. Same Strategy B precedent as 016 D12 hash injection.
+2. **Render.** Transformer body runs — `#transform.output` produces the provider-specific resource(s); a sibling `#transform.#resolution` carries per-claim status data.
+3. **Inject.** The Go pipeline reads `#resolution` and injects values via `FillPath` into the matched `#Claim` instance's `#status`. Same Strategy B precedent as 016 D12 hash injection.
 4. **Consume.** Downstream transformers / component bodies that read `#claims.<id>.#status.<field>` see the populated values. The matcher topologically orders fulfillers before consumers — see [`12-pipeline-changes.md`](12-pipeline-changes.md).
 
-### Schema — `#statusWrites`
+### Schema — `#resolution`
 
 ```cue
 #ComponentTransformer: {
@@ -177,7 +177,7 @@ A `#ModuleTransformer` whose `requiresComponents` finds zero matches **does not 
         // (e.g. "db" if the module declared #claims.db: ...). The matcher
         // resolves claim ids by FQN-equality between requiredClaims and the
         // candidate component's #claims.
-        #statusWrites?: [claimId=string]: _
+        #resolution?: [claimId=string]: _
     }
 }
 
@@ -189,7 +189,7 @@ A `#ModuleTransformer` whose `requiresComponents` finds zero matches **does not 
 
         output: {...}
 
-        #statusWrites?: [claimId=string]: _    // resolves against #moduleRelease.#claims
+        #resolution?: [claimId=string]: _    // resolves against #moduleRelease.#claims
     }
 }
 ```
@@ -197,7 +197,7 @@ A `#ModuleTransformer` whose `requiresComponents` finds zero matches **does not 
 A `#PublicEndpointTransformer` that fulfils `net.#PublicEndpointClaim` would emit:
 
 ```cue
-#statusWrites: (claimIdForFqn): {
+#resolution: (claimIdForFqn): {
     url:  "https://\(_claim.#spec.publicEndpoint.hostname).\(#context.runtime.route.domain)"
     fqdn: "\(_claim.#spec.publicEndpoint.hostname).\(#context.runtime.route.domain)"
 }
@@ -211,7 +211,7 @@ A `#PublicEndpointTransformer` that fulfils `net.#PublicEndpointClaim` would emi
 
 ### Side-effect-only claims
 
-Claims fulfilled purely by side-effect (e.g. backup orchestration — see Example 7 in `08-examples.md`) may omit `#statusWrites` entirely. Their `#status` stays empty by design; consumers do not read resolution data because there is none. The schema does not require `#statusWrites` for any fulfiller — the field is optional, mirroring `#Claim.#status?`.
+Claims fulfilled purely by side-effect (e.g. backup orchestration — see Example 7 in `08-examples.md`) may omit `#resolution` entirely. Their `#status` stays empty by design; consumers do not read resolution data because there is none. The schema does not require `#resolution` for any fulfiller — the field is optional, mirroring `#Claim.#status?`.
 
 ## Worked module-scope example — Hostname
 
@@ -348,7 +348,7 @@ When the well-known catalog is rebuilt under v1alpha2 (014's migration table cov
 
 ### CL-Q7 — Status writeback ordering (was Q18)
 
-A `#ComponentTransformer` (or `#ModuleTransformer`) that fulfils a Claim writes `#status` via `#statusWrites`. A second transformer — or a component body — reads the same Claim's `#status` to wire connection data. The matcher must dispatch fulfillers before consumers; the dispatch order is the topological sort of an FQN-graph derived from `requiredClaims` (write edges) and `#claims.<id>.#status.<field>` reads (read edges).
+A `#ComponentTransformer` (or `#ModuleTransformer`) that fulfils a Claim writes `#status` via `#resolution`. A second transformer — or a component body — reads the same Claim's `#status` to wire connection data. The matcher must dispatch fulfillers before consumers; the dispatch order is the topological sort of an FQN-graph derived from `requiredClaims` (write edges) and `#claims.<id>.#status.<field>` reads (read edges).
 
 Open sub-questions:
 
@@ -366,4 +366,4 @@ Open sub-questions:
 - **TR-D6** (was D29): runtime always passes a fully concrete `#ModuleRelease` to `#transform`. **Lifted to 014 D18** as part of the 014 / 015 untangle (2026-05-02) since the guarantee applies to both transformer kinds equally.
 - **TR-D7** (was D30): `#ModuleTransformer.requiresComponents` is a pre-fire gate, not a filter. Body iterates `#moduleRelease.#components` itself.
 - **CL-D15** (was D31): `#Claim` gains `#status?`. Transformer-written resolution surface; concrete claims pin a `#status` schema (or omit it for side-effect-only fulfilment).
-- **CL-D16** (was D32): `#status` injection follows 016 D12 (Strategy B / Go pipeline). Matcher topologically orders fulfillers before consumers; `#statusWrites` is the channel sketched above.
+- **CL-D16** (was D32): `#status` injection follows 016 D12 (Strategy B / Go pipeline). Matcher topologically orders fulfillers before consumers; `#resolution` is the channel sketched above.

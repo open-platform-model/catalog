@@ -267,7 +267,7 @@ _serviceTransformer: #ComponentTransformer & {
 
 // _pgManagedDatabaseTransformer — fulfils ManagedDatabaseClaim.
 // Walks #component.#claims for FQN match, emits a Postgres CR AND
-// #statusWrites: (claimId): { host, port, secretName }. Keystone of
+// #resolution: (claimId): { host, port, secretName }. Keystone of
 // component-scope status writeback.
 _pgManagedDatabaseTransformer: #ComponentTransformer & {
 	metadata: {
@@ -299,7 +299,7 @@ _pgManagedDatabaseTransformer: #ComponentTransformer & {
 				let _e = _matched[0]
 				let _crName = "\(#context.release.name)-\(#context.component.name)-\(_e.id)"
 
-				#statusWrites: (_e.id): {
+				#resolution: (_e.id): {
 					host:       "\(_crName).\(#context.release.namespace).svc.cluster.local"
 					port:       5432
 					secretName: "\(_crName)-credentials"
@@ -346,7 +346,7 @@ _aivenManagedDatabaseTransformer: #ComponentTransformer & {
 
 // _k8upBackupScheduleTransformer — module-scope. Fulfils BackupClaim,
 // requiresComponents.traits gate (must have at least one component carrying
-// #BackupTrait). Side-effect-only — NO #statusWrites.
+// #BackupTrait). Side-effect-only — NO #resolution.
 _k8upBackupScheduleTransformer: #ModuleTransformer & {
 	metadata: {
 		modulePath:  "opmodel.dev/k8up/v1alpha2/transformers"
@@ -404,7 +404,7 @@ _k8upBackupScheduleTransformer: #ModuleTransformer & {
 }
 
 // _dnsHostnameTransformer — module-scope. Fulfils HostnameClaim, no gate.
-// Writes #statusWrites.<id>.fqdn. Drives t08 (module-scope status writeback).
+// Writes #resolution.<id>.fqdn. Drives t08 (module-scope status writeback).
 _dnsHostnameTransformer: #ModuleTransformer & {
 	metadata: {
 		modulePath:  "opmodel.dev/dns/v1alpha2/transformers"
@@ -435,7 +435,7 @@ _dnsHostnameTransformer: #ModuleTransformer & {
 				let _logical = _e.claim.#spec.name
 				let _fqdn = "\(_logical).example.com"
 
-				#statusWrites: (_e.id): {
+				#resolution: (_e.id): {
 					fqdn: _fqdn
 				}
 
@@ -709,7 +709,7 @@ _strixNoTraitRelease: #ModuleRelease & {
 	uuid:      "00000000-0000-0000-0000-0000000000a2"
 }
 
-// Consumer with a side-effect-only (no #statusWrites) fulfiller — verifies
+// Consumer with a side-effect-only (no #resolution) fulfiller — verifies
 // t11 (#status stays empty).
 _consumerSideEffectOnly: #Module & {
 	metadata: {

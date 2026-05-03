@@ -130,7 +130,7 @@ Enhancement 012 explores cross-component noun grammar (shared networks, identiti
 
 ### CL-Q7 — Genuinely open: Status writeback ordering (was Q18, surfaced in 07-claim-fulfilment.md)
 
-A `#ComponentTransformer` (or `#ModuleTransformer`) that fulfils a Claim writes `#status` via the `#statusWrites` channel sketched in `07-claim-fulfilment.md`. A second transformer — or a component body — reads the same Claim's `#status` to wire connection data. The matcher must dispatch fulfillers before consumers; the dispatch order is the topological sort of an FQN-graph derived from `requiredClaims` (write edges) and `#claims.<id>.#status.<field>` reads (read edges).
+A `#ComponentTransformer` (or `#ModuleTransformer`) that fulfils a Claim writes `#status` via the `#resolution` channel sketched in `07-claim-fulfilment.md`. A second transformer — or a component body — reads the same Claim's `#status` to wire connection data. The matcher must dispatch fulfillers before consumers; the dispatch order is the topological sort of an FQN-graph derived from `requiredClaims` (write edges) and `#claims.<id>.#status.<field>` reads (read edges).
 
 Open sub-questions:
 
@@ -168,7 +168,7 @@ Original text retained for the historical record:
 
 ### TR-Q3 — Does 014's `#provider` synthetic value still work? *(CLOSED — superseded by 014 D12)*
 
-**Status:** CLOSED 2026-05-02. **014 D12** retired `#Provider` and the synthetic `#provider` shim entirely. The matcher consumes `#composedTransformers` + the new `#matchers` reverse index directly. The `#statusWrites` injection-phase sub-question moves to `12-pipeline-changes.md`.
+**Status:** CLOSED 2026-05-02. **014 D12** retired `#Provider` and the synthetic `#provider` shim entirely. The matcher consumes `#composedTransformers` + the new `#matchers` reverse index directly. The `#resolution` injection-phase sub-question moves to `12-pipeline-changes.md`.
 
 Original text retained for the historical record:
 
