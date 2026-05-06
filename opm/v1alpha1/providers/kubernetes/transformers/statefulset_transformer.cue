@@ -54,6 +54,7 @@ import (
 		"opmodel.dev/opm/v1alpha1/traits/network/host-network@v1":        network_traits.#HostNetworkTrait
 		"opmodel.dev/opm/v1alpha1/traits/security/security-context@v1":   security_traits.#SecurityContextTrait
 		"opmodel.dev/opm/v1alpha1/traits/security/workload-identity@v1":  security_traits.#WorkloadIdentityTrait
+		"opmodel.dev/opm/v1alpha1/traits/security/image-pull-secrets@v1": security_traits.#ImagePullSecretsTrait
 		"opmodel.dev/opm/v1alpha1/traits/security/host-pid@v1":           security_traits.#HostPIDTrait
 		"opmodel.dev/opm/v1alpha1/traits/security/host-ipc@v1":           security_traits.#HostIPCTrait
 		"opmodel.dev/opm/v1alpha1/traits/workload/graceful-shutdown@v1":  workload_traits.#GracefulShutdownTrait
@@ -171,6 +172,11 @@ import (
 
 						if #component.spec.workloadIdentity != _|_ {
 							serviceAccountName: #component.spec.workloadIdentity.name
+						}
+
+						// Image pull secrets: pod-level registry credentials
+						if #component.spec.imagePullSecrets != _|_ {
+							imagePullSecrets: #component.spec.imagePullSecrets
 						}
 
 						// Volumes: convert OPM volume specs to Kubernetes volume specs

@@ -164,6 +164,68 @@ _testDeploymentGracefulShutdownWithPreStop: (#DeploymentTransformer.#transform &
 	}
 }
 
+// Test: Component with single image pull secret produces pod-level imagePullSecrets.
+// Asserts: imagePullSecrets trait is forwarded to pod spec verbatim.
+_testDeploymentImagePullSecretSingle: (#DeploymentTransformer.#transform & {
+	#component: {
+		metadata: name: "private"
+		spec: {
+			container: {
+				name: "private"
+				image: {
+					repository: "ghcr.io/acme/private"
+					tag:        "v1.0"
+					digest:     ""
+					pullPolicy: "IfNotPresent"
+					reference:  "ghcr.io/acme/private:v1.0"
+				}
+			}
+			imagePullSecrets: [{name: "regcred"}]
+		}
+	}
+	#context: (#TestCtx & {
+		release:   "app"
+		namespace: "default"
+		component: "private"
+	}).out
+}).output & {
+	spec: template: spec: imagePullSecrets: [{name: "regcred"}]
+}
+
+// Test: Component with multiple image pull secrets preserves order.
+// Asserts: list of secret references survives the transform without rewriting.
+_testDeploymentImagePullSecretMultiple: (#DeploymentTransformer.#transform & {
+	#component: {
+		metadata: name: "multi"
+		spec: {
+			container: {
+				name: "multi"
+				image: {
+					repository: "harbor.internal/team/svc"
+					tag:        "v2.0"
+					digest:     ""
+					pullPolicy: "IfNotPresent"
+					reference:  "harbor.internal/team/svc:v2.0"
+				}
+			}
+			imagePullSecrets: [
+				{name: "regcred"},
+				{name: "harbor-creds"},
+			]
+		}
+	}
+	#context: (#TestCtx & {
+		release:   "app"
+		namespace: "default"
+		component: "multi"
+	}).out
+}).output & {
+	spec: template: spec: imagePullSecrets: [
+		{name: "regcred"},
+		{name: "harbor-creds"},
+	]
+}
+
 // Test: Component with environment variables wired via literal value.
 // Asserts: env vars are passed through to the container spec.
 _testDeploymentWithEnv: (#DeploymentTransformer.#transform & {
