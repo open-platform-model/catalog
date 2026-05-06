@@ -211,6 +211,7 @@ CUE module: `opmodel.dev/opm/v1alpha1@v1`
 | `#CertificateSchema` | `schemas/security.cue` | Certificate spec — defines the desired TLS certificate |
 | `#ClusterIssuerSchema` | `schemas/security.cue` | ClusterIssuer schema (cluster-scoped — same spec shape as Issuer) |
 | `#EncryptionConfigSchema` | `schemas/security.cue` |  |
+| `#ImagePullSecretsSchema` | `schemas/security.cue` | #ImagePullSecretsSchema lists pre-existing K8s Secrets used to pull container images |
 | `#IssuerSchema` | `schemas/security.cue` | Issuer schema (namespace-scoped) |
 | `#IssuerSpecSchema` | `schemas/security.cue` | IssuerSpec — common configuration for Issuer and ClusterIssuer |
 | `#PolicyRuleSchema` | `schemas/security.cue` | Single RBAC permission rule |
@@ -664,6 +665,8 @@ CUE module: `opmodel.dev/opm/v1alpha1@v1`
 | `#HostIPCTrait` | `traits/security/host_ipc.cue` |  |
 | `#HostPID` | `traits/security/host_pid.cue` |  |
 | `#HostPIDTrait` | `traits/security/host_pid.cue` |  |
+| `#ImagePullSecrets` | `traits/security/image_pull_secrets.cue` |  |
+| `#ImagePullSecretsTrait` | `traits/security/image_pull_secrets.cue` |  |
 | `#SecurityContext` | `traits/security/security_context.cue` |  |
 | `#SecurityContextDefaults` | `traits/security/security_context.cue` |  |
 | `#SecurityContextTrait` | `traits/security/security_context.cue` |  |

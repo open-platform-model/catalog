@@ -9,6 +9,14 @@ package schemas
 	automountToken?: bool
 }
 
+// #ImagePullSecretsSchema lists pre-existing K8s Secrets used to pull
+// container images. Each entry is a LocalObjectReference to a Secret
+// of type kubernetes.io/dockerconfigjson in the same namespace as the pod.
+//
+// OPM does not create these Secrets — they must already exist in the
+// cluster (typically managed by an external secret operator or platform team).
+#ImagePullSecretsSchema: [...{name!: string}]
+
 // Security context constraints for container and pod-level hardening.
 //
 // Fields apply at different levels in Kubernetes:
