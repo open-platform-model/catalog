@@ -65,10 +65,8 @@ This enhancement is intentionally thin. `#Environment`, runtime-fill mechanism f
 | Document | Purpose |
 | -------- | ------- |
 | `CONSTITUTION.md` (repo root) | Core design principles governing all changes in this repository |
-| `catalog/enhancements/archive/008-platform-construct/` | Archived predecessor — original `#Platform` construct with `#providers` list. This enhancement supersedes that schema. The `#ctx` / `#Environment` / `#ContextBuilder` portion of 008 is lifted into enhancement 016. |
 | `catalog/enhancements/016-module-context/` | Sibling — defines `#PlatformContext`, `#EnvironmentContext`, `#ModuleContext`, `#ContextBuilder`, `#Environment`. `#Platform.#ctx` is typed by 016's `#PlatformContext`. |
 | `catalog/enhancements/015-claims/` | Sibling — extends this enhancement with `#Claim` primitive, `#ModuleTransformer`, status writeback, and `#defines.claims` |
-| `catalog/enhancements/archive/011-operational-commodities/` | Archived — `#PolicyTransformer` registration on `#Platform` is deferred until policy redesign (012) lands |
 | `catalog/enhancements/012-policy-redesign/` | Open exploration that will inform policy-layer integration |
 | `catalog/core/v1alpha2/provider.cue` | `#Provider` — **retired in this enhancement** (D12). File deleted; matcher migrates to `#composedTransformers` + `#matchers`. |
 | `catalog/core/v1alpha2/transformer.cue` | `#ComponentTransformer`, `#TransformerMap` — introduced in this enhancement (D17). 015 extends with `#ModuleTransformer` and widens `#TransformerMap` to the union. |

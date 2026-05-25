@@ -190,6 +190,7 @@ import (
 				mountPath: vm.mountPath
 				if vm.subPath != _|_ {subPath: vm.subPath}
 				if vm.readOnly == true {readOnly: vm.readOnly}
+				if vm.mountPropagation != _|_ {mountPropagation: vm.mountPropagation}
 			}]
 		}
 

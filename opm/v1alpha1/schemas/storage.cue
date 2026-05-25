@@ -11,6 +11,14 @@ package schemas
 	mountPath!: string
 	subPath?:   string
 	readOnly:   bool | *false
+
+	// Controls how mounts are propagated between host and container.
+	// "None": no propagation (default Kubernetes behavior).
+	// "HostToContainer": container sees subsequent host mounts under this path.
+	// "Bidirectional": mounts created inside the container propagate back to the host —
+	// required for CSI node plugins and any workload that creates dynamic mounts
+	// (e.g. /var/lib/kubelet/pods on a CSI driver). Requires a privileged container.
+	mountPropagation?: "None" | "HostToContainer" | "Bidirectional"
 }
 
 #FileMode: int & >=0 & <=511

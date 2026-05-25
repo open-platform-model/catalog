@@ -64,9 +64,6 @@ The enhancement is split into high-level overview docs (`01`–`03`), four topic
 | `catalog/opm/v1alpha2/resources/extension/crd.cue` | `#CRDsResource` — canonical CRD-shipping path for operator Modules |
 | `catalog/docs/core/definition-types.md` | Litmus test and decision flowchart updated by this enhancement |
 | `catalog/docs/core/primitives.md` | Primitive reference — gains `#Claim` entry |
-| `catalog/enhancements/006-claim-primitive/` | Archived predecessor — initial `#Claim` exploration; informs the demand-side shape |
-| `catalog/enhancements/007-offer-primitive/` | Archived predecessor — earlier supply-side `#Offer` exploration; supply side now expressed via transformer `requiredClaims` rather than a wrapper primitive |
-| `catalog/enhancements/archive/011-operational-commodities/` | Archived — `#Directive` + `#PolicyTransformer` verb-flavor commodity pattern; deferred to the policy redesign (012). Worked examples (backup, TLS, Gateway routing) remain useful reference material; portions are reframed under this enhancement's `#Claim` model in `08-examples.md`. |
 | `catalog/enhancements/012-policy-redesign/` | Concurrent exploration of cross-component noun grammar; this enhancement provides the noun answer at module/component scope |
 | `catalog/enhancements/014-platform-construct/` | **Parent** — introduces `#Platform`, `#registry`, `#composedTransformers`, `#matchers.{resources,traits}`, `#PlatformMatch`, `#ComponentTransformer`, the `#defines.{resources,traits,transformers}` slot, and the matcher algorithm (component-scope). This enhancement extends every one of those views with the Claim half. |
 | `catalog/enhancements/016-module-context/` | Sibling — defines `#ctx` (`#ModuleContext`, `#PlatformContext`, `#EnvironmentContext`, `#ContextBuilder`, `#Environment`). `#Module.#ctx` is typed by 016's `#ModuleContext` and injected at release time by `#ContextBuilder`. |

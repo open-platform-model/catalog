@@ -40,28 +40,6 @@ v1alpha1/
 versions.yml           Published module version + checksum
 ```
 
-## Architecture Decision Records
-
-ADRs capture significant technical decisions with context and consequences.
-
-- Location: `adr/`
-- Template: `adr/TEMPLATE.md`
-- Naming: `NNN-kebab-case-title.md` (three-digit, zero-padded)
-
-### Creating a new ADR
-
-1. Copy `adr/TEMPLATE.md` to `adr/NNN-title.md` using next available number.
-2. Set status to `Proposed`.
-3. Fill in Context, Decision, Consequences.
-4. Update status to `Accepted` once agreed.
-
-### Updating an ADR
-
-- Never delete ADR — update status instead.
-- Retire: set status to `Deprecated`.
-- Replace: set status to `Superseded by ADR-NNN`, create new ADR.
-- One decision per ADR.
-
 ## Environment Notes
 
 - `v1alpha1/cue.mod/module.cue` requires CUE `v0.15.0`+.
