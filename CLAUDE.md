@@ -181,4 +181,4 @@ cue vet -d '#DefinitionName' ./... path/to/testdata/example_valid_case.yaml
 - Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
 - Scope = module/domain: `feat(core): ...`, `fix(traits): ...`
 - OpenSpec work: use change-related naming from repository constitution
-- Never add AI attribution to commit messages
+- End every commit with the trailer `Co-Authored-By: Claude <noreply@anthropic.com>`
