@@ -87,7 +87,23 @@ package schemas
 // accessMode: "ReadWriteMany". The StorageClass and credentials Secret must be
 // pre-provisioned on the cluster (see the smb.csi.k8s.io CSI driver for setup).
 #PersistentClaimSchema: {
-	size:         string
+	// Reference an existing PersistentVolumeClaim by name instead of
+	// provisioning a new one. When set, no PVC is created and size is ignored;
+	// the pod mounts the named claim directly. Use this to share a volume that
+	// another component already owns (e.g. an editor pod viewing a workload's
+	// data PVC). On a single node, a ReadWriteOnce claim can be mounted by
+	// multiple pods, so the referencing pod can mount it read-write.
+	claimName?: string
+
+	// Provisioning fields — used only when claimName is not set.
+	size?:        string
 	accessMode:   "ReadWriteOnce" | "ReadOnlyMany" | "ReadWriteMany" | *"ReadWriteOnce"
 	storageClass: string | *"standard"
+
+	// Exactly one mode: provision a new claim (size) XOR reference an
+	// existing one (claimName).
+	matchN(1, [
+		{claimName!: _},
+		{size!: _},
+	])
 }

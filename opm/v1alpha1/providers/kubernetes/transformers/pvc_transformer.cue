@@ -45,7 +45,7 @@ import (
 
 		// Generate PVC for each volume that has a persistentClaim defined
 		output: {
-			for volumeName, volume in _volumes if volume.persistentClaim != _|_ {
+			for volumeName, volume in _volumes if volume.persistentClaim != _|_ if volume.persistentClaim.claimName == _|_ {
 				"\(volumeName)": k8scorev1.#PersistentVolumeClaim & {
 					apiVersion: "v1"
 					kind:       "PersistentVolumeClaim"

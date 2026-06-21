@@ -250,7 +250,17 @@ import (
 			}
 		}
 		if vol.persistentClaim != _|_ {
-			persistentVolumeClaim: claimName: "\(_prefix)-\(vName)"
+			persistentVolumeClaim: {
+				// Reference an existing claim verbatim when claimName is set;
+				// otherwise mount the PVC the pvc-transformer provisions for this
+				// volume ({releasePrefix}-{volumeName}).
+				if vol.persistentClaim.claimName != _|_ {
+					claimName: vol.persistentClaim.claimName
+				}
+				if vol.persistentClaim.claimName == _|_ {
+					claimName: "\(_prefix)-\(vName)"
+				}
+			}
 		}
 		if vol.configMap != _|_ {
 			// Compute the same K8s name the configmap-transformer will generate:
