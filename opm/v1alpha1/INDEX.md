@@ -204,9 +204,14 @@ CUE module: `opmodel.dev/opm/v1alpha1@v1`
 | `#TlsRouteSchema` | `schemas/network.cue` | TLS route specification (embeds RouteAttachmentSchema) |
 | `#NormalizeCPU` | `schemas/quantity.cue` | #NormalizeCPU normalizes CPU input to Kubernetes canonical form |
 | `#NormalizeMemory` | `schemas/quantity.cue` | #NormalizeMemory normalizes memory input to Kubernetes binary format |
+| `#AcmeDns01SolverSchema` | `schemas/security.cue` | ACME DNS-01 solver — proves domain ownership by writing a TXT record |
 | `#AcmeHttp01SolverSchema` | `schemas/security.cue` | ACME HTTP-01 solver — uses HTTP challenge to prove domain ownership |
 | `#AcmeSolverSchema` | `schemas/security.cue` | ACME solver — selects which challenge type to use |
 | `#CertificateIssuerRefSchema` | `schemas/security.cue` | IssuerRef embedded in Certificate — identifies which Issuer signs the cert |
+| `#CertificateJKSKeystoreSchema` | `schemas/security.cue` | JKS keystore output — Java KeyStore variant of #CertificateKeystoreBaseSchema |
+| `#CertificateKeystoreBaseSchema` | `schemas/security.cue` | Keystore output — cert-manager can additionally write the cert as JKS/PKCS#12 into the target Secret |
+| `#CertificateNameConstraintItemSchema` | `schemas/security.cue` | One side (permitted or excluded) of an x509 name constraints extension |
+| `#CertificatePKCS12KeystoreSchema` | `schemas/security.cue` | PKCS#12 keystore output — PKCS#12 variant of #CertificateKeystoreBaseSchema |
 | `#CertificatePrivateKeySchema` | `schemas/security.cue` | PrivateKey configuration |
 | `#CertificateSchema` | `schemas/security.cue` | Certificate spec — defines the desired TLS certificate |
 | `#ClusterIssuerSchema` | `schemas/security.cue` | ClusterIssuer schema (cluster-scoped — same spec shape as Issuer) |
@@ -217,6 +222,7 @@ CUE module: `opmodel.dev/opm/v1alpha1@v1`
 | `#PolicyRuleSchema` | `schemas/security.cue` | Single RBAC permission rule |
 | `#RoleSchema` | `schemas/security.cue` | RBAC role with rules and CUE-referenced subjects |
 | `#RoleSubjectSchema` | `schemas/security.cue` | Role subject — embeds an identity directly via CUE reference |
+| `#SecretKeyRefSchema` | `schemas/security.cue` | Reference to a key within a Secret — used by every DNS-01 provider for credentials |
 | `#SecurityContextSchema` | `schemas/security.cue` | Security context constraints for container and pod-level hardening |
 | `#ServiceAccountSchema` | `schemas/security.cue` | Standalone service account identity |
 | `#WorkloadIdentitySchema` | `schemas/security.cue` |  |

@@ -69,6 +69,9 @@ package schemas
 	apiGroups!: [...string]
 	resources!: [...string]
 	verbs!: [...string]
+	// Restrict the rule to named instances of the listed resources. Omit to allow all.
+	// Note Kubernetes does not honour resourceNames for list/watch/create.
+	resourceNames?: [...string]
 }
 
 // Role subject — embeds an identity directly via CUE reference
@@ -105,17 +108,71 @@ package schemas
 	rotationPolicy?: "Never" | "Always"
 }
 
+// Keystore output — cert-manager can additionally write the cert as JKS/PKCS#12
+// into the target Secret. The password may come from a Secret or, since
+// cert-manager v1.17, be given inline as a literal (the two are mutually exclusive).
+#CertificateKeystoreBaseSchema: {
+	create!:            bool
+	password?:          string
+	passwordSecretRef?: #SecretKeyRefSchema
+}
+
+// JKS keystore output — Java KeyStore variant of #CertificateKeystoreBaseSchema
+#CertificateJKSKeystoreSchema: #CertificateKeystoreBaseSchema & {
+	// Alias the certificate is stored under inside the keystore.
+	alias?: string
+}
+
+// PKCS#12 keystore output — PKCS#12 variant of #CertificateKeystoreBaseSchema
+#CertificatePKCS12KeystoreSchema: #CertificateKeystoreBaseSchema & {
+	// Encryption/algorithm profile, e.g. LegacyRC2, LegacyDES, Modern2023.
+	profile?: string
+}
+
 // Certificate spec — defines the desired TLS certificate
 #CertificateSchema: {
 	secretName!: string
 	issuerRef!:  #CertificateIssuerRefSchema
 	dnsNames?: [...string]
 	ipAddresses?: [...string]
+	uris?: [...string]
+	emailAddresses?: [...string]
 	commonName?:  string
 	duration?:    string
 	renewBefore?: string
-	privateKey?:  #CertificatePrivateKeySchema
+	// Renew when this percentage of the certificate's lifetime remains (cert-manager v1.16+).
+	// Mutually exclusive with renewBefore.
+	renewBeforePercentage?: int & >=1 & <=99
+	privateKey?:            #CertificatePrivateKeySchema
 	usages?: [...("digital signature" | "key encipherment" | "server auth" | "client auth" | "cert sign" | "crl sign")]
+	// Number of CertificateRequest revisions kept. Upstream defaults this to 1 as of
+	// cert-manager v1.18 (previously unbounded).
+	revisionHistoryLimit?: int & >=1
+	// Extra labels/annotations copied onto the generated TLS Secret.
+	secretTemplate?: {
+		labels?: {[string]: string}
+		annotations?: {[string]: string}
+	}
+	keystores?: {
+		jks?:    #CertificateJKSKeystoreSchema
+		pkcs12?: #CertificatePKCS12KeystoreSchema
+	}
+	// Mark the certificate as a CA (allows it to sign other certificates).
+	isCA?: bool
+	// x509 name constraints for CA certificates (cert-manager v1.15+).
+	nameConstraints?: {
+		critical?:  bool
+		permitted?: #CertificateNameConstraintItemSchema
+		excluded?:  #CertificateNameConstraintItemSchema
+	}
+}
+
+// One side (permitted or excluded) of an x509 name constraints extension
+#CertificateNameConstraintItemSchema: {
+	dnsDomains?: [...string]
+	ipRanges?: [...string]
+	emailAddresses?: [...string]
+	uriDomains?: [...string]
 }
 
 // ACME HTTP-01 solver — uses HTTP challenge to prove domain ownership
@@ -139,13 +196,79 @@ package schemas
 	}
 }
 
+// Reference to a key within a Secret — used by every DNS-01 provider for credentials.
+#SecretKeyRefSchema: {
+	name!: string
+	key!:  string
+}
+
+// ACME DNS-01 solver — proves domain ownership by writing a TXT record.
+// Required for wildcard certificates and for clusters with no inbound HTTP reachability.
+// Only the most common providers are modelled explicitly; use `webhook` for the rest.
+#AcmeDns01SolverSchema: {
+	// How CNAME records are followed when locating the zone to write the TXT record into.
+	// "Follow" is required when delegating _acme-challenge to another zone.
+	cnameStrategy?: "None" | "Follow"
+
+	cloudflare?: {
+		email?:             string
+		apiTokenSecretRef?: #SecretKeyRefSchema
+		apiKeySecretRef?:   #SecretKeyRefSchema
+	}
+	route53?: {
+		// region is optional as of cert-manager v1.21 (inferred from the environment when unset).
+		region?:                   string
+		hostedZoneID?:             string
+		accessKeyID?:              string
+		accessKeyIDSecretRef?:     #SecretKeyRefSchema
+		secretAccessKeySecretRef?: #SecretKeyRefSchema
+		role?:                     string
+	}
+	azureDNS?: {
+		subscriptionID!:        string
+		resourceGroupName!:     string
+		hostedZoneName?:        string
+		environment?:           string
+		clientID?:              string
+		tenantID?:              string
+		clientSecretSecretRef?: #SecretKeyRefSchema
+		managedIdentity?: {
+			clientID?:   string
+			resourceID?: string
+		}
+	}
+	cloudDNS?: {
+		project!:                 string
+		hostedZoneName?:          string
+		serviceAccountSecretRef?: #SecretKeyRefSchema
+	}
+	digitalocean?: {
+		tokenSecretRef!: #SecretKeyRefSchema
+	}
+	// RFC2136 dynamic DNS update (e.g. BIND, PowerDNS).
+	rfc2136?: {
+		nameserver!:          string
+		tsigKeyName?:         string
+		tsigAlgorithm?:       string
+		tsigSecretSecretRef?: #SecretKeyRefSchema
+	}
+	// Escape hatch for any provider served by a cert-manager DNS-01 webhook solver.
+	webhook?: {
+		groupName!:  string
+		solverName!: string
+		config?: {...}
+	}
+}
+
 // ACME solver — selects which challenge type to use
 #AcmeSolverSchema: {
 	selector?: {
 		dnsNames?: [...string]
 		dnsZones?: [...string]
+		matchLabels?: {[string]: string}
 	}
 	http01?: #AcmeHttp01SolverSchema
+	dns01?:  #AcmeDns01SolverSchema
 }
 
 // IssuerSpec — common configuration for Issuer and ClusterIssuer
@@ -158,6 +281,19 @@ package schemas
 			name!: string
 		}
 		skipTLSVerify?: bool
+		// Request a named certificate profile from the ACME server (cert-manager v1.18+).
+		// Supported values are published by the CA's ACME directory.
+		profile?: string
+		// Pin the issuing chain by its root CA common name (e.g. "ISRG Root X1").
+		preferredChain?: string
+		// PEM CA bundle used to verify the ACME server — for private ACME CAs such as step-ca.
+		caBundle?: string
+		// External Account Binding, required by some CAs (e.g. ZeroSSL, Sectigo).
+		externalAccountBinding?: {
+			keyID!:        string
+			keySecretRef!: #SecretKeyRefSchema
+			keyAlgorithm?: "HS256" | "HS384" | "HS512"
+		}
 		solvers?: [...#AcmeSolverSchema]
 	}
 	// CA issuer — signs certs using a CA certificate stored in a Secret

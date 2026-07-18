@@ -9,8 +9,8 @@ core:
     checksum: 6f08575ca9d4872a9e11d6d4023e5f0763f8091171588670ec2bf54cc7252430
 opm:
   v1alpha1:
-    version: v1.6.0
-    checksum: b68d8dd48e0cd129e89ced16ad8fa488c8f07a2dc79ef40089a3d8334e1ba330
+    version: v1.7.0
+    checksum: 1bdc729df6960c6ff0158591f4e292e591d73141ca64b31b7712e8dc6d36441c
 opm_experiments:
   v1alpha1:
     version: v1.1.2

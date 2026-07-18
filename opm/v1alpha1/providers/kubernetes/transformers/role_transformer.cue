@@ -44,6 +44,9 @@ import (
 			apiGroups: r.apiGroups
 			resources: r.resources
 			verbs:     r.verbs
+			if r.resourceNames != _|_ {
+				resourceNames: r.resourceNames
+			}
 		}]
 
 		// Build k8s-shaped subjects from CUE-referenced identities
