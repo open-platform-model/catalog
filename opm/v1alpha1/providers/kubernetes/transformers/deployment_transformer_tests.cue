@@ -260,3 +260,47 @@ _testDeploymentWithEnv: (#DeploymentTransformer.#transform & {
 	kind:       "Deployment"
 	metadata: namespace: "production"
 }
+
+// Test: Component with podMetadata trait sets pod-template annotations + labels.
+// Asserts: spec.template.metadata.{annotations,labels} carry the podMetadata
+// values (pod-scoped), and the standard component labels remain on the template.
+_testDeploymentPodMetadata: (#DeploymentTransformer.#transform & {
+	#component: {
+		metadata: name: "web"
+		spec: {
+			container: {
+				name: "web"
+				image: {
+					repository: "nginx"
+					tag:        "1.27"
+					digest:     ""
+					pullPolicy: "IfNotPresent"
+					reference:  "nginx:1.27"
+				}
+			}
+			podMetadata: {
+				annotations: {
+					"k8up.io/backupcommand":  "echo backup"
+					"k8up.io/file-extension": ".sql"
+				}
+				labels: "backup.opmodel.dev/enabled": "true"
+			}
+		}
+	}
+	#context: (#TestCtx & {
+		release:   "app"
+		namespace: "default"
+		component: "web"
+	}).out
+}).output & {
+	spec: template: metadata: {
+		annotations: {
+			"k8up.io/backupcommand":  "echo backup"
+			"k8up.io/file-extension": ".sql"
+		}
+		labels: {
+			"backup.opmodel.dev/enabled": "true"
+			"app.kubernetes.io/name":     "web"
+		}
+	}
+}

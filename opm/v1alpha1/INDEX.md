@@ -702,6 +702,9 @@ CUE module: `opmodel.dev/opm/v1alpha1@v1`
 | `#Placement` | `traits/workload/placement.cue` |  |
 | `#PlacementDefaults` | `traits/workload/placement.cue` |  |
 | `#PlacementTrait` | `traits/workload/placement.cue` |  |
+| `#PodMetadata` | `traits/workload/pod_metadata.cue` |  |
+| `#PodMetadataSchema` | `traits/workload/pod_metadata.cue` |  |
+| `#PodMetadataTrait` | `traits/workload/pod_metadata.cue` | #PodMetadataTrait sets annotations and labels on the POD TEMPLATE of a workload (spec |
 | `#RestartPolicy` | `traits/workload/restart_policy.cue` |  |
 | `#RestartPolicyDefaults` | `traits/workload/restart_policy.cue` |  |
 | `#RestartPolicyTrait` | `traits/workload/restart_policy.cue` |  |

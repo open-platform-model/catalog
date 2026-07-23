@@ -58,6 +58,7 @@ import (
 		"opmodel.dev/opm/v1alpha1/traits/security/host-pid@v1":           security_traits.#HostPIDTrait
 		"opmodel.dev/opm/v1alpha1/traits/security/host-ipc@v1":           security_traits.#HostIPCTrait
 		"opmodel.dev/opm/v1alpha1/traits/workload/graceful-shutdown@v1":  workload_traits.#GracefulShutdownTrait
+		"opmodel.dev/opm/v1alpha1/traits/workload/pod-metadata@v1":       workload_traits.#PodMetadataTrait
 	}
 
 	#transform: {
@@ -124,7 +125,17 @@ import (
 				replicas:    _scalingCount
 				selector: matchLabels: #context.componentLabels
 				template: {
-					metadata: labels: #context.componentLabels
+					metadata: {
+						labels: {
+							for k, v in #context.componentLabels {(k): v}
+							if #component.spec.podMetadata != _|_ if #component.spec.podMetadata.labels != _|_ {
+								for k, v in #component.spec.podMetadata.labels {(k): v}
+							}
+						}
+						if #component.spec.podMetadata != _|_ if #component.spec.podMetadata.annotations != _|_ {
+							annotations: #component.spec.podMetadata.annotations
+						}
+					}
 					spec: {
 						_convertedSidecars: (#ToK8sContainers & {"in": _sidecarContainers, #releasePrefix: #context.#moduleReleaseMetadata.name}).out
 						containers: list.Concat([[_mainContainer], _convertedSidecars])
