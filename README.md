@@ -4,6 +4,8 @@
 
 ## ⚠️ Deprecated: OPM v0 catalog line only
 
+**NOTE: THIS IS THE CATALOG FOR OPM V0 not V1**
+
 This repo is the **old (OPM v0) catalog** — the CUE modules published as `opmodel.dev/core/v1alpha1` and `opmodel.dev/opm/v1alpha1`, pinned to the CUE v0.15/v0.16 toolchain line. The OPM v1 replacement lives in the new catalogs published as `opmodel.dev/catalogs/opm@v1` and `opmodel.dev/catalogs/kubernetes@v1` (plus `opmodel.dev/core@v1`), which require CUE v0.17+.
 
 Because the two generations cannot share one CUE toolchain (schemas here use CUE behavior removed in v0.17), the `modules/` repo was split by branch: its `main` branch holds only OPM v1 / CUE v0.17 modules on the new catalogs, and its `v0_legacy` branch holds the OPM v0 / CUE v0.16 fleet that still consumes this repo. This repo therefore serves **only** the `v0_legacy` module line — maintenance fixes only, no new definitions.
