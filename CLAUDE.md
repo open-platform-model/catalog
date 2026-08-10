@@ -103,11 +103,11 @@ versions.yml           Published module version + checksum
 
 - `v1alpha1/cue.mod/module.cue` requires CUE `v0.15.0`+.
 - Local env has `cue v0.16.0`.
-- Task commands set `CUE_REGISTRY` automatically.
-- For raw `cue` commands outside `task`, export:
+- Task commands set `CUE_REGISTRY` automatically: reads resolve from GHCR; the publish tasks force a local-registry mapping in-script (local publish is a gated exception — Registry Policy rule 2 in the root `CLAUDE.md`; GHCR publishing is CI-only via `.github/workflows/publish.yml`).
+- For raw `cue` commands outside `task`, export the canonical workspace mapping from the root `CLAUDE.md`:
 
     ```bash
-    export CUE_REGISTRY='opmodel.dev=localhost:5000+insecure,registry.cue.works'
+    export CUE_REGISTRY='opmodel.dev=ghcr.io/open-platform-model,testing.opmodel.dev=localhost:5000+insecure,registry.cue.works'
     ```
 
 ## Build And Dev Commands

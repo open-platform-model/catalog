@@ -16,7 +16,13 @@ vars:
   REGISTRY_IMAGE: registry:2
   REGISTRY_DATA_DIR: '{{.ROOT_DIR}}/.registry-data'
 
-  # Local registry URL (for CUE_REGISTRY environment variable)
+  # Canonical mapping (Registry Policy, root CLAUDE.md): reads resolve
+  # opmodel.dev/* from GHCR; testing.opmodel.dev/* from the local registry.
+  CANONICAL_REGISTRY: opmodel.dev=ghcr.io/open-platform-model,testing.opmodel.dev=localhost:5000+insecure,registry.cue.works
+
+  # All-local mapping, forced in-script by the publish tasks. Local publish of
+  # this legacy catalog is a gated exception (Registry Policy rule 2) — CI
+  # publishes to GHCR via .github/workflows/publish.yml, not the Taskfile.
   LOCAL_REGISTRY: opmodel.dev=localhost:5000+insecure,registry.cue.works
 
   # Plain HTTP URL for direct registry API calls (curl, health checks, etc.)

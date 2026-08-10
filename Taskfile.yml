@@ -26,7 +26,9 @@ includes:
     dir: .
 
 env:
-  CUE_REGISTRY: '{{.LOCAL_REGISTRY}}'
+  # Reads (vet/tidy/deps) resolve from GHCR; publish tasks force LOCAL_REGISTRY
+  # in-script. See Registry Policy in the root CLAUDE.md.
+  CUE_REGISTRY: '{{.CANONICAL_REGISTRY}}'
 
 tasks:
   default:
@@ -742,7 +744,7 @@ tasks:
           VERSION="{{.VERSION}}"
         fi
         echo "Publishing core/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
-        cd "{{.TASKFILE_DIR}}/{{.CORE_DIR}}" && cue mod publish "${VERSION}"
+        cd "{{.TASKFILE_DIR}}/{{.CORE_DIR}}" && CUE_REGISTRY="${OPM_PUBLISH_REGISTRY:-{{.LOCAL_REGISTRY}}}" cue mod publish "${VERSION}"
         echo "Published core/v1alpha1@${VERSION}"
 
   publish:opm:
@@ -766,7 +768,7 @@ tasks:
           VERSION="{{.VERSION}}"
         fi
         echo "Publishing opm/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
-        cd "{{.TASKFILE_DIR}}/{{.OPM_DIR}}" && cue mod publish "${VERSION}"
+        cd "{{.TASKFILE_DIR}}/{{.OPM_DIR}}" && CUE_REGISTRY="${OPM_PUBLISH_REGISTRY:-{{.LOCAL_REGISTRY}}}" cue mod publish "${VERSION}"
         echo "Published opm/v1alpha1@${VERSION}"
 
   publish:opm_experiments:
@@ -790,7 +792,7 @@ tasks:
           VERSION="{{.VERSION}}"
         fi
         echo "Publishing opm_experiments/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
-        cd "{{.TASKFILE_DIR}}/{{.OPM_EXPERIMENTS_DIR}}" && cue mod publish "${VERSION}"
+        cd "{{.TASKFILE_DIR}}/{{.OPM_EXPERIMENTS_DIR}}" && CUE_REGISTRY="${OPM_PUBLISH_REGISTRY:-{{.LOCAL_REGISTRY}}}" cue mod publish "${VERSION}"
         echo "Published opm_experiments/v1alpha1@${VERSION}"
 
   publish:gateway_api:
@@ -814,7 +816,7 @@ tasks:
           VERSION="{{.VERSION}}"
         fi
         echo "Publishing gateway_api/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
-        cd "{{.TASKFILE_DIR}}/{{.GATEWAY_API_DIR}}" && cue mod publish "${VERSION}"
+        cd "{{.TASKFILE_DIR}}/{{.GATEWAY_API_DIR}}" && CUE_REGISTRY="${OPM_PUBLISH_REGISTRY:-{{.LOCAL_REGISTRY}}}" cue mod publish "${VERSION}"
         echo "Published gateway_api/v1alpha1@${VERSION}"
 
   publish:cert_manager:
@@ -838,7 +840,7 @@ tasks:
           VERSION="{{.VERSION}}"
         fi
         echo "Publishing cert_manager/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
-        cd "{{.TASKFILE_DIR}}/{{.CERT_MANAGER_DIR}}" && cue mod publish "${VERSION}"
+        cd "{{.TASKFILE_DIR}}/{{.CERT_MANAGER_DIR}}" && CUE_REGISTRY="${OPM_PUBLISH_REGISTRY:-{{.LOCAL_REGISTRY}}}" cue mod publish "${VERSION}"
         echo "Published cert_manager/v1alpha1@${VERSION}"
 
   publish:k8up:
@@ -856,7 +858,7 @@ tasks:
           VERSION="{{.VERSION}}"
         fi
         echo "Publishing k8up/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
-        cd "{{.TASKFILE_DIR}}/{{.K8UP_DIR}}" && cue mod publish "${VERSION}"
+        cd "{{.TASKFILE_DIR}}/{{.K8UP_DIR}}" && CUE_REGISTRY="${OPM_PUBLISH_REGISTRY:-{{.LOCAL_REGISTRY}}}" cue mod publish "${VERSION}"
         echo "Published k8up/v1alpha1@${VERSION}"
 
   publish:ch_vmm:
@@ -874,7 +876,7 @@ tasks:
           VERSION="{{.VERSION}}"
         fi
         echo "Publishing ch_vmm/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
-        cd "{{.TASKFILE_DIR}}/{{.CH_VMM_DIR}}" && cue mod publish "${VERSION}"
+        cd "{{.TASKFILE_DIR}}/{{.CH_VMM_DIR}}" && CUE_REGISTRY="${OPM_PUBLISH_REGISTRY:-{{.LOCAL_REGISTRY}}}" cue mod publish "${VERSION}"
         echo "Published ch_vmm/v1alpha1@${VERSION}"
 
   publish:mongodb_operator:
@@ -892,7 +894,7 @@ tasks:
           VERSION="{{.VERSION}}"
         fi
         echo "Publishing mongodb_operator/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
-        cd "{{.TASKFILE_DIR}}/{{.MONGODB_OPERATOR_DIR}}" && cue mod publish "${VERSION}"
+        cd "{{.TASKFILE_DIR}}/{{.MONGODB_OPERATOR_DIR}}" && CUE_REGISTRY="${OPM_PUBLISH_REGISTRY:-{{.LOCAL_REGISTRY}}}" cue mod publish "${VERSION}"
         echo "Published mongodb_operator/v1alpha1@${VERSION}"
 
   publish:clickhouse_operator:
@@ -910,7 +912,7 @@ tasks:
           VERSION="{{.VERSION}}"
         fi
         echo "Publishing clickhouse_operator/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
-        cd "{{.TASKFILE_DIR}}/{{.CLICKHOUSE_OPERATOR_DIR}}" && cue mod publish "${VERSION}"
+        cd "{{.TASKFILE_DIR}}/{{.CLICKHOUSE_OPERATOR_DIR}}" && CUE_REGISTRY="${OPM_PUBLISH_REGISTRY:-{{.LOCAL_REGISTRY}}}" cue mod publish "${VERSION}"
         echo "Published clickhouse_operator/v1alpha1@${VERSION}"
 
   publish:otel_collector:
@@ -928,7 +930,7 @@ tasks:
           VERSION="{{.VERSION}}"
         fi
         echo "Publishing otel_collector/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
-        cd "{{.TASKFILE_DIR}}/{{.OTEL_COLLECTOR_DIR}}" && cue mod publish "${VERSION}"
+        cd "{{.TASKFILE_DIR}}/{{.OTEL_COLLECTOR_DIR}}" && CUE_REGISTRY="${OPM_PUBLISH_REGISTRY:-{{.LOCAL_REGISTRY}}}" cue mod publish "${VERSION}"
         echo "Published otel_collector/v1alpha1@${VERSION}"
 
   publish:istio:
@@ -946,7 +948,7 @@ tasks:
           VERSION="{{.VERSION}}"
         fi
         echo "Publishing istio/v1alpha1@${VERSION} to {{.LOCAL_REGISTRY}}..."
-        cd "{{.TASKFILE_DIR}}/{{.ISTIO_DIR}}" && cue mod publish "${VERSION}"
+        cd "{{.TASKFILE_DIR}}/{{.ISTIO_DIR}}" && CUE_REGISTRY="${OPM_PUBLISH_REGISTRY:-{{.LOCAL_REGISTRY}}}" cue mod publish "${VERSION}"
         echo "Published istio/v1alpha1@${VERSION}"
 
   publish:kubernetes:
@@ -970,7 +972,7 @@ tasks:
           VERSION="{{.VERSION}}"
         fi
         echo "Publishing kubernetes/v1@${VERSION} to {{.LOCAL_REGISTRY}}..."
-        cd "{{.TASKFILE_DIR}}/{{.KUBERNETES_DIR}}" && cue mod publish "${VERSION}"
+        cd "{{.TASKFILE_DIR}}/{{.KUBERNETES_DIR}}" && CUE_REGISTRY="${OPM_PUBLISH_REGISTRY:-{{.LOCAL_REGISTRY}}}" cue mod publish "${VERSION}"
         echo "Published kubernetes/v1@${VERSION}"
 
   # ============================================================================
@@ -1006,7 +1008,7 @@ tasks:
           local version
           version=$(yq ".${key}.${api_version}.version" "{{.VERSION_FILE}}")
           echo -e "${BOLD}[${key}/${api_version}]${RESET} publishing @ ${version}..."
-          if (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod publish "${version}"); then
+          if (cd "{{.TASKFILE_DIR}}/${dir}" && CUE_REGISTRY="${OPM_PUBLISH_REGISTRY:-{{.LOCAL_REGISTRY}}}" cue mod publish "${version}"); then
             echo -e "  ${GREEN}✔ ${key}/${api_version}@${version}${RESET}"
           else
             echo -e "  ${RED}✗ Failed to publish ${key}/${api_version}${RESET}"
@@ -1167,7 +1169,7 @@ tasks:
 
           # Publish
           echo "  Publishing ${key}/${api_ver}@${new_version}..."
-          if ! (cd "{{.TASKFILE_DIR}}/${dir}" && cue mod publish "${new_version}"); then
+          if ! (cd "{{.TASKFILE_DIR}}/${dir}" && CUE_REGISTRY="${OPM_PUBLISH_REGISTRY:-{{.LOCAL_REGISTRY}}}" cue mod publish "${new_version}"); then
             echo -e "  ${RED}Failed to publish ${key}/${api_ver}${RESET}"
             exit 1
           fi
