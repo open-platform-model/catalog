@@ -93,6 +93,52 @@ _testServiceLoadBalancer: (#ServiceTransformer.#transform & {
 	spec: type: "LoadBalancer"
 }
 
+// Test: LoadBalancer service renders externalTrafficPolicy when set.
+// Asserts: spec.externalTrafficPolicy passes through from the Expose trait.
+_testServiceExternalTrafficPolicy: (#ServiceTransformer.#transform & {
+	#component: {
+		metadata: name: "router"
+		spec: {
+			container: {
+				name: "router"
+				image: {
+					repository: "itzg/mc-router"
+					tag:        "1.46.2"
+					digest:     ""
+				}
+				ports: minecraft: {
+					name:       "minecraft"
+					targetPort: 25565
+				}
+			}
+			expose: {
+				type: "LoadBalancer"
+				externalTrafficPolicy: "Local"
+				ports: minecraft: {
+					name:       "minecraft"
+					targetPort: 25565
+				}
+			}
+		}
+	}
+	#context: (#TestCtx & {
+		release:   "mc"
+		namespace: "minecraft"
+		component: "router"
+	}).out
+}).output & {
+	apiVersion: "v1"
+	kind:       "Service"
+	metadata: {
+		name:      "mc-router"
+		namespace: "minecraft"
+	}
+	spec: {
+		type:                  "LoadBalancer"
+		externalTrafficPolicy: "Local"
+	}
+}
+
 // Test: Multi-port service includes all declared ports.
 // Asserts: Service with both http and metrics ports produces multiple entries.
 _testServiceMultiPort: (#ServiceTransformer.#transform & {

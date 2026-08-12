@@ -39,6 +39,15 @@ import (
 #ExposeSchema: {
 	ports: [portName=string]: #PortSchema & {name: portName}
 	type: "ClusterIP" | "NodePort" | "LoadBalancer" | *"ClusterIP"
+
+	// Source-IP preservation for NodePort/LoadBalancer Services. "Local" makes
+	// kube-proxy skip SNAT so the workload sees the real client address, at the
+	// cost of only routing to node-local endpoints. Omit for the Kubernetes
+	// default ("Cluster"). Kubernetes rejects the field on ClusterIP Services,
+	// so it is only allowed when type is NodePort or LoadBalancer.
+	if type != "ClusterIP" {
+		externalTrafficPolicy?: "Cluster" | "Local"
+	}
 }
 
 //////////////////////////////////////////////////////////////////

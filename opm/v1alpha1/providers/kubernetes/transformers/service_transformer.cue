@@ -83,6 +83,12 @@ import (
 			spec: {
 				type: _expose.type
 
+				// Only rendered when set; Kubernetes defaults to "Cluster" and
+				// rejects the field on ClusterIP Services (schema-guarded).
+				if _expose.externalTrafficPolicy != _|_ {
+					externalTrafficPolicy: _expose.externalTrafficPolicy
+				}
+
 				selector: #context.componentLabels
 
 				ports: _ports
